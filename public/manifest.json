@@ -1,0 +1,33 @@
+{
+  "name": "PrépaSciences CPGE — Excellence Mathématiques & Physique-Chimie",
+  "short_name": "PrépaSciences",
+  "description": "Plateforme d'élite pour préparationnaires CPGE TSI 2e et MP/MP* (Concours CNC & France). Formulaires officiels et constantes accessibles hors-ligne.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070c1d",
+  "theme_color": "#0b132b",
+  "categories": ["education", "reference"],
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
