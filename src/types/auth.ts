@@ -8,6 +8,7 @@ export interface UserProfile {
   id: string;
   email: string;
   fullName: string;
+  password?: string;
   phone: string;
   role: UserRole;
   filiere: "MP" | "MP*" | "TSI" | "Autre";

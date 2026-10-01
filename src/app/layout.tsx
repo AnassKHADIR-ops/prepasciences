@@ -73,8 +73,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased scroll-smooth`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
       <head>
         {/* Critical LCP Frame Preload */}

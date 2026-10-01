@@ -43,6 +43,9 @@ export default function Hero() {
   const stage3Ref = useRef<HTMLDivElement | null>(null);
   const stage4Ref = useRef<HTMLDivElement | null>(null);
   const scrollProgressRef = useRef<number>(0);
+  const isDesktopRef = useRef<boolean>(true);
+  const lastCanvasWidthRef = useRef<number>(0);
+  const lastCanvasHeightRef = useRef<number>(0);
 
   // Find nearest loaded frame to guarantee zero flicker or blank flashes
   const getNearestLoadedImage = useCallback((targetIndex: number): HTMLImageElement | null => {
@@ -107,14 +110,30 @@ export default function Hero() {
     [getNearestLoadedImage]
   );
 
-  // Resize canvas with DPR support
+  // Resize canvas with DPR support & mobile viewport stabilization
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const width = window.innerWidth;
     const height = window.innerHeight;
+
+    // Cache desktop state in ref for zero-overhead access inside RAF loop
+    isDesktopRef.current = width >= 768;
+
+    // On mobile, suppress canvas resize if only vertical browser toolbar collapsed (<120px) to prevent redraw hitching
+    if (
+      lastCanvasWidthRef.current === width &&
+      Math.abs(lastCanvasHeightRef.current - height) < 120 &&
+      canvas.width > 0
+    ) {
+      return;
+    }
+
+    lastCanvasWidthRef.current = width;
+    lastCanvasHeightRef.current = height;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     canvas.width = Math.floor(width * dpr);
     canvas.height = Math.floor(height * dpr);
@@ -231,7 +250,12 @@ export default function Hero() {
     if (stage2Ref.current) {
       stage2Ref.current.style.opacity = s2.toFixed(3);
       stage2Ref.current.style.transform = `translate3d(0, ${float2.toFixed(2)}px, 0)`;
-      stage2Ref.current.style.filter = blur2 > 0.1 ? `blur(${blur2.toFixed(1)}px)` : "none";
+      // Disable dynamic filter: blur() on mobile (<768px) to eliminate GPU thrashing at 60/120 fps
+      if (isDesktopRef.current && blur2 > 0.1) {
+        stage2Ref.current.style.filter = `blur(${blur2.toFixed(1)}px)`;
+      } else {
+        stage2Ref.current.style.filter = "none";
+      }
       stage2Ref.current.style.pointerEvents = s2 > 0.3 ? "auto" : "none";
     }
 
@@ -244,7 +268,12 @@ export default function Hero() {
     if (stage3Ref.current) {
       stage3Ref.current.style.opacity = s3.toFixed(3);
       stage3Ref.current.style.transform = `translate3d(0, ${float3.toFixed(2)}px, 0)`;
-      stage3Ref.current.style.filter = blur3 > 0.1 ? `blur(${blur3.toFixed(1)}px)` : "none";
+      // Disable dynamic filter: blur() on mobile (<768px) to eliminate GPU thrashing at 60/120 fps
+      if (isDesktopRef.current && blur3 > 0.1) {
+        stage3Ref.current.style.filter = `blur(${blur3.toFixed(1)}px)`;
+      } else {
+        stage3Ref.current.style.filter = "none";
+      }
       stage3Ref.current.style.pointerEvents = s3 > 0.3 ? "auto" : "none";
     }
 
@@ -407,8 +436,8 @@ export default function Hero() {
       <div id="entrainement" className="absolute top-[62%] left-0 w-px h-px pointer-events-none" />
       <div id="tarifs" className="absolute top-[86%] left-0 w-px h-px pointer-events-none" />
 
-      {/* Sticky Full-Screen Canvas Viewport using 100dvh for mobile stability */}
-      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden">
+      {/* Sticky Full-Screen Canvas Viewport stabilized against mobile URL bar reflows */}
+      <div className="sticky top-0 h-screen [height:100vh] [height:-webkit-fill-available] w-full overflow-hidden">
         {/* HTML5 Canvas pinned full-screen */}
         <canvas
           ref={canvasRef}

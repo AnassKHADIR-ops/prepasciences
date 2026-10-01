@@ -7,6 +7,7 @@ import {
   setCurrentSession,
   getUsersDB,
   loginUser,
+  registerUser,
   registerStudent,
   updateStudentStatus,
   deleteStudent,
@@ -25,11 +26,17 @@ interface AuthContextType {
   register: (data: {
     fullName: string;
     email: string;
-    phone: string;
-    filiere: "MP" | "MP*" | "TSI" | "Autre";
-    center: string;
-    offer: StudentOffer;
+    password?: string;
+    phone?: string;
+    filiere?: "MP" | "MP*" | "TSI" | "Autre";
+    center?: string;
+    offer?: StudentOffer;
     notes?: string;
+  }) => { success: boolean; user?: UserProfile; error?: string };
+  registerUser: (data: {
+    fullName: string;
+    email: string;
+    password: string;
   }) => { success: boolean; user?: UserProfile; error?: string };
   logout: () => void;
   toggleTeacherViewMode: () => void;
@@ -70,16 +77,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res;
   };
 
+  const registerUserAction = (data: {
+    fullName: string;
+    email: string;
+    password: string;
+  }) => {
+    const res = registerUser(data);
+    if (res.success && res.user) {
+      setCurrentUser(res.user);
+    }
+    refreshUsers();
+    return res;
+  };
+
   const register = (data: {
     fullName: string;
     email: string;
-    phone: string;
-    filiere: "MP" | "MP*" | "TSI" | "Autre";
-    center: string;
-    offer: StudentOffer;
+    password?: string;
+    phone?: string;
+    filiere?: "MP" | "MP*" | "TSI" | "Autre";
+    center?: string;
+    offer?: StudentOffer;
     notes?: string;
   }) => {
-    const res = registerStudent(data);
+    // If called with only 3 required fields and password
+    if (data.password && (!data.phone || data.phone === "") && (!data.center || data.center === "")) {
+      return registerUserAction({
+        fullName: data.fullName,
+        email: data.email,
+        password: data.password,
+      });
+    }
+
+    const res = registerStudent({
+      fullName: data.fullName,
+      email: data.email,
+      phone: data.phone || "",
+      password: data.password,
+      filiere: data.filiere || "MP*",
+      center: data.center || "Centre CPGE",
+      offer: data.offer || "pc",
+      notes: data.notes,
+    });
     refreshUsers();
     return res;
   };
@@ -119,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         students,
         login,
         register,
+        registerUser: registerUserAction,
         logout,
         toggleTeacherViewMode,
         updateStatus,
