@@ -17,10 +17,18 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
   const router = useRouter();
   const { currentUser, isTeacher, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  const activeTeacher = isMounted && isTeacher;
+  const activeUser = isMounted ? currentUser : null;
 
   // Nom d'affichage et initiales
-  const displayName = currentUser?.fullName?.trim() || "Invité";
-  const firstName = currentUser?.fullName ? currentUser.fullName.split(" ")[0] : "Invité";
+  const displayName = activeUser?.fullName?.trim() || "Invité";
+  const firstName = activeUser?.fullName ? activeUser.fullName.split(" ")[0] : "Invité";
 
   const getInitials = (name: string) => {
     if (!name || name === "Invité") return "CP";
@@ -29,7 +37,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const initials = isTeacher ? "HE" : getInitials(displayName);
+  const initials = activeTeacher ? "HE" : getInitials(displayName);
 
   return (
     <header
@@ -134,7 +142,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
               Références
             </Link>
 
-            {isTeacher && (
+            {activeTeacher && (
               <Link
                 href="/dashboard-prof"
                 className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
@@ -329,7 +337,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
             </Link>
           </div>
 
-          {isTeacher && (
+          {activeTeacher && (
             <Link
               href="/dashboard-prof"
               onClick={() => setMobileMenuOpen(false)}

@@ -102,10 +102,11 @@ function EddamsPortal() {
   };
 
   const handleOpenVideo = (url: string, title: string) => {
-    // Si l'utilisateur est un enseignant ou un étudiant actif validé : accès direct !
+    // Si l'utilisateur est un admin, un enseignant ou un étudiant actif validé : accès direct !
     const hasAccess =
       activeCurrentUser &&
-      (activeCurrentUser.role === "teacher" ||
+      (activeCurrentUser.role === "admin" ||
+        activeCurrentUser.role === "teacher" ||
         (activeCurrentUser.role === "student" && activeCurrentUser.status === "active"));
 
     if (hasAccess) {

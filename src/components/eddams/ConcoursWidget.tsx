@@ -14,7 +14,8 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [openBlocks, setOpenBlocks] = useState<Record<string, boolean>>({
     cnc: true,
-    mp: true,
+    xens: true,
+    methodo: true,
   });
 
   const toggleBlock = (id: string) => {
@@ -157,10 +158,11 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
           {[
             { id: "all", label: "Tous les concours" },
             { id: "cnc", label: "🇲🇦 CNC Maroc" },
+            { id: "xens", label: "🔬 X-ENS" },
+            { id: "methodo", label: "📐 Méthodologie & Problèmes" },
             { id: "mp", label: "⛏️ Mines-Ponts" },
             { id: "ccinp", label: "🎯 CCINP" },
             { id: "cs", label: "⚡ Centrale-Supélec" },
-            { id: "xens", label: "🔬 X-ENS" },
           ].map((f) => (
             <button
               key={f.id}
@@ -187,14 +189,20 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
           filteredBlocks.map((block) => {
             const isOpen = openBlocks[block.id] ?? false;
 
-            const yearsMap: Record<number, EpreuveItem[]> = {};
+            const yearsMap: Record<string, EpreuveItem[]> = {};
             block.sujets.forEach((s) => {
-              if (!yearsMap[s.annee]) yearsMap[s.annee] = [];
-              yearsMap[s.annee].push(s);
+              const anneeKey = String(s.annee);
+              if (!yearsMap[anneeKey]) yearsMap[anneeKey] = [];
+              yearsMap[anneeKey].push(s);
             });
-            const sortedYears = Object.keys(yearsMap)
-              .map(Number)
-              .sort((a, b) => b - a);
+            const sortedYears = Object.keys(yearsMap).sort((a, b) => {
+              const numA = parseInt(a, 10);
+              const numB = parseInt(b, 10);
+              if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+              if (!isNaN(numA)) return -1;
+              if (!isNaN(numB)) return 1;
+              return a.localeCompare(b);
+            });
 
             return (
               <div
@@ -245,7 +253,7 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
                             {annee}
                           </span>
                           <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                            Session {annee} · Filière MP / MP*
+                            {isNaN(Number(annee)) ? annee : `Session ${annee}`} · Filière MP / MP* & PC
                           </span>
                         </div>
 

@@ -13,7 +13,7 @@ import { PC_COURSES_DATA } from "@/components/eddams/pcCoursesData";
 import { getDriveImageUrls, getYoutubeThumbnail } from "./driveUtils";
 import { supabase } from "./supabase";
 
-const COURSES_STORAGE_KEY = "prepasciences_courses_db_v2";
+const COURSES_STORAGE_KEY = "prepasciences_courses_db_v4";
 
 export function getCoursesDB(): ModuleCoursBlock[] {
   if (typeof window === "undefined") return PC_COURSES_DATA;

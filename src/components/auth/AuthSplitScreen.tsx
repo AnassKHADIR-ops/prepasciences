@@ -140,6 +140,7 @@ export function AuthSplitScreen({ initialMode = "login" }: AuthSplitScreenProps)
             src="/auth-physics-lab.jpg"
             alt="Laboratoire et Salle d'étude Sciences Physiques CPGE"
             fill
+            sizes="(max-width: 1024px) 0vw, 50vw"
             priority
             className="object-cover object-center scale-105 filter brightness-90 contrast-105"
           />

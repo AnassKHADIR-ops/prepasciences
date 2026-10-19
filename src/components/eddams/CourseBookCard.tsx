@@ -12,6 +12,8 @@ export interface LivreReference {
   cover?: string;
   badge?: string;
   description?: string;
+  collection?: string;
+  tome?: string;
 }
 
 const LEATHER_PALETTES = [

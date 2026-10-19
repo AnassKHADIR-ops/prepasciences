@@ -44,6 +44,7 @@ interface YTReadyEvent {
 
 interface YTStateChangeEvent {
   data: number;
+  target?: YTPlayerInstance;
 }
 
 declare global {
@@ -119,10 +120,11 @@ export function AnonymousPlayer({ url, title, onEnded }: AnonymousPlayerProps) {
           controls: 0, // DÉSACTIVE TOUS LES CONTRÔLES YOUTUBE (Total Anonymat)
           disablekb: 1, // Désactive les raccourcis natifs YouTube
           fs: 0, // Désactive le bouton plein écran YouTube
-          iv_load_policy: 3, // Masque les annotations
+          iv_load_policy: 3, // Masque les annotations et suggestions
           modestbranding: 1, // Masque le logo YouTube
           rel: 0, // Ne suggère aucune vidéo tierce
           showinfo: 0, // Masque le titre YouTube
+          cc_load_policy: 0, // DÉSACTIVE STRICTEMENT LES SOUS-TITRES AUTOMATIQUES
           playsinline: 1,
           origin: typeof window !== "undefined" ? window.location.origin : undefined,
         },
@@ -133,6 +135,11 @@ export function AnonymousPlayer({ url, title, onEnded }: AnonymousPlayerProps) {
             try {
               event.target.playVideo();
               event.target.setVolume(90);
+              // Désactivation stricte et inconditionnelle des sous-titres
+              const t = event.target as any;
+              if (typeof t.unloadModule === "function") t.unloadModule("captions");
+              if (typeof t.unloadModule === "function") t.unloadModule("cc");
+              if (typeof t.setOption === "function") t.setOption("captions", "track", {});
               const dur = event.target.getDuration();
               if (dur && !isNaN(dur)) setDuration(dur);
             } catch {
@@ -145,6 +152,11 @@ export function AnonymousPlayer({ url, title, onEnded }: AnonymousPlayerProps) {
             if (event.data === 1) {
               setIsPlaying(true);
               setIsBuffering(false);
+              try {
+                const t = event.target as any;
+                if (typeof t.unloadModule === "function") t.unloadModule("captions");
+                if (typeof t.unloadModule === "function") t.unloadModule("cc");
+              } catch {}
             } else if (event.data === 2) {
               setIsPlaying(false);
               setIsBuffering(false);
@@ -389,25 +401,25 @@ export function AnonymousPlayer({ url, title, onEnded }: AnonymousPlayerProps) {
       )}
 
       {/* 1. Iframe YouTube Masqué et Anonymisé (Échelle 102% pour rogner les bordures YT) */}
-      <div className="absolute -inset-[2px] pointer-events-none scale-[1.02]">
+      <div className="absolute -top-[5%] -bottom-[7%] -left-[2%] -right-[2%] pointer-events-none scale-[1.04] overflow-hidden">
         <div id={playerElementId} className="w-full h-full" />
       </div>
 
-      {/* 2. Bandeau Supérieur de Sécurité : Masque le logo de chaîne et titre YouTube */}
-      <div className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-slate-950/95 via-slate-950/70 to-transparent px-4 py-2 flex items-center justify-between z-20 pointer-events-auto">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-mono font-bold text-[10px] tracking-wider uppercase flex items-center gap-1.5 shadow-md shadow-purple-950/60 shrink-0">
-            <Shield className="w-3 h-3 text-purple-200" />
-            <span>PREPASCIENCES PLAYER</span>
-          </span>
-          <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate">
+      {/* 2. Bandeau Supérieur de Sécurité : Masque 100% de la chaîne, du titre et des contrôles natifs YouTube */}
+      <div className="absolute top-0 inset-x-0 h-16 bg-gradient-to-b from-[#060913] via-[#060913]/95 to-transparent px-4 sm:px-6 py-3 flex items-center justify-between z-30 pointer-events-auto border-b border-white/5">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white font-mono font-bold text-[10px] tracking-wider uppercase shadow-md shadow-purple-950/60 shrink-0 border border-white/10">
+            <Shield className="w-3.5 h-3.5 text-purple-200" />
+            <span>LECTEUR ÉDUCATIF PRIVÉ</span>
+          </div>
+          <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight truncate drop-shadow-md">
             {title}
-          </span>
+          </h3>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="px-2 py-0.5 rounded-md bg-white/10 border border-white/15 text-[10px] font-mono font-bold text-emerald-400">
-            HD 1080p
+          <span className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/40 text-[11px] font-bold text-purple-200 shadow-xs tracking-wide">
+            Filière MP
           </span>
         </div>
       </div>
