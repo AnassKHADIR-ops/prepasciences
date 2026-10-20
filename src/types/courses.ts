@@ -37,6 +37,7 @@ export interface ChapitreItem {
   num: number;
   titre: string;
   badge: string;
+  niveau?: "sup" | "spe";
   moduleName?: string;
   description: string;
   cours: CourseSession[];
@@ -52,6 +53,7 @@ export interface ChapitreItem {
 export interface ModuleCoursBlock {
   id: string;
   titre: string;
+  niveau?: "sup" | "spe";
   icon: string;
   description: string;
   chapitres: ChapitreItem[];

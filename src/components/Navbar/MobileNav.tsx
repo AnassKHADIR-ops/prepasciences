@@ -61,7 +61,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
     return (
       <div className="space-y-2.5 pt-2">
         {/* Tuile 1 : Programmes Officiels avec Badges */}
-        <div className="rounded-xl p-3 bg-white/[0.03] border border-white/5 space-y-2">
+        <div className="rounded-xl p-3 bg-white border border-slate-200/80 space-y-2 shadow-2xs">
           <a
             href={data.programmes.href}
             target={isMaths ? "_blank" : undefined}
@@ -73,17 +73,17 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
               <div
                 className={`flex h-7 w-7 items-center justify-center rounded-lg border ${
                   isMaths
-                    ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400"
-                    : "bg-purple-500/15 border-purple-500/30 text-purple-400"
+                    ? "bg-cyan-100 border-cyan-200 text-cyan-700"
+                    : "bg-purple-100 border-purple-200 text-purple-700"
                 }`}
               >
                 <BookOpen className="h-4 w-4" />
               </div>
               <div>
-                <span className="block text-xs font-bold text-white">
+                <span className="block text-xs font-bold text-slate-900">
                   {data.programmes.title}
                 </span>
-                <span className="block text-[10px] text-slate-400 font-mono">
+                <span className="block text-[10px] text-slate-500 font-mono">
                   {data.programmes.subtitle}
                 </span>
               </div>
@@ -99,10 +99,10 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
                 target={isMaths ? "_blank" : undefined}
                 rel={isMaths ? "noopener noreferrer" : undefined}
                 onClick={onClose}
-                className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md border ${
+                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${
                   isMaths
-                    ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-300"
-                    : "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                    ? "bg-cyan-50 border-cyan-200 text-cyan-800"
+                    : "bg-purple-50 border-purple-200 text-purple-800"
                 }`}
               >
                 {badge.label}
@@ -117,17 +117,17 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
           target={isMaths ? "_blank" : undefined}
           rel={isMaths ? "noopener noreferrer" : undefined}
           onClick={onClose}
-          className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/5 transition-colors"
+          className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition-colors shadow-2xs"
         >
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 shrink-0">
               <FileCheck2 className="h-4 w-4" />
             </div>
             <div>
-              <span className="block text-xs font-bold text-white">
+              <span className="block text-xs font-bold text-slate-900">
                 {data.annales.title}
               </span>
-              <span className="block text-[10px] text-slate-400 font-mono">
+              <span className="block text-[10px] text-slate-500 font-mono">
                 {data.annales.subtitle}
               </span>
             </div>
@@ -141,21 +141,21 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
           target={isMaths ? "_blank" : undefined}
           rel={isMaths ? "noopener noreferrer" : undefined}
           onClick={onClose}
-          className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/5 transition-colors"
+          className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition-colors shadow-2xs"
         >
           <div className="flex items-center gap-2.5">
             <div className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 ${
               isMaths
-                ? "bg-cyan-500/15 border border-cyan-500/30 text-cyan-400"
-                : "bg-purple-500/15 border border-purple-500/30 text-purple-400"
+                ? "bg-cyan-50 border border-cyan-200 text-cyan-700"
+                : "bg-purple-50 border border-purple-200 text-purple-700"
             }`}>
               <GraduationCap className="h-4 w-4" />
             </div>
             <div>
-              <span className="block text-xs font-bold text-white">
+              <span className="block text-xs font-bold text-slate-900">
                 {data.pedagogie.title}
               </span>
-              <span className="block text-[10px] text-slate-400 font-mono">
+              <span className="block text-[10px] text-slate-500 font-mono">
                 {data.pedagogie.subtitle}
               </span>
             </div>
@@ -164,12 +164,12 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
         </a>
 
         {/* Carte compacte Professeur Référent */}
-        <div className="rounded-xl p-3 bg-white/[0.02] border border-white/5 space-y-2.5">
+        <div className="rounded-xl p-3 bg-white border border-slate-200/80 space-y-2.5 shadow-2xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
                 className={`relative w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 ${
-                  isMaths ? "border-cyan-500/40" : "border-purple-500/40"
+                  isMaths ? "border-cyan-400" : "border-purple-400"
                 }`}
               >
                 <Image
@@ -181,10 +181,10 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
                 />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white">
+                <h4 className="text-xs font-bold text-slate-900">
                   {data.professor.name}
                 </h4>
-                <p className="text-[10px] font-mono text-slate-400">
+                <p className="text-[10px] font-mono text-slate-500">
                   {data.professor.title}
                 </p>
               </div>
@@ -195,10 +195,10 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
               target={isMaths ? "_blank" : undefined}
               rel={isMaths ? "noopener noreferrer" : undefined}
               onClick={onClose}
-              className={`text-[11px] font-medium flex items-center gap-1 shrink-0 ${
+              className={`text-[11px] font-bold flex items-center gap-1 shrink-0 ${
                 isMaths
-                  ? "text-cyan-400 hover:text-cyan-300"
-                  : "text-purple-400 hover:text-purple-300"
+                  ? "text-cyan-700 hover:text-cyan-800"
+                  : "text-purple-700 hover:text-purple-800"
               }`}
             >
               <span>Profil</span>
@@ -210,7 +210,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
             href={data.professor.whatsAppUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 transition-colors flex items-center justify-center gap-1.5"
+            className="w-full py-2 px-3 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
           >
             <MessageCircle className="h-3.5 w-3.5" />
             <span>Échanger sur WhatsApp</span>
@@ -230,28 +230,28 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
-          className="fixed inset-x-0 top-[60px] bottom-0 z-40 bg-[#050B1D]/98 backdrop-blur-2xl flex flex-col justify-between overflow-hidden lg:hidden"
+          className="fixed inset-x-0 top-[60px] bottom-0 z-40 bg-white/98 backdrop-blur-2xl flex flex-col justify-between overflow-hidden lg:hidden border-t border-slate-200"
         >
           {/* Scrollable Content Container */}
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
             {/* Accordion 1 : Pôle Mathématiques */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden shadow-lg">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shadow-xs">
               <button
                 onClick={() => toggleAccordion("maths")}
-                className="w-full flex items-center justify-between p-3.5 text-left font-bold text-white hover:bg-white/5 transition-colors"
+                className="w-full flex items-center justify-between p-3.5 text-left font-bold text-slate-900 hover:bg-slate-100 transition-colors"
                 aria-expanded={openAccordion === "maths"}
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 border border-cyan-200 text-cyan-700">
                     <BookOpen className="h-4 w-4" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-white">
+                      <span className="text-xs font-bold text-slate-900">
                         Pôle Mathématiques
                       </span>
-                      <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300">
-                        MP/MP* & TSI
+                      <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-100 border border-cyan-200 text-cyan-800">
+                        MP/MP* &amp; TSI
                       </span>
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   animate={{ rotate: openAccordion === "maths" ? 180 : 0 }}
                   transition={{ duration: 0.18 }}
                 >
-                  <ChevronDown className="h-4 w-4 text-slate-400" />
+                  <ChevronDown className="h-4 w-4 text-slate-500" />
                 </motion.div>
               </button>
 
@@ -271,7 +271,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2, ease: "easeInOut" }}
-                    className="overflow-hidden border-t border-white/5 bg-slate-950/40 px-3 pb-3"
+                    className="overflow-hidden border-t border-slate-200 bg-slate-100/50 px-3 pb-3"
                   >
                     {renderPoleContent(POLES_DATA.maths)}
                   </motion.div>
@@ -280,22 +280,22 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
             </div>
 
             {/* Accordion 2 : Pôle Physique-Chimie */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden shadow-lg">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shadow-xs">
               <button
                 onClick={() => toggleAccordion("pc")}
-                className="w-full flex items-center justify-between p-3.5 text-left font-bold text-white hover:bg-white/5 transition-colors"
+                className="w-full flex items-center justify-between p-3.5 text-left font-bold text-slate-900 hover:bg-slate-100 transition-colors"
                 aria-expanded={openAccordion === "pc"}
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 border border-purple-200 text-purple-700">
                     <Atom className="h-4 w-4" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-white">
+                      <span className="text-xs font-bold text-slate-900">
                         Pôle Physique-Chimie
                       </span>
-                      <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300">
+                      <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-100 border border-purple-200 text-purple-800">
                         MP / MP*
                       </span>
                     </div>
@@ -305,7 +305,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   animate={{ rotate: openAccordion === "pc" ? 180 : 0 }}
                   transition={{ duration: 0.18 }}
                 >
-                  <ChevronDown className="h-4 w-4 text-slate-400" />
+                  <ChevronDown className="h-4 w-4 text-slate-500" />
                 </motion.div>
               </button>
 
@@ -316,7 +316,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2, ease: "easeInOut" }}
-                    className="overflow-hidden border-t border-white/5 bg-slate-950/40 px-3 pb-3"
+                    className="overflow-hidden border-t border-slate-200 bg-slate-100/50 px-3 pb-3"
                   >
                     {renderPoleContent(POLES_DATA.pc)}
                   </motion.div>
@@ -325,60 +325,50 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
             </div>
 
             {/* Direct Navigation Links */}
-            <div className="pt-2 border-t border-white/10 space-y-1">
+            <div className="pt-2 border-t border-slate-200 space-y-1">
               <a
                 href="#hero"
                 onClick={onClose}
-                className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
               >
-                Accueil & Présentation
+                Accueil &amp; Présentation
               </a>
               <a
                 href="#professeurs"
                 onClick={onClose}
-                className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
               >
                 Nos Professeurs Agrégés
               </a>
               <a
                 href="#tarifs"
                 onClick={onClose}
-                className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                className="block px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
               >
-                Tarifs & Inscriptions
+                Tarifs &amp; Inscriptions
               </a>
             </div>
           </div>
 
           {/* Fixed Bottom Action Bar */}
-          <div className="p-3.5 bg-[#050B1D]/98 border-t border-white/10 backdrop-blur-xl flex gap-2">
+          <div className="p-3.5 bg-white border-t border-slate-200 backdrop-blur-xl flex gap-2">
             <a
               href="https://wa.me/212716314673?text=Bonjour%20Pr%C3%A9pasciences,%20je%20souhaite%20des%20informations%20sur%20les%20programmes%20CPGE"
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                background: "rgba(32, 201, 151, 0.06)",
-                border: "1px solid rgba(32, 201, 151, 0.30)",
-                color: "#20C997",
-              }}
-              className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-all"
+              className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 active:scale-98 transition-all"
             >
-              <MessageCircle className="h-3.5 w-3.5 text-[#20C997]" />
+              <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
               <span>WhatsApp CPGE</span>
             </a>
 
             <a
               href="/espace-candidats"
               onClick={onClose}
-              style={{
-                background: "#18C7F3",
-                color: "#050B1D",
-                borderRadius: "12px",
-              }}
-              className="flex-1 py-2.5 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-[#18C7F3]/25 active:scale-98 transition-all"
+              className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-purple-700 hover:bg-purple-800 text-white shadow-xs active:scale-98 transition-all"
             >
               <span>Espace Candidats</span>
-              <ArrowRight className="h-3.5 w-3.5 text-[#050B1D]" />
+              <ArrowRight className="h-3.5 w-3.5 text-white" />
             </a>
           </div>
         </motion.div>

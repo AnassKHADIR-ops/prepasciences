@@ -1,4 +1,5 @@
-import { PC_COURSES_DATA, ChapitreItem } from "@/components/eddams/pcCoursesData";
+import { PC_COURSES_DATA } from "@/components/eddams/pcCoursesData";
+import { ChapitreItem } from "@/types/courses";
 import { getActiveMathCourses, MathCourseItem } from "./mathCoursesData";
 
 export interface MarqueeCourseItem {

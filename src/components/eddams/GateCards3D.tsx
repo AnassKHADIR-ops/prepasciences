@@ -20,11 +20,11 @@ export function GateCards3D({ onSelectSection }: GateCards3DProps) {
   }[] = [
     {
       id: "cours",
-      badge: "Syllabus MP / MP*",
+      badge: "Syllabus Sup & Spé CPGE",
       title: "Cours et TDs",
-      subtitle: "5 modules fondamentaux de Physique-Chimie, fiches de méthode théoriques, séries d'exercices d'entraînement et vidéos d'application.",
+      subtitle: "11 modules fondamentaux de Physique-Chimie (Sup & Spé), fiches méthodologiques, séries de TD avec corrigés rédigés et vidéos d'application.",
       icon: <BookOpen className="w-8 h-8 text-purple-700 dark:text-purple-400" />,
-      count: "5 Modules",
+      count: "Sup & Spé (11 Modules)",
     },
     {
       id: "concours",

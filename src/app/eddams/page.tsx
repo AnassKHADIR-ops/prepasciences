@@ -18,6 +18,9 @@ function EddamsPortal() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rubriqueParam = searchParams.get("rubrique") as SectionType | null;
+  const rawNiveau = searchParams.get("niveau");
+  const niveauParam: "sup" | "spe" | null =
+    rawNiveau === "sup" || rawNiveau === "spe" ? rawNiveau : null;
   const { currentUser } = useAuth();
 
   const isMounted = useSyncExternalStore(
@@ -198,7 +201,7 @@ function EddamsPortal() {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium transition-colors">
-              Professeur Agrégé de Physique-Chimie · CPGE Spé MP / MP*
+              Professeur Agrégé de Physique-Chimie · CPGE (MPSI / PCSI / TSI · MP / PSI / TSI)
             </p>
           </div>
 
@@ -223,6 +226,14 @@ function EddamsPortal() {
             <CoursesWidget
               onOpenPdf={handleOpenPdf}
               onOpenVideo={handleOpenVideo}
+              initialNiveau={niveauParam}
+              onSelectNiveau={(lvl) => {
+                if (lvl) {
+                  router.push(`/eddams?rubrique=cours&niveau=${lvl}`);
+                } else {
+                  router.push(`/eddams?rubrique=cours`);
+                }
+              }}
             />
           )}
 

@@ -75,7 +75,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
                 H. Eddams
               </span>
               <span className="font-bold text-[8px] sm:text-[9px] tracking-wider uppercase text-slate-400 hidden xs:inline-block sm:inline-block truncate">
-                CPGE MP / MP*
+                CPGE MP / PSI / TSI
               </span>
             </div>
           </Link>
@@ -188,7 +188,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
           </button>
 
           {/* Pilule Utilisateur (Professeur ou Étudiant) */}
-          {currentUser ? (
+          {activeUser ? (
             <div
               className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-xs font-bold border transition-colors ${
                 theme === "dark"
@@ -239,7 +239,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
           )}
 
           {/* Bouton Déconnexion */}
-          {currentUser && (
+          {activeUser && (
             <button
               type="button"
               onClick={() => {

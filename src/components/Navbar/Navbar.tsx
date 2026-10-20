@@ -72,12 +72,11 @@ export default function Navbar() {
       ref={navContainerRef}
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled || activePole || mobileMenuOpen
-          ? "bg-[#050B1D]/90 backdrop-blur-2xl border-b border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.5)] py-2.5"
-          : "bg-[#050B1D]/60 backdrop-blur-md border-b border-white/[0.07] py-3.5"
+          ? "bg-white/95 backdrop-blur-xl border-b border-slate-200/90 shadow-xs py-2.5"
+          : "bg-white/80 backdrop-blur-md border-b border-slate-200/60 py-3.5"
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 relative w-full">
-        {/* ========================================================================= */}
         {/* LOGO GAUCHE : [ΣΨ] PRÉPASCIENCES · EXCELLENCE CPGE */}
         <Link
           href="/"
@@ -92,24 +91,22 @@ export default function Navbar() {
           }}
           className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
         >
-          <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-[#0D1D38] via-[#08142B] to-[#050B1D] p-0.5 border border-[#18C7F3]/40 shadow-sm shadow-[#18C7F3]/10 transition-transform duration-200 group-hover:scale-105">
-            <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-[#050B1D] font-mono font-black text-[#18C7F3] text-sm sm:text-lg">
+          <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-purple-700 p-0.5 shadow-xs transition-transform duration-200 group-hover:scale-105">
+            <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white font-mono font-black text-purple-700 text-sm sm:text-lg">
               &Sigma;&Psi;
             </div>
           </div>
           <div className="flex flex-col">
-            <span className="font-black text-base sm:text-xl tracking-tight text-white group-hover:text-[#45D5F7] transition-colors leading-tight">
-              Prépa<span className="text-[#18C7F3]">sciences</span>
+            <span className="font-black text-base sm:text-xl tracking-tight text-[#17142D] group-hover:text-purple-700 transition-colors leading-tight">
+              Prépa<span className="text-purple-700">sciences</span>
             </span>
-            <span className="text-[8px] sm:text-[10px] font-mono uppercase tracking-widest text-[#91A4BA] font-semibold">
+            <span className="text-[8px] sm:text-[10px] font-mono uppercase tracking-widest text-slate-500 font-semibold">
               Excellence CPGE
             </span>
           </div>
         </Link>
 
-        {/* ========================================================================= */}
         {/* DESKTOP NAV ITEMS : MEGA-MENU TRIGGERS */}
-        {/* ========================================================================= */}
         <nav
           className="hidden lg:flex items-center space-x-1"
           aria-label="Navigation principale"
@@ -126,8 +123,8 @@ export default function Navbar() {
               }
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                 activePole === "maths"
-                  ? "bg-white/[0.08] text-[#18C7F3] shadow-inner"
-                  : "text-[#D9E4F2] hover:text-white hover:bg-white/[0.05]"
+                  ? "bg-cyan-50 text-cyan-800 shadow-inner"
+                  : "text-slate-700 hover:text-slate-900 hover:bg-slate-100/70"
               }`}
               aria-expanded={activePole === "maths"}
             >
@@ -153,8 +150,8 @@ export default function Navbar() {
               }
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                 activePole === "pc"
-                  ? "bg-white/[0.08] text-[#18C7F3] shadow-inner"
-                  : "text-[#D9E4F2] hover:text-white hover:bg-white/[0.05]"
+                  ? "bg-purple-50 text-purple-800 shadow-inner"
+                  : "text-slate-700 hover:text-slate-900 hover:bg-slate-100/70"
               }`}
               aria-expanded={activePole === "pc"}
             >
@@ -171,53 +168,39 @@ export default function Navbar() {
           {/* Item 3 : Tarifs & Inscriptions (Lien direct) */}
           <a
             href="#tarifs"
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide text-[#D9E4F2] hover:text-white hover:bg-white/[0.05] transition-colors"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 transition-colors"
           >
             Tarifs &amp; Inscriptions
           </a>
         </nav>
 
-        {/* ========================================================================= */}
         {/* DESKTOP ACTIONS DROITE */}
-        {/* ========================================================================= */}
         <div className="hidden lg:flex items-center gap-3">
-          {/* Bouton Pilule WhatsApp CPGE (Accent Vert #20C997 Subordonné) */}
+          {/* Bouton Pilule WhatsApp CPGE */}
           <a
             href="https://wa.me/212716314673?text=Bonjour%20Pr%C3%A9pasciences,%20je%20souhaite%20des%20informations%20sur%20les%20programmes%20CPGE"
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              background: "rgba(32, 201, 151, 0.06)",
-              border: "1px solid rgba(32, 201, 151, 0.30)",
-              color: "#20C997",
-            }}
-            className="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold hover:bg-[rgba(32,201,151,0.12)] hover:border-[rgba(32,201,151,0.50)] transition-all shadow-sm active:scale-98"
+            className="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all shadow-2xs active:scale-98"
           >
-            <MessageCircle className="h-3.5 w-3.5 text-[#20C997]" />
+            <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
             <span>WhatsApp CPGE</span>
           </a>
 
-          {/* Bouton Principal Espace Candidats (CTA Cyan #18C7F3 Majeur) */}
-          <a
+          {/* Bouton Principal Espace Candidats */}
+          <Link
             href="/espace-candidats"
-            style={{
-              background: "#18C7F3",
-              color: "#050B1D",
-              borderRadius: "12px",
-            }}
-            className="group relative overflow-hidden inline-flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold shadow-[0_4px_16px_rgba(24,199,243,0.3)] hover:bg-[#45D5F7] hover:shadow-[0_6px_22px_rgba(24,199,243,0.45)] hover:-translate-y-0.5 active:translate-y-0 active:scale-98 transition-all duration-200"
+            className="group relative overflow-hidden inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-xl shadow-xs hover:shadow transition-all duration-200 active:scale-98"
           >
             <span>Espace Candidats</span>
-            <ArrowRight className="h-3.5 w-3.5 text-[#050B1D] group-hover:translate-x-0.5 transition-transform" />
-          </a>
+            <ArrowRight className="h-3.5 w-3.5 text-white group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
 
-        {/* ========================================================================= */}
         {/* BOUTON HAMBURGER MOBILE ANIMÉ */}
-        {/* ========================================================================= */}
         <button
           onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="relative flex h-10 w-10 flex-col items-center justify-center rounded-xl border border-white/10 bg-[#08142B] p-2 text-slate-200 hover:bg-white/10 lg:hidden focus:outline-none"
+          className="relative flex h-10 w-10 flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700 hover:bg-slate-100 lg:hidden focus:outline-none"
           aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={mobileMenuOpen}
         >
@@ -228,14 +211,14 @@ export default function Navbar() {
                 : { rotate: 0, y: 0 }
             }
             transition={{ duration: 0.2 }}
-            className="block h-0.5 w-5 rounded-full bg-white mb-1"
+            className="block h-0.5 w-5 rounded-full bg-slate-800 mb-1"
           />
           <motion.span
             animate={
               mobileMenuOpen ? { opacity: 0 } : { opacity: 1 }
             }
             transition={{ duration: 0.15 }}
-            className="block h-0.5 w-5 rounded-full bg-white mb-1"
+            className="block h-0.5 w-5 rounded-full bg-slate-800 mb-1"
           />
           <motion.span
             animate={
@@ -244,13 +227,11 @@ export default function Navbar() {
                 : { rotate: 0, y: 0 }
             }
             transition={{ duration: 0.2 }}
-            className="block h-0.5 w-5 rounded-full bg-white"
+            className="block h-0.5 w-5 rounded-full bg-slate-800"
           />
         </button>
 
-        {/* ========================================================================= */}
         {/* DESKTOP MEGA-MENU FLOTTANT */}
-        {/* ========================================================================= */}
         <MegaMenu
           activePole={activePole}
           onClose={() => setActivePole(null)}
@@ -264,9 +245,7 @@ export default function Navbar() {
         />
       </div>
 
-      {/* ========================================================================= */}
       {/* MOBILE NAV DRAWER */}
-      {/* ========================================================================= */}
       <MobileNav
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}

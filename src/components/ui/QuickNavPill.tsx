@@ -9,8 +9,8 @@ export function QuickNavPill() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show when scrolled past 600px
-      if (window.scrollY > 600) {
+      // Show when scrolled past 400px
+      if (window.scrollY > 400) {
         setVisible(true);
       } else {
         setVisible(false);
@@ -35,13 +35,13 @@ export function QuickNavPill() {
       {/* Bouton Espace Candidats */}
       <Link
         href="/espace-candidats"
-        className="group flex items-center gap-2 rounded-full border border-cyan-500/40 bg-[#0c142c]/90 px-4 py-2.5 text-xs font-bold text-white shadow-xl shadow-cyan-950/60 backdrop-blur-xl hover:border-cyan-400 hover:bg-cyan-950/80 transition-all hover:scale-105 active:scale-95"
+        className="group flex items-center gap-2 rounded-full border border-purple-200 bg-white/95 px-4 py-2.5 text-xs font-bold text-slate-900 shadow-lg shadow-purple-900/5 backdrop-blur-xl hover:border-purple-300 hover:bg-purple-50 transition-all hover:scale-105 active:scale-95"
       >
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400" />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
         </span>
-        <GraduationCap className="h-4 w-4 text-cyan-400 group-hover:rotate-12 transition-transform" />
+        <GraduationCap className="h-4 w-4 text-purple-700 group-hover:rotate-12 transition-transform" />
         <span className="hidden sm:inline">Espace Candidats</span>
       </Link>
 
@@ -50,7 +50,7 @@ export function QuickNavPill() {
         type="button"
         onClick={scrollToTop}
         aria-label="Remonter en haut de page"
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-slate-900/80 text-slate-300 shadow-xl backdrop-blur-xl hover:border-white/40 hover:bg-slate-800 hover:text-white transition-all hover:scale-105 active:scale-95"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-lg backdrop-blur-xl hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 transition-all hover:scale-105 active:scale-95 cursor-pointer"
       >
         <ArrowUp className="h-4 w-4" />
       </button>

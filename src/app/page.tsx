@@ -2,8 +2,8 @@
 
 import React, { useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import LogoMarquee from "@/components/LogoMarquee";
+import { CleanLightLanding } from "@/components/Landing/CleanLightLanding";
+import Footer from "@/components/Footer";
 import { QuickNavPill } from "@/components/ui/QuickNavPill";
 
 export default function Home() {
@@ -32,21 +32,23 @@ export default function Home() {
       };
     }
   }, []);
+
   return (
-    <main className="min-h-screen bg-[#050B1D] text-white selection:bg-[#18C7F3] selection:text-[#050B1D] overflow-x-clip">
-      {/* Sticky / Glass Navigation Bar */}
+    <main className="min-h-screen bg-[#FFFDF9] text-[#17142D] selection:bg-purple-200 selection:text-purple-900 overflow-x-clip">
+      {/* Sticky / Glass Navigation Bar (Light Theme) */}
       <Navbar />
 
-      {/* Cinematic Scroll-Linked Experience across all 150 frames:
-          - Stage 1: Titre principal (frames 1 à 85)
-          - Stage 2: Ouverture sur Nos Professeurs Agrégés (à frame 85)
-          - Stage 3: Départ des profs & Commencer à s'exercer (frames 86 à 115) avec les 2 boutons
-          - Stage 4: Affichage élégant des Prix & Tarifs sur l'étudiant en préparation (frames 115 à 150)
+      {/* Official Light Landing Experience:
+          - Stage 1: Hero Section clair & épuré
+          - Stage 2: Nos Professeurs Agrégés avec Contours de séances professionnels & Countdown
+          - Stage 2.5: Carrousel continu du Syllabus Math & PC
+          - Stage 3: Passer à l'entraînement (Maths & PC)
+          - Stage 4: Tarifs & Inscriptions (Maths 300 DH, Double 600 DH, PC 300 DH)
       */}
-      <Hero />
+      <CleanLightLanding />
 
-      {/* Double Carrousel Infini de Logos Concours & Écoles (Inspiration Vidéo 8:19) */}
-      <LogoMarquee />
+      {/* Footer épuré & harmonieux (Light Theme) */}
+      <Footer variant="light" />
 
       {/* Floating Quick Action Pill */}
       <QuickNavPill />

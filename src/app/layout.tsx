@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#050B1D",
+  themeColor: "#FFFFFF",
   width: "device-width",
   initialScale: 1,
 };
@@ -76,14 +76,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
       <head>
-        {/* Critical LCP Frame Preload */}
-        <link
-          rel="preload"
-          as="image"
-          type="image/webp"
-          href="/frames/frame_001.webp"
-          fetchPriority="high"
-        />
         {/* Preconnect to WhatsApp for instant CTA response */}
         <link rel="preconnect" href="https://wa.me" />
         <link rel="dns-prefetch" href="https://wa.me" />
@@ -92,7 +84,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
         {/* Synchronous scroll restoration kill switch & bfcache resurrect */}
         <script
@@ -112,7 +104,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#050B1D] text-white">
+      <body className="min-h-screen bg-[#FFFDF9] text-[#17142D]">
         <Providers>{children}</Providers>
       </body>
     </html>

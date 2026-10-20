@@ -20,6 +20,8 @@ import {
   Atom,
   Check,
   Filter,
+  ChevronLeft,
+  ArrowRight,
 } from "lucide-react";
 import { getDriveImageUrls, extractDriveFileId, getYoutubeThumbnailCandidates, getYoutubeThumbnail } from "@/lib/driveUtils";
 import { useCourses } from "@/context/CoursesContext";
@@ -28,6 +30,8 @@ import { useAuth } from "@/context/AuthContext";
 interface CoursesWidgetProps {
   onOpenPdf: (url: string, title: string) => void;
   onOpenVideo: (url: string, title: string) => void;
+  initialNiveau?: "sup" | "spe" | null;
+  onSelectNiveau?: (niveau: "sup" | "spe" | null) => void;
 }
 
 // ── 1. Carte Séance de cours & Replay Vidéo (Colonne Gauche) ──
@@ -465,8 +469,12 @@ function CourseExerciseLine({
   );
 }
 
-// ── Composant Principal : CoursesWidget ──
-export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
+export function CoursesWidget({
+  onOpenPdf,
+  onOpenVideo,
+  initialNiveau,
+  onSelectNiveau,
+}: CoursesWidgetProps) {
   const {
     courses,
     createSession,
@@ -487,6 +495,38 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
   const { isTeacher, teacherViewMode } = useAuth();
   const isTeacherView = isTeacher && teacherViewMode === "teacher";
 
+  const [selectedNiveau, setSelectedNiveau] = useState<"sup" | "spe" | null>(() => {
+    if (initialNiveau) return initialNiveau;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const n = params.get("niveau");
+      if (n === "sup" || n === "spe") return n as "sup" | "spe";
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (initialNiveau !== undefined) {
+      setSelectedNiveau(initialNiveau);
+    }
+  }, [initialNiveau]);
+
+  const handleLevelChange = (lvl: "sup" | "spe" | null) => {
+    setSelectedNiveau(lvl);
+    setActiveModule("all");
+    if (onSelectNiveau) {
+      onSelectNiveau(lvl);
+    } else if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (lvl) {
+        url.searchParams.set("niveau", lvl);
+      } else {
+        url.searchParams.delete("niveau");
+      }
+      window.history.pushState(null, "", url.toString());
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModule, setActiveModule] = useState<string>("all");
   const [isModuleDropdownOpen, setIsModuleDropdownOpen] = useState(false);
@@ -502,19 +542,30 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const activeCoursesData = courses && courses.length > 0 ? courses : PC_COURSES_DATA;
+  const activeCoursesData = useMemo(() => {
+    const base = courses && courses.length > 0 ? courses : PC_COURSES_DATA;
+    if (!selectedNiveau) return base;
+    return base.filter((m) => m.niveau === selectedNiveau);
+  }, [courses, selectedNiveau]);
 
-  // Aplatir tous les chapitres avec le nom du module associé
+  // Aplatir tous les chapitres avec le nom du module associé (retirer les chapitres vides sans document)
   const allChapters = useMemo(() => {
     const list: (ChapitreItem & { moduleIcon: string; moduleTitre: string; moduleId: string })[] = [];
     activeCoursesData.forEach((module) => {
       module.chapitres.forEach((ch) => {
-        list.push({
-          ...ch,
-          moduleIcon: module.icon,
-          moduleTitre: module.titre,
-          moduleId: module.id,
-        });
+        const hasCours = ch.cours && ch.cours.some((c) => (c.support && c.support.trim() !== "") || (c.video && c.video.trim() !== ""));
+        const hasTds = ch.tds && ch.tds.some((t) => (t.enonce && t.enonce.trim() !== "") || (t.correction && t.correction.trim() !== "") || (t.corriges && t.corriges.length > 0));
+        const hasFiches = ch.fiches && ch.fiches.some((f) => f.url && f.url.trim() !== "");
+        const hasLegacy = Boolean(ch.ficheUrl || ch.enonceTdUrl || ch.corrigeTdUrl || ch.videoUrl);
+
+        if (hasCours || hasTds || hasFiches || hasLegacy) {
+          list.push({
+            ...ch,
+            moduleIcon: module.icon,
+            moduleTitre: module.titre,
+            moduleId: module.id,
+          });
+        }
       });
     });
     return list;
@@ -522,13 +573,18 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
 
   // Informations sur le module actuellement filtré
   const currentModuleItem = useMemo(() => {
+    const defaultDesc =
+      selectedNiveau === "sup"
+        ? "Programme complet 1ère Année (MPSI / PCSI / TSI)"
+        : "Programme complet 2ème Année (MP / PSI / TSI)";
+
     if (activeModule === "all") {
       return {
         id: "all",
         titre: "Tous les modules",
         icon: "📚",
         count: allChapters.length,
-        description: "Programme complet de Spé MP / MP*",
+        description: defaultDesc,
       };
     }
     const found = activeCoursesData.find((m) => m.id === activeModule);
@@ -545,12 +601,23 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
           titre: "Tous les modules",
           icon: "📚",
           count: allChapters.length,
-          description: "Programme complet de Spé MP / MP*",
+          description: defaultDesc,
         };
-  }, [activeModule, activeCoursesData, allChapters.length]);
+  }, [activeModule, activeCoursesData, allChapters.length, selectedNiveau]);
 
-  // Par défaut : Chapitre 1 ouvert au chargement
-  const [openChapterIds, setOpenChapterIds] = useState<Set<string>>(new Set(["em-ch1"]));
+  // Par défaut : premier chapitre ouvert
+  const [openChapterIds, setOpenChapterIds] = useState<Set<string>>(() => {
+    if (selectedNiveau === "sup") return new Set(["elec-sup-ch1"]);
+    return new Set(["elec-spe-ch1"]);
+  });
+
+  useEffect(() => {
+    if (selectedNiveau === "sup") {
+      setOpenChapterIds(new Set(["elec-sup-ch1"]));
+    } else if (selectedNiveau === "spe") {
+      setOpenChapterIds(new Set(["elec-spe-ch1"]));
+    }
+  }, [selectedNiveau]);
 
   const toggleChapter = (id: string) => {
     setOpenChapterIds((prev) => {
@@ -648,7 +715,7 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
   // Formulaire modal Chapitre
   const [newChTitle, setNewChTitle] = useState("");
   const [newChDesc, setNewChDesc] = useState("");
-  const [newChBadge, setNewChBadge] = useState("Spé MP / MP*");
+  const [newChBadge, setNewChBadge] = useState("Spé MP / PSI / TSI");
   const [newChModuleId, setNewChModuleId] = useState(activeCoursesData[0]?.id || "em");
 
   const openAddSession = (ch: { moduleId: string; id: string; titre: string }) => {
@@ -878,40 +945,260 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
         </div>
       )}
 
-      {/* 1. En-tête Prestigieux Lumineux */}
-      <div className="relative rounded-3xl bg-white/70 dark:bg-[#0d1322]/80 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_20px_50px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-5 sm:p-10 mb-5 sm:mb-6 text-center overflow-hidden">
-        <div className="pointer-events-none absolute -top-16 -left-16 w-72 h-72 rounded-full bg-purple-300/30 dark:bg-purple-900/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-indigo-300/25 dark:bg-indigo-900/20 blur-3xl" />
-        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-white/60 dark:bg-purple-950/20 blur-2xl" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
+      {/* ================================================================= */}
+      {/* CAS 1 : PAS DE NIVEAU SÉLECTIONNÉ => AFFICHAGE DES 2 CARTES 3D    */}
+      {/* ================================================================= */}
+      {selectedNiveau === null ? (
+        <div className="space-y-8 animate-fadeIn">
+          {/* En-tête Prestigieux du Portail Cours */}
+          <div className="relative rounded-3xl bg-white/70 dark:bg-[#0d1322]/80 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_20px_50px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-6 sm:p-10 text-center overflow-hidden">
+            <div className="pointer-events-none absolute -top-16 -left-16 w-72 h-72 rounded-full bg-purple-300/30 dark:bg-purple-900/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-indigo-300/25 dark:bg-indigo-900/20 blur-3xl" />
+            <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-white/60 dark:bg-purple-950/20 blur-2xl" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
 
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-3.5 sm:px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-2xs">
-            <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            Programme Physique-Chimie CPGE · Spé MP / MP*
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-3.5 sm:px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-2xs">
+                <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                Pôle d'Excellence Physique-Chimie CPGE
+              </div>
+
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-2.5 sm:mb-3 tracking-tight">
+                Cours & <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">Travaux Dirigés</span>
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
+                Veuillez sélectionner votre promotion ci-dessous pour accéder directement aux polycopiés complets, fiches de synthèse, séries de TD avec corrigés rédigés et séances vidéo adaptés à votre programme officiel.
+              </p>
+            </div>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-2.5 sm:mb-3 tracking-tight">
-            Cours & <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">Travaux Dirigés</span>
-          </h2>
+          {/* Les Deux Cartes : 1ère Année SUP (MPSI/PCSI/TSI) & 2ème Année SPÉ (MP/PSI/TSI) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+            {/* ── CARTE 1 : SUP (MPSI / PCSI / TSI) ── */}
+            <div
+              onClick={() => handleLevelChange("sup")}
+              className="group relative cursor-pointer rounded-3xl bg-white/80 dark:bg-[#0c101e]/85 backdrop-blur-xl border border-slate-200/90 dark:border-purple-500/30 hover:border-purple-500/70 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_rgba(124,58,237,0.18)] hover:-translate-y-1.5 overflow-hidden text-left"
+            >
+              {/* Effet Halo Décoratif */}
+              <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-purple-400/15 dark:bg-purple-600/15 blur-3xl group-hover:bg-purple-400/25 transition-all" />
 
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed font-medium">
-            Syllabus officiel, séances de cours avec replays vidéo, séries d&apos;entraînement avec corrigés rédigés et fiches de synthèse.
-          </p>
+              <div>
+                {/* Badge promotion */}
+                <div className="flex items-center justify-between gap-2 mb-5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
+                    <span>⚛️</span>
+                    <span>1ère Année CPGE · SUP (MPSI / PCSI / TSI)</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                    5 Modules · 22 Chapitres
+                  </span>
+                </div>
 
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-5 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
-              Syllabus Spé MP / MP*
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
-              Séances & Fiches de Synthèse
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
-              Entraînement Concours
-            </span>
+                {/* Titre & Sous-titre */}
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-purple-500/30 shrink-0 group-hover:scale-110 transition-transform">
+                    ⚛️
+                  </div>
+                  <div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                      MPSI / PCSI / TSI
+                    </h3>
+                    <p className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-400">
+                      Fondements & Consolidation Méthodologique
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description du programme */}
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 font-medium">
+                  Programme officiel de Sup : Électronique dans l&apos;ARQS, Thermodynamique, Mécanique du Point, Optique Géométrique, Électrostatique & Magnétostatique.
+                </p>
+
+                {/* Points forts */}
+                <ul className="space-y-2.5 mb-6 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Polycopiés de cours officiels rédigés par Pr. H. Eddams</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Séries de TD complètes avec corrigés rédigés détaillés</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Fiches méthodologiques & formulaires synthétiques CPGE</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Bouton d'entrée */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                <button
+                  type="button"
+                  className="w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center justify-center gap-2 shadow-md shadow-purple-600/25 transition-all group-hover:gap-3 cursor-pointer"
+                >
+                  <span>Accéder aux cours MPSI / PCSI / TSI</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
+            </div>
+
+            {/* ── CARTE 2 : SPÉ (MP / PSI / TSI) ── */}
+            <div
+              onClick={() => handleLevelChange("spe")}
+              className="group relative cursor-pointer rounded-3xl bg-white/80 dark:bg-[#0c101e]/85 backdrop-blur-xl border border-slate-200/90 dark:border-purple-500/30 hover:border-indigo-500/70 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_rgba(99,102,241,0.18)] hover:-translate-y-1.5 overflow-hidden text-left"
+            >
+              {/* Effet Halo Décoratif */}
+              <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-indigo-400/15 dark:bg-indigo-600/15 blur-3xl group-hover:bg-indigo-400/25 transition-all" />
+
+              <div>
+                {/* Badge promotion */}
+                <div className="flex items-center justify-between gap-2 mb-5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                    <span>⚡</span>
+                    <span>2ème Année CPGE · SPÉ (MP / PSI / TSI)</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                    6 Modules · Séances & Vidéos
+                  </span>
+                </div>
+
+                {/* Titre & Sous-titre */}
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-indigo-500/30 shrink-0 group-hover:scale-110 transition-transform">
+                    ⚡
+                  </div>
+                  <div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      MP / PSI / TSI
+                    </h3>
+                    <p className="text-xs sm:text-sm font-semibold text-indigo-700 dark:text-indigo-400">
+                      Approfondissement & Préparation Concours
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description du programme */}
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 font-medium">
+                  Programme officiel de Spé : Électronique & Numérisation, Électromagnétisme & Ondes, Thermodynamique & Diffusion, Optique Ondulatoire, Physique Quantique.
+                </p>
+
+                {/* Points forts */}
+                <ul className="space-y-2.5 mb-6 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Séances de cours interactives avec Replays Vidéo HD</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Polycopiés de cours officiels rédigés par Pr. H. Eddams</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Préparation ciblée aux concours : CNC, CCINP, Mines, Centrale, X-ENS</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Bouton d'entrée */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                <button
+                  type="button"
+                  className="w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex items-center justify-center gap-2 shadow-md shadow-indigo-600/25 transition-all group-hover:gap-3 cursor-pointer"
+                >
+                  <span>Accéder aux cours MP / PSI / TSI</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        /* ================================================================= */
+        /* CAS 2 : NIVEAU SÉLECTIONNÉ (SUP OU SPÉ) => COURS, TDS, FICHES     */
+        /* ================================================================= */
+        <div className="space-y-6 animate-fadeIn">
+          {/* Barre de Bascule & Navigation Sup / Spé */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-white/80 dark:bg-[#0d1322]/80 backdrop-blur-xl border border-slate-200/90 dark:border-purple-500/25 shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleLevelChange(null)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Changer de promotion (Sup / Spé)</span>
+            </button>
+
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => handleLevelChange("sup")}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  selectedNiveau === "sup"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <span>⚛️</span>
+                <span>MPSI / PCSI / TSI (Sup)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLevelChange("spe")}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  selectedNiveau === "spe"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <span>⚡</span>
+                <span>MP / PSI / TSI (Spé)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 1. En-tête Prestigieux Lumineux Dynamique */}
+          <div className="relative rounded-3xl bg-white/70 dark:bg-[#0d1322]/80 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_20px_50px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-5 sm:p-10 text-center overflow-hidden">
+            <div className="pointer-events-none absolute -top-16 -left-16 w-72 h-72 rounded-full bg-purple-300/30 dark:bg-purple-900/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-indigo-300/25 dark:bg-indigo-900/20 blur-3xl" />
+            <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-white/60 dark:bg-purple-950/20 blur-2xl" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
+
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-3.5 sm:px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-2xs">
+                <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                {selectedNiveau === "sup"
+                  ? "Programme Physique-Chimie CPGE · 1ère Année (MPSI / PCSI / TSI)"
+                  : "Programme Physique-Chimie CPGE · 2ème Année (MP / PSI / TSI)"}
+              </div>
+
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-2.5 sm:mb-3 tracking-tight">
+                Cours & <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">Travaux Dirigés</span>
+                <span className="block text-xl sm:text-2xl text-purple-600 dark:text-purple-400 mt-1 font-bold">
+                  {selectedNiveau === "sup" ? "MPSI / PCSI / TSI (Sup)" : "MP / PSI / TSI (Spé)"}
+                </span>
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed font-medium">
+                {selectedNiveau === "sup"
+                  ? "Syllabus officiel 1ère année : polycopiés de cours officiels, fiches méthodologiques, séries de TD et corrigés détaillés rédigés par Pr. Hassan EDDAMS."
+                  : "Syllabus officiel Spé : séances de cours avec replays vidéo, séries d'entraînement avec corrigés rédigés et fiches de synthèse."}
+              </p>
+
+              <div className="flex items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-5 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
+                  {selectedNiveau === "sup" ? "Syllabus MPSI / PCSI / TSI" : "Syllabus Spé MP / PSI / TSI"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
+                  {selectedNiveau === "sup" ? "5 Modules · 22 Chapitres" : "Séances & Fiches de Synthèse"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
+                  {selectedNiveau === "sup" ? "TD & Corrigés Détaillés" : "Entraînement Concours"}
+                </span>
+              </div>
+            </div>
+          </div>
 
       {/* 2. Filtres par Module & Recherche */}
       <div className="bg-white/90 dark:bg-[#0d1322]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-purple-500/25 p-4 sm:p-5 shadow-xs mb-6 space-y-3.5">
@@ -972,7 +1259,9 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
                         <div className="text-left min-w-0">
                           <div className="font-bold">Tous les modules</div>
                           <div className={`text-[10px] truncate ${activeModule === "all" ? "text-purple-100" : "text-slate-400"}`}>
-                            Voir l'intégralité du syllabus officiel Spé MP / MP*
+                            {selectedNiveau === "sup"
+                              ? "Voir l'intégralité du syllabus officiel MPSI / PCSI / TSI"
+                              : "Voir l'intégralité du syllabus officiel Spé MP / PSI / TSI"}
                           </div>
                         </div>
                       </div>
@@ -1367,6 +1656,8 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
           </div>
         )}
       </div>
+        </div>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════════ */}
       {/* MODAL 1 : AJOUTER UNE SÉANCE VIDÉO DIRECTEMENT                     */}
@@ -1981,7 +2272,7 @@ export function CoursesWidget({ onOpenPdf, onOpenVideo }: CoursesWidgetProps) {
                 </label>
                 <input
                   type="text"
-                  placeholder="Spé MP / MP*"
+                  placeholder="Spé MP / PSI / TSI"
                   value={newChBadge}
                   onChange={(e) => setNewChBadge(e.target.value)}
                   className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white"
