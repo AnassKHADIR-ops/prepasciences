@@ -42,7 +42,7 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
           }`}
         >
           Explorez les Cours Travaillés en{" "}
-          <span className={isLight ? "text-cyan-700" : "text-[#18C7F3]"}>Mathématiques</span>
+          <span className={isLight ? "text-amber-600" : "text-[#F5A623]"}>Mathématiques</span>
           {" "}&amp;{" "}
           <span className={isLight ? "text-purple-700" : "text-[#C084FC]"}>Physique-Chimie</span>
         </h2>
@@ -68,15 +68,15 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
                 rel="noopener noreferrer"
                 className={`flex items-center gap-3.5 px-5 py-3.5 rounded-2xl border transition-all duration-300 group select-none cursor-pointer ${
                   isLight
-                    ? "bg-white hover:bg-cyan-50/50 border-cyan-200/90 hover:border-cyan-400 shadow-2xs hover:shadow-md"
-                    : "bg-[#0c1630]/75 hover:bg-[#0f1c3f] border-cyan-500/30 hover:border-cyan-400/80 shadow-lg shadow-cyan-950/30 hover:shadow-cyan-500/20 backdrop-blur-md"
+                    ? "bg-white hover:bg-amber-50/50 border-amber-200/90 hover:border-amber-400 shadow-2xs hover:shadow-md"
+                    : "bg-[#1f1709]/75 hover:bg-[#2e2009] border-amber-500/30 hover:border-amber-400/80 shadow-lg shadow-amber-950/30 hover:shadow-amber-500/20 backdrop-blur-md"
                 }`}
               >
                 <div 
                   className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all shrink-0 ${
                     isLight
-                      ? "bg-cyan-50 border-cyan-200 text-cyan-700 group-hover:scale-105"
-                      : "bg-cyan-950/90 border-cyan-500/40 text-cyan-400 group-hover:scale-105 group-hover:bg-cyan-900/50"
+                      ? "bg-amber-50 border-amber-200 text-amber-700 group-hover:scale-105"
+                      : "bg-amber-950/90 border-amber-500/40 text-amber-400 group-hover:scale-105 group-hover:bg-amber-900/50"
                   }`}
                 >
                   <BookOpen className="h-5 w-5" />
@@ -85,22 +85,22 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
                   <div className="flex items-center gap-2">
                     <span 
                       className={`block text-sm font-bold transition-colors whitespace-nowrap ${
-                        isLight ? "text-slate-900 group-hover:text-cyan-800" : "text-slate-100 group-hover:text-cyan-300"
+                        isLight ? "text-slate-900 group-hover:text-amber-800" : "text-slate-100 group-hover:text-amber-300"
                       }`}
                     >
                       {course.titre}
                     </span>
-                    <ExternalLink className={`h-3.5 w-3.5 opacity-60 group-hover:opacity-100 transition-opacity shrink-0 ${isLight ? "text-cyan-700" : "text-cyan-400"}`} />
+                    <ExternalLink className={`h-3.5 w-3.5 opacity-60 group-hover:opacity-100 transition-opacity shrink-0 ${isLight ? "text-amber-700" : "text-amber-400"}`} />
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-cyan-300/80"}`}>
+                    <span className={`text-[10px] font-mono ${isLight ? "text-slate-500" : "text-amber-300/80"}`}>
                       Pôle Maths · Pr. Anass Khadir
                     </span>
                     <span 
                       className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                         isLight
-                          ? "bg-cyan-50 text-cyan-800 border-cyan-200"
-                          : "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
+                          ? "bg-amber-50 text-amber-900 border-amber-200"
+                          : "bg-amber-500/20 text-amber-300 border-amber-500/30"
                       }`}
                     >
                       {course.badge}
