@@ -8,7 +8,7 @@ import { Moon, Sun, LogOut, LayoutDashboard, User, Menu, X } from "lucide-react"
 import { useAuth } from "@/context/AuthContext";
 
 interface EddamsNavbarProps {
-  activeTab?: "portail" | "cours" | "concours" | "references" | "dashboard";
+  activeTab?: "portail" | "cours" | "videotheque" | "concours" | "references" | "dashboard";
   theme: "light" | "dark";
   onToggleTheme: () => void;
 }
@@ -110,6 +110,21 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
               }`}
             >
               Espace Cours
+            </Link>
+
+            <Link
+              href="/eddams?rubrique=videotheque"
+              className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                activeTab === "videotheque"
+                  ? theme === "dark"
+                    ? "bg-purple-950/70 border border-purple-500/40 text-purple-300 font-bold"
+                    : "bg-blue-50 border border-blue-200 text-blue-700 font-bold shadow-2xs"
+                  : theme === "dark"
+                  ? "text-slate-400 hover:text-white hover:bg-white/5"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <span>Vidéothèque (387)</span>
             </Link>
 
             <Link
@@ -308,6 +323,19 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
             >
               <span className="text-base">📚</span>
               <span>Espace Cours</span>
+            </Link>
+
+            <Link
+              href="/eddams?rubrique=videotheque"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all col-span-2 ${
+                activeTab === "videotheque"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                  : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50"
+              }`}
+            >
+              <span className="text-base">🎬</span>
+              <span>Vidéothèque CPGE (387 Vidéos)</span>
             </Link>
 
             <Link

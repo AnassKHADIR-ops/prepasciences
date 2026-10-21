@@ -19,6 +19,7 @@ export interface CollectionFilterItem {
 
 export const COLLECTIONS_LIST: { id: string; label: string; badge: string }[] = [
   { id: "all", label: "Toutes les collections", badge: "Bibliothèque" },
+  { id: "programmes-officiels", label: "Programmes Officiels CPGE (Syllabus)", badge: "Ministère" },
   { id: "eddams", label: "Polycopiés Pr. H. Eddams", badge: "Polycopiés" },
   { id: "annales-concours", label: "Annales et Oraux (X-ENS, CNC)", badge: "Annales Concours" },
   { id: "tout-en-un", label: "Tout-en-un", badge: "Dunod / J'intègre" },
@@ -35,6 +36,61 @@ export const COLLECTIONS_LIST: { id: string; label: string; badge: string }[] = 
 ];
 
 export const PC_REFERENCES_DATA: LivreReference[] = [
+  // ── PROGRAMMES OFFICIELS CPGE (SYLLABUS OFFICIEL) ──
+  {
+    id: "prog-psi-2",
+    titre: "Programme Officiel de Physique · Spé PSI (2ème année)",
+    auteur: "Ministère de l'Éducation Nationale / CPGE",
+    collection: "programmes-officiels",
+    badge: "Syllabus PSI Spé",
+    description: "Programme officiel complet de Physique pour la filière PSI 2ème année : fluides visqueux, bilans, électromagnétisme, conduction thermique et asservissements.",
+    lien: "/programmes/programme-psi-2.pdf",
+  },
+  {
+    id: "prog-mp-2",
+    titre: "Programme Officiel de Physique · Spé MP (2ème année)",
+    auteur: "Ministère de l'Éducation Nationale / CPGE",
+    collection: "programmes-officiels",
+    badge: "Syllabus MP Spé",
+    description: "Programme officiel complet de Physique pour la filière MP 2ème année : physique quantique, thermodynamique statistique, électromagnétisme, mécanique du solide et ondes.",
+    lien: "/programmes/programme-mp-2.pdf",
+  },
+  {
+    id: "prog-tsi-2",
+    titre: "Programme Officiel de Physique · Spé TSI (2ème année)",
+    auteur: "Ministère de l'Éducation Nationale / CPGE",
+    collection: "programmes-officiels",
+    badge: "Syllabus TSI Spé",
+    description: "Programme officiel complet de Physique pour la filière TSI 2ème année : électrotechnique, mécanique du solide, ondes et transferts thermiques.",
+    lien: "/programmes/programme-tsi-2.pdf",
+  },
+  {
+    id: "prog-mpsi-1",
+    titre: "Programme Officiel de Physique · Sup MPSI (1ère année)",
+    auteur: "Ministère de l'Éducation Nationale / CPGE",
+    collection: "programmes-officiels",
+    badge: "Syllabus MPSI Sup",
+    description: "Programme officiel complet de Physique pour la filière MPSI 1ère année : électronique ARQS, optique géométrique, mécanique du point et thermodynamique.",
+    lien: "/programmes/programme-mpsi-1.pdf",
+  },
+  {
+    id: "prog-pcsi-1",
+    titre: "Programme Officiel de Physique · Sup PCSI (1ère année)",
+    auteur: "Ministère de l'Éducation Nationale / CPGE",
+    collection: "programmes-officiels",
+    badge: "Syllabus PCSI Sup",
+    description: "Programme officiel complet de Physique pour la filière PCSI 1ère année : électrocinétique, optique, mécanique et induction.",
+    lien: "/programmes/programme-pcsi-1.pdf",
+  },
+  {
+    id: "prog-tsi-1",
+    titre: "Programme Officiel de Physique · Sup TSI (1ère année)",
+    auteur: "Ministère de l'Éducation Nationale / CPGE",
+    collection: "programmes-officiels",
+    badge: "Syllabus TSI Sup",
+    description: "Programme officiel complet de Physique pour la filière TSI 1ère année : électronique, mécanique, ondes et épreuves pratiques.",
+    lien: "/programmes/programme-tsi-1.pdf",
+  },
   // ── POLYCOPIÉS & OUVRAGES PR. HASSAN EDDAMS & CONCOURS ──
   {
     id: "ref-eddams-resume",

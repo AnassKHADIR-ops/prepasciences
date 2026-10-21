@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { BookOpen, Trophy, BookmarkCheck, ArrowRight } from "lucide-react";
+import { BookOpen, Trophy, BookmarkCheck, ArrowRight, PlayCircle } from "lucide-react";
 
-export type SectionType = "cours" | "concours" | "references";
+export type SectionType = "cours" | "videotheque" | "concours" | "references";
 
 interface GateCards3DProps {
   onSelectSection: (section: SectionType) => void;
@@ -27,6 +27,14 @@ export function GateCards3D({ onSelectSection }: GateCards3DProps) {
       count: "Sup & Spé (11 Modules)",
     },
     {
+      id: "videotheque",
+      badge: "Vidéothèque Officielle · 387 Vidéos",
+      title: "Vidéothèque CPGE",
+      subtitle: "387 cours & corrigés vidéos par E-Learning Physique. Filtrez par filière (PSI, MP, PC, TSI) avec gestion intégrée du tronc commun.",
+      icon: <PlayCircle className="w-8 h-8 text-purple-700 dark:text-purple-400" />,
+      count: "387 Vidéos Classées",
+    },
+    {
       id: "concours",
       badge: "Annales Officielles",
       title: "Concours",
@@ -45,8 +53,8 @@ export function GateCards3D({ onSelectSection }: GateCards3DProps) {
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto py-12 px-4 sm:px-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 [perspective:1200px]">
+    <div className="w-full max-w-7xl mx-auto py-12 px-4 sm:px-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 [perspective:1200px]">
         {cards.map((card) => {
           return (
             <div
