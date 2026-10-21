@@ -14,7 +14,8 @@ import {
   ArrowRight, 
   Sparkles, 
   GraduationCap, 
-  Globe 
+  Globe,
+  Quote
 } from "lucide-react";
 import { SessionCountdown } from "@/components/ui/SessionCountdown";
 import LogoMarquee from "@/components/LogoMarquee";
@@ -62,7 +63,7 @@ export function CleanLightLanding() {
         </div>
 
         {/* Boutons d'Action Directe */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-14">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
           <a
             href="#professeurs"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-sm sm:text-base shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
@@ -77,26 +78,6 @@ export function CleanLightLanding() {
           >
             <span>Accéder aux cours</span>
           </Link>
-        </div>
-
-        {/* 4 Chiffres Clés de Confiance */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 pt-10 border-t border-slate-200/80 max-w-3xl mx-auto text-center">
-          <div className="p-3 bg-white/70 rounded-2xl border border-slate-200/60 shadow-2xs">
-            <div className="text-2xl sm:text-3xl font-black text-purple-800 font-mono">2</div>
-            <div className="text-xs text-slate-600 mt-1 font-medium">Professeurs Agrégés d&apos;État</div>
-          </div>
-          <div className="p-3 bg-white/70 rounded-2xl border border-slate-200/60 shadow-2xs">
-            <div className="text-2xl sm:text-3xl font-black text-cyan-800 font-mono">100%</div>
-            <div className="text-xs text-slate-600 mt-1 font-medium">Programme CNC &amp; France</div>
-          </div>
-          <div className="p-3 bg-white/70 rounded-2xl border border-slate-200/60 shadow-2xs">
-            <div className="text-2xl sm:text-3xl font-black text-indigo-800 font-mono">MP / TSI</div>
-            <div className="text-xs text-slate-600 mt-1 font-medium">Filières d&apos;Élite Préparées</div>
-          </div>
-          <div className="p-3 bg-white/70 rounded-2xl border border-slate-200/60 shadow-2xs">
-            <div className="text-2xl sm:text-3xl font-black text-emerald-700 font-mono">7j / 7</div>
-            <div className="text-xs text-slate-600 mt-1 font-medium">Suivi WhatsApp Continu</div>
-          </div>
         </div>
       </section>
 
@@ -148,209 +129,290 @@ export function CleanLightLanding() {
           </button>
         </div>
 
-        {/* Grid des Deux Cartes Professeurs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+        {/* Conteneur des Profils Enseignants en Mode Alterné Apple */}
+        <div className="space-y-12 sm:space-y-16">
           
-          {/* ── CARTE 1 : PR. HASSAN EDDAMS (PHYSIQUE-CHIMIE) ── */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 1. PROFESSEUR PHYSIQUE-CHIMIE : PR. HASSAN EDDAMS                  */}
+          {/*    Layout : PHOTO À GAUCHE — TEXTE À DROITE                       */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
           <div className={`w-full ${activeTeacherMobile === "pc" ? "block" : "hidden md:block"}`}>
-            <div className="h-full rounded-3xl bg-white border border-purple-200/90 shadow-[0_8px_30px_rgba(124,58,237,0.06)] hover:shadow-[0_16px_45px_rgba(124,58,237,0.12)] hover:border-purple-300 transition-all duration-300 p-6 sm:p-8 flex flex-col justify-between">
-              
-              <div className="space-y-5">
-                {/* En-tête : Photo + Identité */}
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-shrink-0">
-                    <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl overflow-hidden shadow-md border-2 border-purple-300/80 bg-purple-50 flex items-center justify-center">
-                      <Image
-                        src="/logo-pc.webp"
-                        alt="Hassan Eddams - Professeur Agrégé de Physique-Chimie"
-                        width={96}
-                        height={112}
-                        className="w-full h-full object-cover rounded-xl"
-                      />
+            <article className="rounded-3xl bg-white border border-purple-200/80 shadow-[0_12px_45px_rgba(124,58,237,0.06)] hover:shadow-[0_18px_55px_rgba(124,58,237,0.1)] hover:border-purple-300 transition-all duration-300 p-6 sm:p-10 lg:p-12">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                
+                {/* COLONNE GAUCHE : PHOTO OFFICIELLE */}
+                <div className="lg:col-span-5 flex justify-center">
+                  <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_16px_36px_rgba(124,58,237,0.12)] border-2 border-purple-200/90 bg-purple-50 group">
+                    <Image
+                      src="/profs/prof-pc.png"
+                      alt="Hassan Eddams - Professeur Agrégé de Physique-Chimie CPGE"
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 420px"
+                      className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-purple-950/40 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md py-2.5 px-3.5 rounded-xl border border-purple-200/80 shadow-md flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-pulse" />
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Pr. Hassan Eddams</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200">
+                        CPGE Safi
+                      </span>
                     </div>
                   </div>
+                </div>
 
-                  <div className="space-y-1 min-w-0">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] sm:text-[11px] font-mono font-bold uppercase border border-purple-200">
-                      Pôle Physique-Chimie
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-[#17142D] tracking-tight">
+                {/* COLONNE DROITE : BIO, CITATION, SÉANCES & ACTIONS */}
+                <div className="lg:col-span-7 space-y-6">
+                  {/* Badges d'En-tête */}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-purple-100/90 text-purple-800 text-xs font-mono font-bold uppercase tracking-wider border border-purple-200">
+                        Pôle Physique-Chimie
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-mono font-medium border border-slate-200">
+                        <MapPin className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                        Centre CPGE Moulay Abdellah · Safi
+                      </span>
+                    </div>
+
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827] tracking-tight">
                       Hassan Eddams
                     </h3>
-                    <p className="text-purple-700 font-bold text-xs sm:text-sm">
-                      Professeur Agrégé de Physique-Chimie
-                    </p>
-                    <p className="text-xs text-slate-500 font-mono flex items-center gap-1.5 pt-0.5">
-                      <MapPin className="h-3.5 w-3.5 text-purple-600 shrink-0" />
-                      <span>CPGE Lycée Moulay Abdellah- Safi</span>
+                    <p className="text-purple-700 font-semibold text-sm sm:text-base">
+                      Professeur Agrégé de Physique et Chimie
                     </p>
                   </div>
-                </div>
 
-                {/* Filière enseignée badge */}
-                <div className="pt-3 border-t border-slate-100">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1.5">
-                    Filière enseignée actuellement :
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-xs font-mono font-bold shadow-2xs">
-                      MP / MP* 2ème année
+                  {/* Présentation / Bio (Style Apple épuré) */}
+                  <div className="space-y-3 text-slate-600 text-sm sm:text-base leading-relaxed font-normal">
+                    <p>
+                      Je suis Professeur Agrégé de Physiques et chimie au Centre des Classes Préparatoires aux Grandes Écoles d’Ingénieurs Moulay Abdellah à Safi.
+                    </p>
+                    <p>
+                      Depuis plusieurs années, j’accompagne des étudiants de classes préparatoires (MP, PSI, TSI), de prépas intégrées, d’écoles d’ingénieurs et d’universités dans leur parcours académique.
+                    </p>
+                  </div>
+
+                  {/* Bloc Citation Inspirante PrépaSciences */}
+                  <div className="relative p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-50/70 to-slate-50 border-l-4 border-purple-600 border border-purple-100/80 shadow-2xs">
+                    <div className="flex gap-3">
+                      <Quote className="w-5 h-5 text-purple-600 shrink-0 mt-0.5 rotate-180 opacity-80" />
+                      <p className="text-xs sm:text-sm text-slate-700 italic font-medium leading-relaxed">
+                        « Nous les profs, on a créé le portail PREPASCIENCES afin de mettre à disposition des ressources pédagogiques de qualité : cours, exercices corrigés, problèmes classiques, méthodes de résolution, vidéos et conseils de préparation aux concours. »
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Filières Préparées */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold">
+                      Filières préparées :
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-xs font-mono font-bold shadow-2xs">
+                      MPSI / PCSI / TSI
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-lg bg-purple-100 border border-purple-300 text-purple-900 text-xs font-mono font-bold shadow-2xs">
+                      MP / PSI / TSI
                     </span>
                   </div>
-                </div>
 
-                {/* ══ LE CONTOUR DE SÉANCE PROFESSIONNEL (FLIGHT-BOARD) ══ */}
-                <div className="p-4 rounded-2xl bg-[#FAF7FF] border-2 border-purple-200/90 shadow-2xs">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 ring-2 ring-emerald-300" />
-                      </span>
-                      <span className="text-xs font-mono font-bold tracking-wide text-slate-800">
-                        Prochaine séance Live
+                  {/* Contour de Séance Professionnel */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF7FF] border-2 border-purple-200/90 shadow-2xs">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 ring-2 ring-emerald-300" />
+                        </span>
+                        <span className="text-xs font-mono font-bold tracking-wide text-slate-800">
+                          Prochaine séance Live
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono font-bold text-purple-700 bg-white border border-purple-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                        Lundi &amp; Samedi 20h
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono font-bold text-purple-700 bg-white border border-purple-200 px-2.5 py-0.5 rounded-full shadow-2xs">
-                      Lundi &amp; Samedi 20h
-                    </span>
+
+                    <SessionCountdown 
+                      targetDays={[1, 6]} 
+                      targetHour={20} 
+                      colorClass="text-purple-700" 
+                      variant="light"
+                    />
                   </div>
 
-                  <SessionCountdown 
-                    targetDays={[1, 6]} 
-                    targetHour={20} 
-                    colorClass="text-purple-700" 
-                    variant="light"
-                  />
+                  {/* Boutons d'Action */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <Link
+                      href="/eddams"
+                      className="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 hover:border-purple-300 shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Atom className="h-4 w-4 text-purple-700 shrink-0" />
+                      <span>Ouvrir l&apos;espace PC</span>
+                    </Link>
+
+                    <a
+                      href="https://wa.me/212721729799?text=Bonjour%20Professeur%20Hassan%20Eddams,%20je%20souhaite%20des%20informations%20sur%20les%20cours%20de%20Physique-Chimie%20CPGE"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <MessageCircle className="h-4 w-4 text-white shrink-0" />
+                      <span>WhatsApp Direct</span>
+                    </a>
+                  </div>
+
                 </div>
               </div>
-
-              {/* Boutons d'Action : Espace PC & WhatsApp Direct */}
-              <div className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 border-t border-slate-100">
-                <Link
-                  href="/eddams"
-                  className="py-3 px-3 rounded-xl font-bold text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 hover:border-purple-300 shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Atom className="h-4 w-4 text-purple-700 shrink-0" />
-                  <span>Ouvrir l&apos;espace PC</span>
-                </Link>
-
-                <a
-                  href="https://wa.me/212721729799?text=Bonjour%20Professeur%20Hassan%20Eddams,%20je%20souhaite%20des%20informations%20sur%20la%20fili%C3%A8re%20MP%20Physique-Chimie"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-3 px-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <MessageCircle className="h-4 w-4 text-white shrink-0" />
-                  <span>WhatsApp Direct</span>
-                </a>
-              </div>
-
-            </div>
+            </article>
           </div>
 
 
-          {/* ── CARTE 2 : PR. ANASS KHADIR (MATHÉMATIQUES) ── */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 2. PROFESSEUR MATHÉMATIQUES : PR. ANASS KHADIR                     */}
+          {/*    Layout : TEXTE À GAUCHE — PHOTO À DROITE (Comme www.anasskhadir.com) */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
           <div className={`w-full ${activeTeacherMobile === "maths" ? "block" : "hidden md:block"}`}>
-            <div className="h-full rounded-3xl bg-white border border-cyan-200/90 shadow-[0_8px_30px_rgba(6,182,212,0.06)] hover:shadow-[0_16px_45px_rgba(6,182,212,0.12)] hover:border-cyan-300 transition-all duration-300 p-6 sm:p-8 flex flex-col justify-between">
-              
-              <div className="space-y-5">
-                {/* En-tête : Photo + Identité */}
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-shrink-0">
-                    <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl overflow-hidden shadow-md border-2 border-cyan-300/80 bg-cyan-50">
-                      <Image
-                        src="/anas-khadir.webp"
-                        alt="Anass Khadir - Professeur Agrégé de Mathématiques"
-                        width={96}
-                        height={112}
-                        className="w-full h-full object-cover object-top"
-                      />
+            <article className="rounded-3xl bg-white border border-cyan-200/80 shadow-[0_12px_45px_rgba(6,182,212,0.06)] hover:shadow-[0_18px_55px_rgba(6,182,212,0.1)] hover:border-cyan-300 transition-all duration-300 p-6 sm:p-10 lg:p-12">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                
+                {/* COLONNE GAUCHE (Sur Desktop) : BIO, CITATION, SÉANCES & ACTIONS */}
+                <div className="lg:col-span-7 space-y-6 order-2 lg:order-1">
+                  {/* Badges d'En-tête */}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-cyan-100/90 text-cyan-900 text-xs font-mono font-bold uppercase tracking-wider border border-cyan-200">
+                        Pôle Mathématiques
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-mono font-medium border border-slate-200">
+                        <MapPin className="w-3.5 h-3.5 text-cyan-700 shrink-0" />
+                        Centre CPGE ERRAZI · El Jadida
+                      </span>
                     </div>
-                  </div>
 
-                  <div className="space-y-1 min-w-0">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-900 text-[10px] sm:text-[11px] font-mono font-bold uppercase border border-cyan-200">
-                      Pôle Mathématiques
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-[#17142D] tracking-tight">
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111827] tracking-tight">
                       Anass Khadir
                     </h3>
-                    <p className="text-cyan-800 font-bold text-xs sm:text-sm">
+                    <p className="text-cyan-800 font-semibold text-sm sm:text-base">
                       Professeur Agrégé de Mathématiques
                     </p>
-                    <p className="text-xs text-slate-500 font-mono flex items-center gap-1.5 pt-0.5">
-                      <MapPin className="h-3.5 w-3.5 text-cyan-600 shrink-0" />
-                      <span>Centre CPGE ERRAZI – El Jadida</span>
+                  </div>
+
+                  {/* Présentation / Bio (Style Apple épuré) */}
+                  <div className="space-y-3 text-slate-600 text-sm sm:text-base leading-relaxed font-normal">
+                    <p>
+                      Je suis Professeur Agrégé de Mathématiques au Centre des Classes Préparatoires aux Grandes Écoles d’Ingénieurs ERRAZI à El Jadida.
+                    </p>
+                    <p>
+                      Depuis plusieurs années, j’accompagne des étudiants de classes préparatoires (MP, PSI, TSI, ECS, ECT), de prépas intégrées, d’écoles d’ingénieurs et d’universités dans leur parcours académique.
                     </p>
                   </div>
-                </div>
 
-                {/* Filières enseignées badges */}
-                <div className="pt-3 border-t border-slate-100">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-1.5">
-                    Filières enseignées actuellement :
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 rounded-lg bg-cyan-50 border border-cyan-200 text-cyan-900 text-xs font-mono font-bold shadow-2xs">
-                      Filière TSI 2e année
+                  {/* Bloc Citation Inspirante PrépaSciences */}
+                  <div className="relative p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cyan-50/70 to-slate-50 border-l-4 border-cyan-600 border border-cyan-100/80 shadow-2xs">
+                    <div className="flex gap-3">
+                      <Quote className="w-5 h-5 text-cyan-700 shrink-0 mt-0.5 rotate-180 opacity-80" />
+                      <p className="text-xs sm:text-sm text-slate-700 italic font-medium leading-relaxed">
+                        « Nous les profs, on a créé le portail PREPASCIENCES afin de mettre à disposition des ressources pédagogiques de qualité : cours, exercices corrigés, problèmes classiques, méthodes de résolution, vidéos et conseils de préparation aux concours. »
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Filières Préparées */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold">
+                      Filières préparées :
                     </span>
-                    <span className="px-3 py-1 rounded-lg bg-cyan-50 border border-cyan-200 text-cyan-900 text-xs font-mono font-bold shadow-2xs">
-                      MP / MP* 2e année
+                    <span className="px-2.5 py-0.5 rounded-lg bg-cyan-50 border border-cyan-200 text-cyan-900 text-xs font-mono font-bold shadow-2xs">
+                      TSI 2e année
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-lg bg-cyan-100 border border-cyan-300 text-cyan-950 text-xs font-mono font-bold shadow-2xs">
+                      MP / PSI / TSI
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-medium">
+                      ECS / ECT
                     </span>
                   </div>
-                </div>
 
-                {/* ══ LE CONTOUR DE SÉANCE PROFESSIONNEL (FLIGHT-BOARD) ══ */}
-                <div className="p-4 rounded-2xl bg-[#F0F9FF] border-2 border-cyan-200/90 shadow-2xs">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 ring-2 ring-emerald-300" />
-                      </span>
-                      <span className="text-xs font-mono font-bold tracking-wide text-slate-800">
-                        Prochaine séance Live
+                  {/* Contour de Séance Professionnel */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#F0F9FF] border-2 border-cyan-200/90 shadow-2xs">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 ring-2 ring-emerald-300" />
+                        </span>
+                        <span className="text-xs font-mono font-bold tracking-wide text-slate-800">
+                          Prochaine séance Live
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono font-bold text-cyan-800 bg-white border border-cyan-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                        Mardi &amp; Jeudi 20h
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono font-bold text-cyan-800 bg-white border border-cyan-200 px-2.5 py-0.5 rounded-full shadow-2xs">
-                      Mardi &amp; Jeudi 20h
-                    </span>
+
+                    <SessionCountdown 
+                      targetDays={[2, 4]} 
+                      targetHour={20} 
+                      colorClass="text-cyan-800" 
+                      variant="light"
+                    />
                   </div>
 
-                  <SessionCountdown 
-                    targetDays={[2, 4]} 
-                    targetHour={20} 
-                    colorClass="text-cyan-800" 
-                    variant="light"
-                  />
+                  {/* Boutons d'Action & Socials */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <a
+                      href="https://quiz.anasskhadir.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-cyan-900 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 hover:border-cyan-300 shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Globe className="h-4 w-4 text-cyan-700 shrink-0" />
+                      <span>Site Anass Khadir</span>
+                    </a>
+
+                    <a
+                      href="https://wa.me/212659041407?text=Bonjour%20Professeur%20Anass%20Khadir,%20je%20souhaite%20des%20informations%20sur%20les%20cours%20de%20Math%C3%A9matiques%20CPGE"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-cyan-700 to-teal-600 hover:from-cyan-800 hover:to-teal-700 shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <MessageCircle className="h-4 w-4 text-white shrink-0" />
+                      <span>WhatsApp Direct</span>
+                    </a>
+                  </div>
+
                 </div>
+
+                {/* COLONNE DROITE (Sur Desktop) : PHOTO OFFICIELLE */}
+                <div className="lg:col-span-5 flex justify-center order-1 lg:order-2">
+                  <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_16px_36px_rgba(6,182,212,0.12)] border-2 border-cyan-200/90 bg-cyan-50 group">
+                    <Image
+                      src="/profs/prof-maths.png"
+                      alt="Anass Khadir - Professeur Agrégé de Mathématiques CPGE"
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 420px"
+                      className="object-cover object-top group-hover:scale-[1.02] transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md py-2.5 px-3.5 rounded-xl border border-cyan-200/80 shadow-md flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-600 animate-pulse" />
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">Pr. Anass Khadir</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded-md border border-cyan-200">
+                        CPGE El Jadida
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-
-              {/* Boutons d'Action : Site Anass Khadir & WhatsApp Direct */}
-              <div className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 border-t border-slate-100">
-                <a
-                  href="https://quiz.anasskhadir.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-3 px-3 rounded-xl font-bold text-xs text-cyan-800 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 hover:border-cyan-300 shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Globe className="h-4 w-4 text-cyan-700 shrink-0" />
-                  <span>Site Anass Khadir</span>
-                </a>
-
-                <a
-                  href="https://wa.me/212659041407?text=Bonjour%20Professeur%20Anass%20Khadir,%20je%20souhaite%20des%20informations%20sur%20les%20cours%20de%20Math%C3%A9matiques%20CPGE"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-3 px-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-cyan-700 to-teal-600 hover:from-cyan-800 hover:to-teal-700 shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <MessageCircle className="h-4 w-4 text-white shrink-0" />
-                  <span>WhatsApp Direct</span>
-                </a>
-              </div>
-
-            </div>
+            </article>
           </div>
 
         </div>
