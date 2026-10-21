@@ -97,6 +97,19 @@ html, body {
   animation: float-slow 6s ease-in-out infinite;
 }
 
+@keyframes floatBar {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-floatBar {
+  animation: floatBar 4s ease-in-out infinite;
+}
+
 .animate-glow {
   animation: pulse-glow 4s ease-in-out infinite;
 }

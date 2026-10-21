@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import { CleanLightLanding } from "@/components/Landing/CleanLightLanding";
 import Footer from "@/components/Footer";
 import { QuickNavPill } from "@/components/ui/QuickNavPill";
-import { FloatingSocialBar } from "@/components/ui/FloatingSocialBar";
 
 export default function Home() {
   // Prevent browser from restoring intermediate scroll positions when returning from /eddams or external sites
@@ -53,9 +52,6 @@ export default function Home() {
 
       {/* Floating Quick Action Pill */}
       <QuickNavPill />
-
-      {/* Floating Social Media & WhatsApp Bar (Style www.anasskhadir.com) */}
-      <FloatingSocialBar />
     </main>
   );
 }
