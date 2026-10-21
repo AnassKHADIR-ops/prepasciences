@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { 
   Award, 
   MapPin, 
@@ -32,15 +33,20 @@ export function CleanLightLanding() {
       {/* ========================================================================= */}
       <section 
         id="hero"
-        className="relative pt-12 sm:pt-20 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
+        className="relative pt-6 sm:pt-12 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
       >
         {/* Lueur d'ambiance très douce en arrière-plan (Pêche poudrée & lavande douce HEC) */}
         <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[550px] bg-gradient-to-b from-[#FCEEE6]/80 via-[#F7E7E2]/50 to-transparent rounded-full blur-3xl -z-10" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* COLONNE GAUCHE (7 cols) : HERO HEADLINE, SUBTITLE, CTAS & FILIÈRES */}
-          <div className="lg:col-span-7 space-y-6 text-left">
+          <motion.div 
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-7 space-y-5 text-left"
+          >
             {/* Titre Principal exact du mockup */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.1] text-slate-900 font-sans">
               <span>L&apos;excellence </span>
@@ -74,7 +80,7 @@ export function CleanLightLanding() {
             </div>
 
             {/* Trait d'accentuation Orange & Liste des Filières exacts du mockup */}
-            <div className="pt-2 space-y-3">
+            <div className="pt-2 space-y-2.5">
               <div className="w-16 h-1.5 bg-[#F5A623] rounded-full" />
               <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs sm:text-sm font-bold text-slate-700 font-mono tracking-wide">
                 <span>MP</span>
@@ -88,10 +94,15 @@ export function CleanLightLanding() {
                 <span>PCSI</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* COLONNE DROITE (5 cols) : PODIUM D'EXCELLENCE 3D AVEC LOGO OFFICIEL */}
-          <div className="lg:col-span-5 flex flex-col items-center justify-center pt-8 lg:pt-0">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-5 flex flex-col items-center justify-center pt-4 lg:pt-0"
+          >
             <div className="relative w-full max-w-md flex flex-col items-center">
               
               {/* CARTE / MONOLITHE FLOTTANT D'EXCELLENCE AVEC LE LOGO */}
@@ -161,7 +172,7 @@ export function CleanLightLanding() {
               <div className="w-full max-w-[340px] h-6 bg-gradient-to-r from-purple-200/40 via-amber-200/40 to-orange-200/40 rounded-full blur-md -mt-1" />
 
               {/* Signature sous le podium */}
-              <div className="mt-4 flex items-center gap-2 text-xs text-slate-500 font-mono">
+              <div className="mt-3 flex items-center gap-2 text-xs text-slate-500 font-mono">
                 <Image
                   src="/logo-icon.png"
                   alt="PrépaSciences"
@@ -174,21 +185,31 @@ export function CleanLightLanding() {
               </div>
 
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </section>
 
+      {/* LIGNE DE TRANSITION FLUIDE ET RAFFINÉE ENTRE HERO ET PROFESSEURS */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
+      </div>
 
       {/* ========================================================================= */}
       {/* 2. NOS PROFESSEURS AGRÉGÉS AVEC CONTOURS DE SÉANCES PROFESSIONNELS       */}
       {/* ========================================================================= */}
       <section 
         id="professeurs" 
-        className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70"
+        className="pt-8 sm:pt-12 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
       >
-        {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 space-y-2">
+        {/* Section Header avec animation douce au défilement */}
+        <motion.div 
+          initial={{ opacity: 0, y: 22 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center max-w-2xl mx-auto mb-8 sm:mb-10 space-y-2"
+        >
           <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-3.5 py-1 text-xs font-bold text-purple-800 shadow-2xs">
             <Award className="h-3.5 w-3.5 text-purple-600" />
             <span className="tracking-wide">Encadrement d&apos;Élite en CPGE</span>
@@ -196,7 +217,7 @@ export function CleanLightLanding() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#17142D] tracking-tight">
             Nos Professeurs Agrégés
           </h2>
-        </div>
+        </motion.div>
 
         {/* Sélecteur Mobile : Choix Enseignant */}
         <div className="flex md:hidden items-center justify-center p-1 rounded-xl bg-slate-100 border border-slate-200 mb-6 w-full max-w-xs mx-auto shadow-2xs">
@@ -225,13 +246,19 @@ export function CleanLightLanding() {
         </div>
 
         {/* Conteneur des Profils Enseignants - Sans cadre, élégance pure Apple */}
-        <div className="space-y-20 sm:space-y-28">
+        <div className="space-y-8 sm:space-y-12">
           
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* 1. PROFESSEUR PHYSIQUE-CHIMIE : PR. HASSAN EDDAMS                  */}
           {/*    PHOTO SANS CADRE NI FOND À GAUCHE — TEXTE — RÉSEAUX À DROITE (MAUVE) */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
-          <div className={`w-full ${activeTeacherMobile === "pc" ? "block" : "hidden md:block"}`}>
+          <motion.div 
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className={`w-full ${activeTeacherMobile === "pc" ? "block" : "hidden md:block"}`}
+          >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
               
               {/* COLONNE GAUCHE : PHOTO OFFICIELLE DÉTOURÉE SANS CADRE NI ARRIÈRE-PLAN */}
@@ -400,20 +427,26 @@ export function CleanLightLanding() {
               </aside>
 
             </div>
-          </div>
+          </motion.div>
 
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* LIGNE DE SÉPARATION DISCRÈTE ENTRE LES DEUX PROFESSEURS             */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
-          <div className="hidden md:block border-t border-slate-200/60 max-w-4xl mx-auto" />
+          <div className="hidden md:block my-4 sm:my-6 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent max-w-4xl mx-auto" />
 
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* 2. PROFESSEUR MATHÉMATIQUES : PR. ANASS KHADIR                     */}
           {/*    TEXTE À GAUCHE — PHOTO SANS CADRE NI FOND — RÉSEAUX À DROITE (BLEU CIEL) */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
-          <div className={`w-full ${activeTeacherMobile === "maths" ? "block" : "hidden md:block"}`}>
+          <motion.div 
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className={`w-full ${activeTeacherMobile === "maths" ? "block" : "hidden md:block"}`}
+          >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
               
               {/* COLONNE GAUCHE (Desktop) : BIO, CITATION, SÉANCES & ACTIONS */}
@@ -645,7 +678,7 @@ export function CleanLightLanding() {
               </aside>
 
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </section>
@@ -658,9 +691,15 @@ export function CleanLightLanding() {
       {/* ========================================================================= */}
       <section 
         id="tarifs" 
-        className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto border-t border-slate-200/70"
+        className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto border-t border-slate-200/70"
       >
-        <div className="text-center max-w-3xl mx-auto mb-12 space-y-2">
+        <motion.div 
+          initial={{ opacity: 0, y: 22 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 space-y-2"
+        >
           <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-3.5 py-1 text-xs font-bold text-purple-800 shadow-2xs">
             <GraduationCap className="h-3.5 w-3.5 text-purple-600" />
             <span>Formules d&apos;Adhésion Spé 2026-2027</span>
@@ -671,7 +710,7 @@ export function CleanLightLanding() {
           <p className="text-slate-600 text-sm sm:text-base font-normal max-w-xl mx-auto">
             Accompagnement hebdomadaire interactif, replays 4K illimités, fiches de synthèse et groupes d&apos;entraide 7j/7 avec nos professeurs agrégés permanents.
           </p>
-        </div>
+        </motion.div>
 
         {/* Sélecteur Mobile : Choix Formule */}
         <div className="flex md:hidden items-center justify-center p-1 rounded-xl bg-slate-100 border border-slate-200 mb-6 w-full max-w-sm mx-auto shadow-2xs">
@@ -710,13 +749,19 @@ export function CleanLightLanding() {
           </button>
         </div>
 
-        {/* 3 Cartes Tarifaires */}
+        {/* 3 Cartes Tarifaires avec animations échelonnées */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           
           {/* Card 1 : Maths Seule */}
-          <div className={`rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 flex-col justify-between shadow-xs hover:shadow-md hover:border-amber-300 transition-all ${
-            activePlanMobile === "maths" ? "flex" : "hidden md:flex"
-          }`}>
+          <motion.div 
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className={`rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 flex-col justify-between shadow-xs hover:shadow-md hover:border-amber-300 transition-all ${
+              activePlanMobile === "maths" ? "flex" : "hidden md:flex"
+            }`}
+          >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-950 text-xs font-mono font-bold uppercase border border-amber-200">
@@ -776,12 +821,18 @@ export function CleanLightLanding() {
                 <span>S&apos;inscrire en Maths (300 DH)</span>
               </a>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 2 : Pack Double Intégral (Recommandé) */}
-          <div className={`rounded-3xl border-2 border-purple-500 bg-white p-6 sm:p-7 flex-col justify-between relative shadow-lg hover:shadow-xl transition-all ${
-            activePlanMobile === "double" ? "flex" : "hidden md:flex"
-          }`}>
+          <motion.div 
+            initial={{ opacity: 0, y: 28, scale: 0.98 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className={`rounded-3xl border-2 border-purple-500 bg-white p-6 sm:p-7 flex-col justify-between relative shadow-lg hover:shadow-xl transition-all ${
+              activePlanMobile === "double" ? "flex" : "hidden md:flex"
+            }`}
+          >
             {/* Top Floating Badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-700 text-white font-extrabold text-[11px] tracking-wide uppercase shadow-sm flex items-center gap-1.5 whitespace-nowrap">
               <Star className="h-3.5 w-3.5 fill-white" />
@@ -846,12 +897,18 @@ export function CleanLightLanding() {
                 <span>Rejoindre le Pack Double (600 DH)</span>
               </a>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 3 : Physique Seule */}
-          <div className={`rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 flex-col justify-between shadow-xs hover:shadow-md hover:border-purple-300 transition-all ${
-            activePlanMobile === "pc" ? "flex" : "hidden md:flex"
-          }`}>
+          <motion.div 
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className={`rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 flex-col justify-between shadow-xs hover:shadow-md hover:border-purple-300 transition-all ${
+              activePlanMobile === "pc" ? "flex" : "hidden md:flex"
+            }`}
+          >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="inline-block px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-800 text-xs font-mono font-bold uppercase border border-purple-200">
@@ -911,7 +968,7 @@ export function CleanLightLanding() {
                 <span>S&apos;inscrire en Physique (300 DH)</span>
               </a>
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </section>

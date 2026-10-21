@@ -33,6 +33,7 @@
 }
 
 html, body {
+  scroll-behavior: smooth;
   background-color: #FFFDF9;
   color: #17142D;
   overflow-x: clip;

@@ -139,20 +139,6 @@ export default function Navbar() {
           >
             Ressources
           </a>
-
-          <a
-            href="#professeurs"
-            className="px-3 py-2 text-sm font-medium text-slate-700 hover:text-purple-900 transition-colors"
-          >
-            Concours
-          </a>
-
-          <a
-            href="#professeurs"
-            className="px-3 py-2 text-sm font-medium text-slate-700 hover:text-purple-900 transition-colors"
-          >
-            À propos
-          </a>
         </nav>
 
         {/* DESKTOP ACTIONS DROITE : EXACT BOUTON VIOLET DU MOCKUP */}

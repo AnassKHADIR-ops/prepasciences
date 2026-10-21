@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { BookOpen, Atom, ExternalLink, ArrowRight } from "lucide-react";
 import { getActiveMathMarqueeItems, getActivePcCourses } from "@/data/platformCoursesSync";
 
@@ -30,13 +31,19 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
   return (
     <section 
       id="syllabus"
-      className={`relative py-16 sm:py-20 overflow-hidden border-t ${
+      className={`relative py-10 sm:py-14 overflow-hidden border-t ${
         isLight 
           ? "bg-[#FAF9F6] text-[#17142D] border-slate-200/80" 
           : "bg-gradient-to-b from-[#0b132b] via-[#0e1838] to-[#0b132b] text-white border-white/15"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 text-center relative z-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 22 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 text-center relative z-10"
+      >
         <h2 
           className={`text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-3 ${
             isLight ? "text-[#17142D]" : "text-white"
@@ -53,7 +60,7 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
             ? "Synchronisation directe avec nos espaces de travail d'excellence : cours officiels, travaux dirigés corrigés et méthodologie de concours assurés par nos professeurs agrégés permanents."
             : "Synchronisation directe avec nos espaces de travail d'excellence : cours complets et travaux dirigés de Mathématiques (Pr. Anass Khadir) et contenus de Physique-Chimie (Pr. Hassan Eddams)."}
         </p>
-      </div>
+      </motion.div>
 
       {/* Infinite Marquee Container */}
       <div className="relative w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] space-y-4">
