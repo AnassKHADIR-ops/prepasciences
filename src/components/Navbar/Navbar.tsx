@@ -11,8 +11,8 @@ import MobileNav from "./MobileNav";
 const NAV_ITEMS = [
   { id: "hero", label: "Accueil", href: "#hero" },
   { id: "professeurs", label: "Nos Professeurs", href: "#professeurs" },
+  { id: "syllabus", label: "Nos ressources", href: "#syllabus" },
   { id: "tarifs", label: "Nos formations", href: "#tarifs" },
-  { id: "syllabus", label: "Ressources", href: "#syllabus" },
 ];
 
 export default function Navbar() {
