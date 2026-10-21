@@ -16,7 +16,9 @@ import {
   GraduationCap, 
   Globe,
   Quote,
-  Phone
+  Phone,
+  Trophy,
+  Crown
 } from "lucide-react";
 import { SessionCountdown } from "@/components/ui/SessionCountdown";
 import LogoMarquee from "@/components/LogoMarquee";
@@ -29,56 +31,154 @@ export function CleanLightLanding() {
     <div className="w-full bg-[#FFFDF9] text-[#17142D]">
 
       {/* ========================================================================= */}
-      {/* 1. HERO SECTION CLAIRE & ÉPURÉE (ZÉRO NOIRCEUR, ZÉRO TOURNEMENT D'IMAGES) */}
+      {/* 1. HERO SECTION HAUTE ÉDITION (INSPIRÉE DE L'AFFICHE HEC / MAJOR PRÉPA)    */}
       {/* ========================================================================= */}
       <section 
         id="hero"
-        className="relative pt-16 sm:pt-24 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto text-center"
+        className="relative pt-12 sm:pt-20 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
       >
-        {/* Lueur d'ambiance très douce en arrière-plan */}
-        <div className="pointer-events-none absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-purple-100/60 via-amber-100/50 to-cyan-100/60 rounded-full blur-3xl -z-10" />
+        {/* Lueur d'ambiance très douce en arrière-plan (Pêche poudrée & lavande douce HEC) */}
+        <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[550px] bg-gradient-to-b from-[#FCEEE6]/80 via-[#F7E7E2]/50 to-transparent rounded-full blur-3xl -z-10" />
 
-        {/* Badge Compact Sobre */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white/90 px-4 py-1.5 text-xs font-bold text-purple-800 shadow-2xs backdrop-blur-md mb-6">
-          <Sparkles className="h-3.5 w-3.5 text-purple-600" />
-          <span className="tracking-wide">✦ EXCELLENCE CPGE · CNC &amp; CONCOURS</span>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+          
+          {/* COLONNE GAUCHE (7 cols) : COMPOSITION TYPOGRAPHIQUE ÉDITORIALE HEC */}
+          <div className="lg:col-span-7 space-y-5 text-left">
+            {/* Badge Inspiré Grandes Écoles */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/80 bg-white/90 px-3.5 py-1 text-xs font-mono font-bold text-amber-950 shadow-2xs backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+              <span>PORTAIL D&apos;ÉLITE CPGE · CNC &amp; GRANDES ÉCOLES</span>
+            </div>
 
-        {/* Titre H1 Massif & Lisible */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-[#17142D] mb-6 max-w-4xl mx-auto">
-          PrépaSciences, <br />
-          <span className="text-[#17142D]">votre plateforme d’excellence</span> <br />
-          <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-cyan-600 bg-clip-text text-transparent">
-            pour réussir en CPGE
-          </span>
-        </h1>
+            {/* Titre Typographique Haute Visibilité (Inspiré de l'affiche HEC) */}
+            <div className="space-y-1 sm:space-y-2 font-black uppercase tracking-tight text-[#0F172A] font-sans">
+              <div className="text-4xl sm:text-6xl lg:text-7xl tracking-tighter text-[#0F172A]">
+                PRÉPASCIENCES
+              </div>
+              
+              <div className="text-2xl sm:text-4xl lg:text-5xl flex items-center flex-wrap gap-2.5 text-[#1E293B]">
+                <span>PLATEFORME</span>
+                <span className="inline-flex items-center px-3 py-0.5 rounded-lg bg-[#F5A623] text-slate-950 font-mono font-black text-xs sm:text-base tracking-wide shadow-xs">
+                  2025 - 2026
+                </span>
+                <span>D&apos;EXCELLENCE</span>
+              </div>
 
-        {/* Sous-titre aéré */}
-        <div className="max-w-2xl mx-auto mb-10 space-y-2">
-          <p className="text-base sm:text-lg font-bold text-purple-900 tracking-wide">
-            Mathématiques &amp; Physique-Chimie
-          </p>
-          <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-            Des cours structurés, un entraînement régulier et un accompagnement personnalisé par nos professeurs agrégés permanents pour dominer les concours CPGE.
-          </p>
-        </div>
+              <div className="text-2xl sm:text-4xl lg:text-5xl text-[#0F172A]">
+                POUR RÉUSSIR EN CPGE
+              </div>
 
-        {/* Boutons d'Action Directe */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
-          <a
-            href="#professeurs"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-sm sm:text-base shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
-          >
-            <span>Découvrir nos professeurs</span>
-            <ArrowRight className="w-4 h-4" />
-          </a>
+              <div className="text-xl sm:text-3xl lg:text-4xl text-purple-900 font-extrabold flex items-center gap-2">
+                <span>ADMISSION GRANDES ÉCOLES</span>
+              </div>
 
-          <Link
-            href="/eddams?rubrique=cours"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white hover:bg-slate-50 text-[#17142D] border border-slate-200 font-bold text-sm sm:text-base shadow-2xs hover:border-purple-300 transition-all cursor-pointer"
-          >
-            <span>Accéder aux cours</span>
-          </Link>
+              {/* Barre Dorée Signature (Underline de l'affiche HEC) */}
+              <div className="w-24 sm:w-32 h-2 sm:h-2.5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full mt-3 shadow-xs" />
+            </div>
+
+            {/* Sous-titre & Proposition de Valeur */}
+            <div className="pt-2 space-y-2 max-w-xl text-slate-700">
+              <p className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Mathématiques &amp; Physique-Chimie · MP · PSI · TSI
+              </p>
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
+                Des cours structurés, fiches de synthèse et résolutions de problèmes types Concours dispensés par nos professeurs agrégés d&apos;État pour dominer les concours CPGE.
+              </p>
+            </div>
+
+            {/* Badges de Confiance Épurés (Sans boutons) */}
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <span className="px-3.5 py-1.5 rounded-full bg-white/95 border border-slate-200/90 text-slate-800 text-xs font-mono font-bold shadow-2xs">
+                🏆 100% Programme CNC &amp; France
+              </span>
+              <span className="px-3.5 py-1.5 rounded-full bg-white/95 border border-purple-200/90 text-purple-900 text-xs font-mono font-bold shadow-2xs">
+                ⚛️ Pr. Eddams (Safi)
+              </span>
+              <span className="px-3.5 py-1.5 rounded-full bg-white/95 border border-sky-200/90 text-sky-900 text-xs font-mono font-bold shadow-2xs">
+                📐 Pr. Khadir (El Jadida)
+              </span>
+            </div>
+          </div>
+
+          {/* COLONNE DROITE (5 cols) : PODIUM D'EXCELLENCE 3D (INSPIRÉ DE L'AFFICHE HEC) */}
+          <div className="lg:col-span-5 flex flex-col items-center justify-center pt-8 lg:pt-0">
+            <div className="relative w-full max-w-md flex flex-col items-center">
+              
+              {/* CARTE / MONOLITHE FLOTTANT D'EXCELLENCE (Écho au bloc HEC tenu dans la main) */}
+              <div className="relative z-20 mb-4 px-6 py-4 rounded-3xl bg-white/95 border-2 border-slate-200/80 shadow-[0_20px_45px_rgba(15,23,42,0.12)] text-center backdrop-blur-md animate-floatBar">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-[10px] font-mono font-bold uppercase mb-1">
+                  <Crown className="w-3 h-3 text-amber-600" />
+                  <span>Excellence CPGE</span>
+                </div>
+                <div className="text-2xl font-black text-[#0F172A] tracking-tight">
+                  PRÉPASCIENCES
+                </div>
+                <div className="text-[11px] font-mono font-bold text-purple-700 tracking-wider uppercase mt-0.5">
+                  CNC · MINES · CENTRALE · X-ENS
+                </div>
+              </div>
+
+              {/* LE PODIUM DES 3 MARCHES (Inspiré du podium 1, 2, 3 de l'affiche HEC) */}
+              <div className="relative z-10 w-full flex items-end justify-center gap-3 sm:gap-4 px-2">
+                
+                {/* Marche 2 : Pôle PC (Hauteur moyenne) */}
+                <div className="flex-1 max-w-[120px] flex flex-col items-center">
+                  <div className="w-full h-28 sm:h-32 rounded-t-2xl bg-gradient-to-b from-white via-slate-50 to-slate-100 border-t-2 border-x-2 border-purple-200 shadow-md flex flex-col items-center justify-between py-3">
+                    <span className="text-3xl sm:text-4xl font-black text-[#0F172A] font-mono">2</span>
+                    <div className="text-center px-1">
+                      <span className="block text-[10px] font-mono font-bold text-purple-800 uppercase leading-tight">
+                        Physique
+                      </span>
+                      <span className="block text-[9px] text-slate-500 font-medium">Chimie</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Marche 1 : Major CNC & France (La plus haute, au centre) */}
+                <div className="flex-1 max-w-[140px] flex flex-col items-center">
+                  <div className="w-full h-36 sm:h-44 rounded-t-2xl bg-gradient-to-b from-white via-amber-50/40 to-slate-100 border-t-2 border-x-2 border-amber-300 shadow-lg flex flex-col items-center justify-between py-3">
+                    <div className="flex flex-col items-center">
+                      <Trophy className="w-5 h-5 text-amber-500 mb-0.5" />
+                      <span className="text-4xl sm:text-5xl font-black text-[#0F172A] font-mono">1</span>
+                    </div>
+                    <div className="text-center px-1">
+                      <span className="block text-[10px] font-mono font-black text-amber-950 uppercase leading-tight">
+                        Major CNC
+                      </span>
+                      <span className="block text-[9px] text-slate-600 font-bold">&amp; France</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Marche 3 : Pôle Maths (La plus basse) */}
+                <div className="flex-1 max-w-[120px] flex flex-col items-center">
+                  <div className="w-full h-20 sm:h-24 rounded-t-2xl bg-gradient-to-b from-white via-slate-50 to-slate-100 border-t-2 border-x-2 border-sky-200 shadow-md flex flex-col items-center justify-between py-2">
+                    <span className="text-2xl sm:text-3xl font-black text-[#0F172A] font-mono">3</span>
+                    <div className="text-center px-1">
+                      <span className="block text-[10px] font-mono font-bold text-sky-800 uppercase leading-tight">
+                        Maths
+                      </span>
+                      <span className="block text-[9px] text-slate-500 font-medium">CPGE</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Ombre de sol du podium (Teinte lavande/bleutée comme l'affiche HEC) */}
+              <div className="w-full max-w-[340px] h-6 bg-gradient-to-r from-purple-200/40 via-indigo-300/50 to-sky-200/40 rounded-full blur-md -mt-1" />
+
+              {/* Signature Major Prépa style sous le podium */}
+              <div className="mt-4 flex items-center gap-1.5 text-xs text-slate-500 font-mono">
+                <GraduationCap className="w-4 h-4 text-purple-700" />
+                <span className="font-bold text-slate-700">PrépaSciences</span>
+                <span className="text-slate-400">· L&apos;Excellence CPGE</span>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -231,26 +331,6 @@ export function CleanLightLanding() {
                   />
                 </div>
 
-                {/* Boutons d'Action */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <Link
-                    href="/eddams"
-                    className="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-purple-700 bg-white hover:bg-purple-50 border border-purple-200 hover:border-purple-300 shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Atom className="h-4 w-4 text-purple-700 shrink-0" />
-                    <span>Ouvrir l&apos;espace PC</span>
-                  </Link>
-
-                  <a
-                    href="https://wa.me/212721729799?text=Bonjour%20Professeur%20Hassan%20Eddams,%20je%20souhaite%20des%20informations%20sur%20les%20cours%20de%20Physique-Chimie%20CPGE"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-purple-700 hover:bg-purple-800 shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <MessageCircle className="h-4 w-4 text-white shrink-0" />
-                    <span>WhatsApp Direct</span>
-                  </a>
-                </div>
 
                 {/* Version Mobile des Réseaux Sociaux (Mauve) */}
                 <div className="flex lg:hidden items-center justify-center gap-3 pt-3">
@@ -422,28 +502,6 @@ export function CleanLightLanding() {
                   />
                 </div>
 
-                {/* Boutons d'Action */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <a
-                    href="https://quiz.anasskhadir.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-sky-900 bg-white hover:bg-sky-50 border border-sky-200 hover:border-sky-300 shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Globe className="h-4 w-4 text-sky-700 shrink-0" />
-                    <span>Site Anass Khadir</span>
-                  </a>
-
-                  <a
-                    href="https://wa.me/212659041407?text=Bonjour%20Professeur%20Anass%20Khadir,%20je%20souhaite%20des%20informations%20sur%20les%20cours%20de%20Math%C3%A9matiques%20CPGE"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-sky-600 hover:bg-sky-700 shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <MessageCircle className="h-4 w-4 text-white shrink-0" />
-                    <span>WhatsApp Direct</span>
-                  </a>
-                </div>
 
                 {/* Version Mobile des Réseaux Sociaux (Bleu Ciel) */}
                 <div className="flex lg:hidden items-center justify-center gap-3 pt-3">
