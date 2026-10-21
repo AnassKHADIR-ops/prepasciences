@@ -8,11 +8,8 @@ import {
   MapPin, 
   MessageCircle, 
   Atom, 
-  BookOpen, 
   Check, 
   Star, 
-  ArrowRight, 
-  Sparkles, 
   GraduationCap, 
   Globe,
   Quote,
@@ -43,15 +40,9 @@ export function CleanLightLanding() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
           {/* COLONNE GAUCHE (7 cols) : COMPOSITION TYPOGRAPHIQUE ÉDITORIALE HEC */}
-          <div className="lg:col-span-7 space-y-5 text-left">
-            {/* Badge Inspiré Grandes Écoles */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/80 bg-white/90 px-3.5 py-1 text-xs font-mono font-bold text-amber-950 shadow-2xs backdrop-blur-md">
-              <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-              <span>PORTAIL D&apos;ÉLITE CPGE · CNC &amp; GRANDES ÉCOLES</span>
-            </div>
-
+          <div className="lg:col-span-7 space-y-4 text-left">
             {/* Titre Typographique Haute Visibilité (Inspiré de l'affiche HEC) */}
-            <div className="space-y-1 sm:space-y-2 font-black uppercase tracking-tight text-[#0F172A] font-sans">
+            <div className="space-y-1.5 sm:space-y-2.5 font-black uppercase tracking-tight text-[#0F172A] font-sans">
               <div className="text-4xl sm:text-6xl lg:text-7xl tracking-tighter text-[#0F172A]">
                 PRÉPASCIENCES
               </div>
@@ -74,30 +65,6 @@ export function CleanLightLanding() {
 
               {/* Barre Dorée Signature (Underline de l'affiche HEC) */}
               <div className="w-24 sm:w-32 h-2 sm:h-2.5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full mt-3 shadow-xs" />
-            </div>
-
-            {/* Sous-titre & Proposition de Valeur */}
-            <div className="pt-2 space-y-2 max-w-xl text-slate-700">
-              <p className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Mathématiques &amp; Physique-Chimie · MP · PSI · TSI
-              </p>
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-                Des cours structurés, fiches de synthèse et résolutions de problèmes types Concours dispensés par nos professeurs agrégés d&apos;État pour dominer les concours CPGE.
-              </p>
-            </div>
-
-            {/* Badges de Confiance Épurés (Sans boutons) */}
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <span className="px-3.5 py-1.5 rounded-full bg-white/95 border border-slate-200/90 text-slate-800 text-xs font-mono font-bold shadow-2xs">
-                🏆 100% Programme CNC &amp; France
-              </span>
-              <span className="px-3.5 py-1.5 rounded-full bg-white/95 border border-purple-200/90 text-purple-900 text-xs font-mono font-bold shadow-2xs">
-                ⚛️ Pr. Eddams (Safi)
-              </span>
-              <span className="px-3.5 py-1.5 rounded-full bg-white/95 border border-sky-200/90 text-sky-900 text-xs font-mono font-bold shadow-2xs">
-                📐 Pr. Khadir (El Jadida)
-              </span>
             </div>
           </div>
 
@@ -199,9 +166,6 @@ export function CleanLightLanding() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#17142D] tracking-tight">
             Nos Professeurs Agrégés
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base font-normal max-w-lg mx-auto">
-            Deux professeurs agrégés permanents dans les centres publics au Maroc
-          </p>
         </div>
 
         {/* Sélecteur Mobile : Choix Enseignant */}
@@ -643,53 +607,7 @@ export function CleanLightLanding() {
       <LogoMarquee variant="light" />
 
       {/* ========================================================================= */}
-      {/* 3. PASSER À L'ENTRAÎNEMENT (STAGE 3 ÉPURÉ)                               */}
-      {/* ========================================================================= */}
-      <section 
-        id="entrainement"
-        className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center border-t border-slate-200/70"
-      >
-        <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-1.5 text-xs font-mono font-bold text-purple-800 mb-4 shadow-2xs">
-          <GraduationCap className="h-4 w-4 text-purple-600" />
-          <span>Métamorphose &amp; Maîtrise des Épreuves</span>
-        </div>
-
-        <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#17142D] mb-4">
-          Passez à l&apos;entraînement.
-        </h2>
-
-        <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed mb-10">
-          Le savoir des agrégés appliqué aux épreuves types Concours. Séances interactives en direct, fiches méthodes éprouvées et résolution des problèmes types CNC &amp; concours français. Choisissez votre matière pour débuter :
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-5 max-w-xl mx-auto">
-          {/* Bouton Maths */}
-          <a
-            href="https://quiz.anasskhadir.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex-1 inline-flex items-center justify-center gap-3 rounded-2xl bg-white hover:bg-cyan-50/50 border-2 border-cyan-300 text-cyan-900 px-7 py-4 text-sm sm:text-base font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
-          >
-            <BookOpen className="h-5 w-5 text-cyan-700 shrink-0" />
-            <span>Préparer les Mathématiques</span>
-            <ArrowRight className="h-4 w-4 text-cyan-700 group-hover:translate-x-1 transition-transform shrink-0" />
-          </a>
-
-          {/* Bouton PC */}
-          <Link
-            href="/eddams"
-            className="group flex-1 inline-flex items-center justify-center gap-3 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white px-7 py-4 text-sm sm:text-base font-bold shadow-sm hover:shadow-md transition-all cursor-pointer"
-          >
-            <Atom className="h-5 w-5 text-purple-200 shrink-0" />
-            <span>Préparer Physique-Chimie</span>
-            <ArrowRight className="h-4 w-4 text-white group-hover:translate-x-1 transition-transform shrink-0" />
-          </Link>
-        </div>
-      </section>
-
-
-      {/* ========================================================================= */}
-      {/* 4. TARIFS & INSCRIPTIONS (STAGE 4 ÉPURÉ)                                  */}
+      {/* 3. TARIFS & INSCRIPTIONS (STAGE 3 ÉPURÉ)                                  */}
       {/* ========================================================================= */}
       <section 
         id="tarifs" 

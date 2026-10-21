@@ -36,17 +36,6 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 text-center relative z-10">
-        <div 
-          className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold backdrop-blur-md mb-4 shadow-2xs ${
-            isLight
-              ? "bg-white border-slate-200 text-purple-800"
-              : "border-cyan-500/30 bg-cyan-950/60 text-cyan-300 shadow-cyan-500/10"
-          }`}
-        >
-          <BookOpen className={`h-4 w-4 ${isLight ? "text-purple-600" : "text-cyan-400"}`} />
-          <span>Syllabus en Direct · Cours &amp; Séances Disponibles</span>
-        </div>
-
         <h2 
           className={`text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-3 ${
             isLight ? "text-[#17142D]" : "text-white"
