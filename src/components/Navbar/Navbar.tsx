@@ -8,21 +8,72 @@ import { motion } from "framer-motion";
 import MegaMenu from "./MegaMenu";
 import MobileNav from "./MobileNav";
 
+const NAV_ITEMS = [
+  { id: "hero", label: "Accueil", href: "#hero" },
+  { id: "professeurs", label: "Nos Professeurs", href: "#professeurs" },
+  { id: "tarifs", label: "Nos formations", href: "#tarifs" },
+  { id: "syllabus", label: "Ressources", href: "#syllabus" },
+];
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activePole, setActivePole] = useState<"maths" | "pc" | null>(null);
+  const [activeSection, setActiveSection] = useState<string>("hero");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navContainerRef = useRef<HTMLElement | null>(null);
 
-  // Scroll listener for sticky navbar opacity elevation
+  // Scroll listener for sticky navbar opacity elevation & active section spy
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+
+      // Section active detection
+      if (window.scrollY < 120) {
+        setActiveSection("hero");
+        return;
+      }
+
+      const scrollPosition = window.scrollY + 200;
+      const sections = [
+        { id: "tarifs", el: document.getElementById("tarifs") },
+        { id: "syllabus", el: document.getElementById("syllabus") },
+        { id: "professeurs", el: document.getElementById("professeurs") },
+        { id: "hero", el: document.getElementById("hero") },
+      ];
+
+      for (const section of sections) {
+        if (section.el) {
+          const top = section.el.offsetTop;
+          if (scrollPosition >= top) {
+            setActiveSection(section.id);
+            break;
+          }
+        }
+      }
     };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string, href: string) => {
+    setActiveSection(id);
+    if (window.location.pathname === "/") {
+      e.preventDefault();
+      if (id === "hero") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        try { window.history.pushState(null, "", "/"); } catch {}
+      } else {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+          try { window.history.pushState(null, "", href); } catch {}
+        }
+      }
+    }
+  };
 
   // Keyboard accessibility: Escape key closes all dropdowns
   useEffect(() => {
@@ -107,38 +158,39 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* DESKTOP NAV ITEMS : EXACT ACCUEIL / NOS FORMATIONS / RESSOURCES / CONCOURS / À PROPOS */}
+        {/* DESKTOP NAV ITEMS DYNAMIQUES AVEC INDICATEUR MAUVE GLISSANT */}
         <nav
-          className="hidden lg:flex items-center space-x-2 xl:space-x-4"
+          className="hidden lg:flex items-center space-x-1 xl:space-x-2"
           aria-label="Navigation principale"
         >
-          <Link
-            href="/"
-            onClick={(e) => {
-              if (window.location.pathname === "/") {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            }}
-            className="relative px-3 py-2 text-sm font-bold text-slate-900 group"
-          >
-            <span>Accueil</span>
-            <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-purple-700 rounded-full" />
-          </Link>
-
-          <a
-            href="#tarifs"
-            className="px-3 py-2 text-sm font-medium text-slate-700 hover:text-purple-900 transition-colors"
-          >
-            Nos formations
-          </a>
-
-          <a
-            href="#syllabus"
-            className="px-3 py-2 text-sm font-medium text-slate-700 hover:text-purple-900 transition-colors"
-          >
-            Ressources
-          </a>
+          {NAV_ITEMS.map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <a
+                key={item.id}
+                href={item.href}
+                onClick={(e) => handleNavClick(e, item.id, item.href)}
+                className={`relative px-3.5 py-2 text-sm transition-colors duration-200 ${
+                  isActive
+                    ? "font-bold text-purple-950"
+                    : "font-medium text-slate-700 hover:text-purple-900"
+                }`}
+              >
+                <span>{item.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="activeNavIndicator"
+                    className="absolute bottom-0 left-3 right-3 h-0.5 bg-purple-700 rounded-full"
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 32,
+                    }}
+                  />
+                )}
+              </a>
+            );
+          })}
         </nav>
 
         {/* DESKTOP ACTIONS DROITE : EXACT BOUTON VIOLET DU MOCKUP */}
