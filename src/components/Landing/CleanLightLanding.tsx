@@ -11,7 +11,6 @@ import {
   Check, 
   Star, 
   GraduationCap, 
-  Globe,
   Quote,
   Phone,
   Trophy,
@@ -507,10 +506,19 @@ export function CleanLightLanding() {
                     href="https://quiz.anasskhadir.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-full bg-sky-100 text-sky-800 flex items-center justify-center hover:bg-sky-200 transition-colors"
-                    aria-label="Site Anass Khadir"
+                    className="w-9 h-9 rounded-full bg-white border border-sky-300 flex items-center justify-center overflow-hidden hover:bg-sky-50 transition-colors shadow-2xs"
+                    aria-label="Espace de maths"
+                    title="Espace de maths"
                   >
-                    <Globe className="w-4 h-4" />
+                    <div className="relative w-7 h-7 rounded-full overflow-hidden flex items-center justify-center">
+                      <Image
+                        src="/logo-espace-maths.png"
+                        alt="Espace de maths"
+                        width={28}
+                        height={28}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </a>
                 </div>
 
@@ -581,17 +589,25 @@ export function CleanLightLanding() {
                     </span>
                   </a>
 
-                  {/* Site Anass Khadir */}
+                  {/* Espace de maths */}
                   <a
                     href="https://quiz.anasskhadir.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group relative w-10 h-10 rounded-full bg-white border border-sky-200 flex items-center justify-center text-sky-700 hover:bg-sky-600 hover:text-white hover:border-sky-600 transition-all duration-300 shadow-2xs hover:scale-110"
-                    aria-label="Site Web Anass Khadir"
+                    className="group relative w-10 h-10 rounded-full bg-white border-2 border-sky-300 flex items-center justify-center overflow-hidden hover:border-sky-500 hover:scale-110 transition-all duration-300 shadow-2xs"
+                    aria-label="Espace de maths"
                   >
-                    <Globe className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                      <Image
+                        src="/logo-espace-maths.png"
+                        alt="Espace de maths"
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                    </div>
                     <span className="pointer-events-none absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md">
-                      Site Quiz Anass Khadir
+                      Espace de maths
                     </span>
                   </a>
                 </div>

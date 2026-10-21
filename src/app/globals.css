@@ -86,7 +86,7 @@ html, body {
 }
 
 .animate-marquee-right {
-  animation: marquee-reverse 90s linear infinite;
+  animation: marquee-reverse 240s linear infinite;
 }
 
 .animate-marquee-reverse:hover {

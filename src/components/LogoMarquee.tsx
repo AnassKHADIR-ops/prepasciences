@@ -23,7 +23,7 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
   );
 
   const duplicatedPcCourses = useMemo(
-    () => (pcCourses.length > 0 ? [...pcCourses, ...pcCourses, ...pcCourses, ...pcCourses] : []),
+    () => (pcCourses.length > 0 ? [...pcCourses, ...pcCourses] : []),
     [pcCourses]
   );
 

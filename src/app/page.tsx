@@ -3,7 +3,6 @@
 import React, { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { CleanLightLanding } from "@/components/Landing/CleanLightLanding";
-import Footer from "@/components/Footer";
 import { QuickNavPill } from "@/components/ui/QuickNavPill";
 
 export default function Home() {
@@ -46,9 +45,6 @@ export default function Home() {
           - Stage 4: Tarifs & Inscriptions (Maths 300 DH, Double 600 DH, PC 300 DH)
       */}
       <CleanLightLanding />
-
-      {/* Footer épuré & harmonieux (Light Theme) */}
-      <Footer variant="light" />
 
       {/* Floating Quick Action Pill */}
       <QuickNavPill />
