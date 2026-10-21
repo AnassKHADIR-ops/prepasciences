@@ -14,7 +14,8 @@ import {
   Quote,
   Phone,
   Trophy,
-  Crown
+  Crown,
+  ArrowRight
 } from "lucide-react";
 import { SessionCountdown } from "@/components/ui/SessionCountdown";
 import LogoMarquee from "@/components/LogoMarquee";
@@ -38,90 +39,118 @@ export function CleanLightLanding() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
-          {/* COLONNE GAUCHE (7 cols) : COMPOSITION TYPOGRAPHIQUE ÉDITORIALE HEC */}
-          <div className="lg:col-span-7 space-y-4 text-left">
-            {/* Titre Typographique Haute Visibilité (Inspiré de l'affiche HEC) */}
-            <div className="space-y-1.5 sm:space-y-2.5 font-black uppercase tracking-tight text-[#0F172A] font-sans">
-              <div className="text-4xl sm:text-6xl lg:text-7xl tracking-tighter text-[#0F172A]">
-                PRÉPASCIENCES
-              </div>
-              
-              <div className="text-2xl sm:text-4xl lg:text-5xl text-[#1E293B]">
-                PLATEFORME D&apos;EXCELLENCE
-              </div>
+          {/* COLONNE GAUCHE (7 cols) : HERO HEADLINE, SUBTITLE, CTAS & FILIÈRES */}
+          <div className="lg:col-span-7 space-y-6 text-left">
+            {/* Titre Principal exact du mockup */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.1] text-slate-900 font-sans">
+              <span>L&apos;excellence </span>
+              <span className="text-purple-800">CPGE,</span>
+              <br />
+              <span>à portée de </span>
+              <span className="text-purple-800">méthode.</span>
+            </h1>
 
-              <div className="text-2xl sm:text-4xl lg:text-5xl text-[#0F172A]">
-                POUR RÉUSSIR EN CPGE
-              </div>
+            {/* Sous-titre exact du mockup */}
+            <p className="text-base sm:text-lg lg:text-xl text-slate-600 font-normal max-w-xl leading-relaxed">
+              Des cours rigoureux, des exercices ciblés et un accompagnement pour réussir les concours.
+            </p>
 
-              <div className="text-xl sm:text-3xl lg:text-4xl text-purple-900 font-extrabold flex items-center gap-2">
-                <span>ADMISSION GRANDES ÉCOLES</span>
-              </div>
+            {/* Deux Boutons CTA exacts du mockup */}
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-1">
+              <a
+                href="#tarifs"
+                className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white bg-purple-800 hover:bg-purple-900 transition-all duration-200 shadow-md hover:shadow-lg active:scale-98 text-sm sm:text-base group"
+              >
+                <span>Découvrir les formations</span>
+                <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a
+                href="#syllabus"
+                className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-purple-900 bg-white border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all duration-200 shadow-2xs text-sm sm:text-base group"
+              >
+                <span>Explorer les ressources</span>
+                <ArrowRight className="w-4 h-4 text-purple-900 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </div>
 
-              {/* Barre Dorée Signature (Underline de l'affiche HEC) */}
-              <div className="w-24 sm:w-32 h-2 sm:h-2.5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full mt-3 shadow-xs" />
+            {/* Trait d'accentuation Orange & Liste des Filières exacts du mockup */}
+            <div className="pt-2 space-y-3">
+              <div className="w-16 h-1.5 bg-[#F5A623] rounded-full" />
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs sm:text-sm font-bold text-slate-700 font-mono tracking-wide">
+                <span>MP</span>
+                <span className="text-[#F5A623] text-base leading-none">•</span>
+                <span>PSI</span>
+                <span className="text-[#F5A623] text-base leading-none">•</span>
+                <span>TSI</span>
+                <span className="text-[#F5A623] text-base leading-none">•</span>
+                <span>MPSI</span>
+                <span className="text-[#F5A623] text-base leading-none">•</span>
+                <span>PCSI</span>
+              </div>
             </div>
           </div>
 
-          {/* COLONNE DROITE (5 cols) : PODIUM D'EXCELLENCE 3D (INSPIRÉ DE L'AFFICHE HEC) */}
+          {/* COLONNE DROITE (5 cols) : PODIUM D'EXCELLENCE 3D AVEC LOGO OFFICIEL */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center pt-8 lg:pt-0">
             <div className="relative w-full max-w-md flex flex-col items-center">
               
-              {/* CARTE / MONOLITHE FLOTTANT D'EXCELLENCE (Écho au bloc HEC tenu dans la main) */}
+              {/* CARTE / MONOLITHE FLOTTANT D'EXCELLENCE AVEC LE LOGO */}
               <div className="relative z-20 mb-4 px-6 py-4 rounded-3xl bg-white/95 border-2 border-slate-200/80 shadow-[0_20px_45px_rgba(15,23,42,0.12)] text-center backdrop-blur-md animate-floatBar">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-[10px] font-mono font-bold uppercase mb-1">
-                  <Crown className="w-3 h-3 text-amber-600" />
-                  <span>Excellence CPGE</span>
+                <div className="flex items-center justify-center gap-2.5 mb-1">
+                  <Image
+                    src="/logo-icon.png"
+                    alt="Logo PrépaSciences"
+                    width={28}
+                    height={28}
+                    className="w-7 h-7 object-contain"
+                  />
+                  <span className="text-xl sm:text-2xl font-black text-purple-900 tracking-tight">
+                    PRÉPASCIENCES
+                  </span>
                 </div>
-                <div className="text-2xl font-black text-[#0F172A] tracking-tight">
-                  PRÉPASCIENCES
-                </div>
-                <div className="text-[11px] font-mono font-bold text-purple-700 tracking-wider uppercase mt-0.5">
-                  CNC · MINES · CENTRALE · X-ENS
+                <div className="text-[11px] font-mono font-bold text-purple-700 tracking-widest uppercase">
+                  — EXCELLENCE CPGE —
                 </div>
               </div>
 
-              {/* LE PODIUM DES 3 MARCHES (Inspiré du podium 1, 2, 3 de l'affiche HEC) */}
+              {/* LE PODIUM DES 3 MARCHES (Inspiré du mockup) */}
               <div className="relative z-10 w-full flex items-end justify-center gap-3 sm:gap-4 px-2">
                 
-                {/* Marche 2 : Pôle PC (Hauteur moyenne) */}
+                {/* Marche 2 : PHYSIQUE */}
                 <div className="flex-1 max-w-[120px] flex flex-col items-center">
                   <div className="w-full h-28 sm:h-32 rounded-t-2xl bg-gradient-to-b from-white via-slate-50 to-slate-100 border-t-2 border-x-2 border-purple-200 shadow-md flex flex-col items-center justify-between py-3">
                     <span className="text-3xl sm:text-4xl font-black text-[#0F172A] font-mono">2</span>
                     <div className="text-center px-1">
-                      <span className="block text-[10px] font-mono font-bold text-purple-800 uppercase leading-tight">
-                        Physique
+                      <span className="block text-[11px] font-mono font-bold text-purple-800 uppercase leading-tight tracking-wider">
+                        PHYSIQUE
                       </span>
-                      <span className="block text-[9px] text-slate-500 font-medium">Chimie</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Marche 1 : Major CNC & France (La plus haute, au centre) */}
+                {/* Marche 1 : 👑 1 MAJOR CNC (La plus haute, au centre) */}
                 <div className="flex-1 max-w-[140px] flex flex-col items-center">
                   <div className="w-full h-36 sm:h-44 rounded-t-2xl bg-gradient-to-b from-white via-amber-50/40 to-slate-100 border-t-2 border-x-2 border-amber-300 shadow-lg flex flex-col items-center justify-between py-3">
                     <div className="flex flex-col items-center">
-                      <Trophy className="w-5 h-5 text-amber-500 mb-0.5" />
+                      <Crown className="w-5 h-5 text-amber-500 mb-0.5" />
                       <span className="text-4xl sm:text-5xl font-black text-[#0F172A] font-mono">1</span>
                     </div>
                     <div className="text-center px-1">
-                      <span className="block text-[10px] font-mono font-black text-amber-950 uppercase leading-tight">
-                        Major CNC
+                      <span className="block text-[11px] font-mono font-black text-amber-950 uppercase leading-tight tracking-wider">
+                        MAJOR CNC
                       </span>
-                      <span className="block text-[9px] text-slate-600 font-bold">&amp; France</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Marche 3 : Pôle Maths (Harmonie Ambre & Orange) */}
+                {/* Marche 3 : MATHS */}
                 <div className="flex-1 max-w-[120px] flex flex-col items-center">
                   <div className="w-full h-20 sm:h-24 rounded-t-2xl bg-gradient-to-b from-white via-amber-50/30 to-slate-100 border-t-2 border-x-2 border-amber-300 shadow-md flex flex-col items-center justify-between py-2">
                     <span className="text-2xl sm:text-3xl font-black text-[#0F172A] font-mono">3</span>
                     <div className="text-center px-1">
-                      <span className="block text-[10px] font-mono font-bold text-amber-900 uppercase leading-tight">
-                        Maths
+                      <span className="block text-[11px] font-mono font-bold text-amber-900 uppercase leading-tight tracking-wider">
+                        MATHS
                       </span>
-                      <span className="block text-[9px] text-slate-500 font-medium">CPGE</span>
                     </div>
                   </div>
                 </div>
@@ -131,9 +160,15 @@ export function CleanLightLanding() {
               {/* Ombre de sol du podium (Teinte prestigieuse violette et ambrée) */}
               <div className="w-full max-w-[340px] h-6 bg-gradient-to-r from-purple-200/40 via-amber-200/40 to-orange-200/40 rounded-full blur-md -mt-1" />
 
-              {/* Signature Major Prépa style sous le podium */}
-              <div className="mt-4 flex items-center gap-1.5 text-xs text-slate-500 font-mono">
-                <GraduationCap className="w-4 h-4 text-purple-700" />
+              {/* Signature sous le podium */}
+              <div className="mt-4 flex items-center gap-2 text-xs text-slate-500 font-mono">
+                <Image
+                  src="/logo-icon.png"
+                  alt="PrépaSciences"
+                  width={16}
+                  height={16}
+                  className="w-4 h-4 object-contain"
+                />
                 <span className="font-bold text-slate-700">PrépaSciences</span>
                 <span className="text-slate-400">· L&apos;Excellence CPGE</span>
               </div>
@@ -520,16 +555,16 @@ export function CleanLightLanding() {
 
               </div>
 
-              {/* COLONNE CENTRALE / DROITE : PHOTO OFFICIELLE DÉTOURÉE SANS CADRE NI ARRIÈRE-PLAN */}
-              <div className="lg:col-span-5 flex items-end justify-center lg:justify-center order-1 lg:order-2">
-                <div className="relative w-full max-w-[340px] sm:max-w-[400px] lg:max-w-[430px]">
+              {/* COLONNE DROITE : PHOTO OFFICIELLE ÉTIRÉE TOUT À DROITE SANS CADRE NI ARRIÈRE-PLAN */}
+              <div className="lg:col-span-5 flex items-end justify-center lg:justify-end order-1 lg:order-2">
+                <div className="relative w-full max-w-[380px] sm:max-w-[460px] lg:max-w-none flex justify-center lg:justify-end items-end">
                   <Image
                     src="/profs/prof-maths.png"
                     alt="Pr. Anass Khadir - Professeur Agrégé de Mathématiques CPGE"
                     width={1085}
                     height={1450}
                     priority
-                    className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-sm"
+                    className="w-full max-h-[560px] sm:max-h-[620px] object-contain object-bottom select-none pointer-events-none drop-shadow-sm"
                   />
                 </div>
               </div>

@@ -29,6 +29,7 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
 
   return (
     <section 
+      id="syllabus"
       className={`relative py-16 sm:py-20 overflow-hidden border-t ${
         isLight 
           ? "bg-[#FAF9F6] text-[#17142D] border-slate-200/80" 
