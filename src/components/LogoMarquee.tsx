@@ -42,9 +42,9 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
           }`}
         >
           Explorez les Cours Travaillés en{" "}
-          <span className={isLight ? "text-amber-600" : "text-[#F5A623]"}>Mathématiques</span>
-          {" "}&amp;{" "}
-          <span className={isLight ? "text-purple-700" : "text-[#C084FC]"}>Physique-Chimie</span>
+          <span className={isLight ? "text-purple-900" : "text-[#C084FC]"}>
+            Mathématiques &amp; Physique-Chimie
+          </span>
         </h2>
 
         <p className={`text-sm sm:text-base max-w-2xl mx-auto font-normal ${isLight ? "text-slate-600" : "text-slate-300"}`}>

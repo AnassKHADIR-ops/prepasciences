@@ -758,9 +758,6 @@ export function CleanLightLanding() {
                 <span className="inline-block px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 text-xs font-mono font-bold uppercase border border-purple-200">
                   Pack Double Intégral (Maths + PC)
                 </span>
-                <span className="text-[10px] font-mono text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                  Économie de 100 DH
-                </span>
               </div>
 
               <div>
