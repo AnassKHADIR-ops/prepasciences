@@ -84,10 +84,10 @@ export const POLES_DATA: Record<"maths" | "pc", PoleData> = {
       subtitle: "Syllabus Officiels (MPSI, PCSI, MP, PSI, TSI)",
     },
     filiereBadges: [
-      { label: "PSI / PSI*", href: "/eddams?rubrique=videotheque" },
-      { label: "MP / MP*", href: "/eddams?rubrique=videotheque" },
-      { label: "PC / PC*", href: "/eddams?rubrique=videotheque" },
-      { label: "TSI", href: "/eddams?rubrique=videotheque" },
+      { label: "PSI / PSI*", href: "/eddams?rubrique=cours" },
+      { label: "MP / MP*", href: "/eddams?rubrique=cours" },
+      { label: "PC / PC*", href: "/eddams?rubrique=cours" },
+      { label: "TSI", href: "/eddams?rubrique=cours" },
     ],
     annales: {
       title: "Annales CNC, Mines, CCINP, X-ENS",
@@ -95,9 +95,9 @@ export const POLES_DATA: Record<"maths" | "pc", PoleData> = {
       subtitle: "Sujets & corrigés officiels",
     },
     pedagogie: {
-      title: "Vidéothèque CPGE (387 Vidéos)",
-      href: "/eddams?rubrique=videotheque",
-      subtitle: "Cours complets & Tronc commun par filière",
+      title: "Cours, TDs & Vidéothèque",
+      href: "/eddams?rubrique=cours",
+      subtitle: "Polycopiés officiels & Tronc commun par filière",
     },
     professor: {
       name: "Hassan EDDAMS",

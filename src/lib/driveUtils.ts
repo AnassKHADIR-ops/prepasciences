@@ -30,7 +30,7 @@ export function getDriveImageUrls(driveUrlOrId: string | null | undefined): stri
 
   const fileId = extractDriveFileId(driveUrlOrId);
   if (!fileId) {
-    return typeof driveUrlOrId === "string" && driveUrlOrId.startsWith("http")
+    return typeof driveUrlOrId === "string" && (driveUrlOrId.startsWith("http") || driveUrlOrId.startsWith("/"))
       ? [driveUrlOrId]
       : [];
   }

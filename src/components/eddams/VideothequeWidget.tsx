@@ -104,9 +104,8 @@ export function VideothequeWidget({
             </h1>
 
             <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-              <strong className="text-purple-700 dark:text-purple-400">387 vidéos ordonnées</strong> par discipline,
-              chapitre et filière selon les programmes officiels CPGE (MPSI, PCSI, MP, PSI, PC, TSI). Tous les cours sont
-              vérifiés sans aucun lien manquant.
+              <strong className="text-purple-700 dark:text-purple-400">Catalogue complet de cours et replays</strong> ordonnés
+              par discipline, chapitre et filière selon les programmes officiels CPGE (MPSI, PCSI, MP, PSI, PC, TSI). Les ressources sont enrichies régulièrement chaque semaine.
             </p>
           </div>
 
@@ -130,9 +129,8 @@ export function VideothequeWidget({
               <Layers className="w-4 h-4 text-purple-600" />
               Filtrer par Filière CPGE
             </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {filteredVideos.length} vidéo{filteredVideos.length > 1 ? "s" : ""} disponible
-              {filteredVideos.length > 1 ? "s" : ""}
+            <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
+              Mise à jour continue
             </span>
           </div>
 
@@ -149,15 +147,7 @@ export function VideothequeWidget({
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-bold">Toutes filières</span>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                    selectedFiliere === "ALL"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {stats.total}
-                </span>
+                {selectedFiliere === "ALL" && <CheckCircle2 className="w-4 h-4 text-white" />}
               </div>
               <span
                 className={`text-[11px] leading-snug line-clamp-1 ${
@@ -183,15 +173,7 @@ export function VideothequeWidget({
                   PSI / PSI*
                   <Award className="w-3.5 h-3.5 text-amber-400" />
                 </span>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                    selectedFiliere === "PSI"
-                      ? "bg-white/20 text-white"
-                      : "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300"
-                  }`}
-                >
-                  {stats.psi}
-                </span>
+                {selectedFiliere === "PSI" && <CheckCircle2 className="w-4 h-4 text-white" />}
               </div>
               <span
                 className={`text-[11px] leading-snug line-clamp-1 ${
@@ -214,15 +196,7 @@ export function VideothequeWidget({
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-bold">MP / MP*</span>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                    selectedFiliere === "MP"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {stats.mp}
-                </span>
+                {selectedFiliere === "MP" && <CheckCircle2 className="w-4 h-4 text-white" />}
               </div>
               <span
                 className={`text-[11px] leading-snug line-clamp-1 ${
@@ -245,15 +219,7 @@ export function VideothequeWidget({
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-bold">PC / PC*</span>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                    selectedFiliere === "PC"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {stats.pc}
-                </span>
+                {selectedFiliere === "PC" && <CheckCircle2 className="w-4 h-4 text-white" />}
               </div>
               <span
                 className={`text-[11px] leading-snug line-clamp-1 ${
@@ -276,15 +242,7 @@ export function VideothequeWidget({
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-bold">TSI</span>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                    selectedFiliere === "TSI"
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {stats.tsi}
-                </span>
+                {selectedFiliere === "TSI" && <CheckCircle2 className="w-4 h-4 text-white" />}
               </div>
               <span
                 className={`text-[11px] leading-snug line-clamp-1 ${

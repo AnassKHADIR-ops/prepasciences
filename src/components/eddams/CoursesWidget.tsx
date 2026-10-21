@@ -22,16 +22,497 @@ import {
   Filter,
   ChevronLeft,
   ArrowRight,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import { getDriveImageUrls, extractDriveFileId, getYoutubeThumbnailCandidates, getYoutubeThumbnail } from "@/lib/driveUtils";
 import { useCourses } from "@/context/CoursesContext";
 import { useAuth } from "@/context/AuthContext";
+import {
+  ELEARNING_PHYSICS_VIDEOS,
+  ElearningVideoItem,
+  FiliereCPGE,
+} from "@/data/elearningPhysiqueData";
+import { VideothequeWidget } from "./VideothequeWidget";
 
 interface CoursesWidgetProps {
   onOpenPdf: (url: string, title: string) => void;
   onOpenVideo: (url: string, title: string) => void;
   initialNiveau?: "sup" | "spe" | null;
   onSelectNiveau?: (niveau: "sup" | "spe" | null) => void;
+}
+
+export interface ChapterVideoItem {
+  id: string;
+  titre: string;
+  sous?: string;
+  video: string;
+  support?: string;
+  thumbnail?: string;
+  durationFormatted?: string;
+  badge?: string;
+  isCustom?: boolean;
+  rawSession?: CourseSession;
+}
+
+// ── Extraction Intelligente du Polycopié de Cours Officiel du Chapitre ──
+function getChapterOfficialPdf(chapter: ChapitreItem & { moduleId?: string; moduleName?: string }): {
+  url: string;
+  titre: string;
+  sous: string;
+} {
+  // 1. Chercher d'abord dans chapter.cours un support polycopié officiel
+  const polySession = chapter.cours?.find(
+    (c) =>
+      c.support &&
+      (c.titre.toLowerCase().includes("polycopié") ||
+        c.titre.toLowerCase().includes("cours complet") ||
+        c.sous?.toLowerCase().includes("officiel") ||
+        c.sous?.toLowerCase().includes("support rédigé"))
+  );
+  if (polySession && polySession.support) {
+    return {
+      url: polySession.support,
+      titre: polySession.titre,
+      sous: polySession.sous || "Support officiel rédigé par Pr. Hassan EDDAMS",
+    };
+  }
+
+  // 2. Chercher n'importe quel premier support de cours non vide
+  const anySupport = chapter.cours?.find((c) => c.support && c.support.trim() !== "");
+  if (anySupport && anySupport.support) {
+    return {
+      url: anySupport.support,
+      titre: anySupport.titre.toLowerCase().includes("polycopié")
+        ? anySupport.titre
+        : `Polycopié de Cours : ${chapter.titre}`,
+      sous: anySupport.sous || "Support officiel de cours CPGE · Pr. Hassan EDDAMS",
+    };
+  }
+
+  // 3. Chercher dans les fiches de synthèse
+  const polyFiche = chapter.fiches?.find(
+    (f) =>
+      f.url &&
+      (f.titre.toLowerCase().includes("polycopié") || f.titre.toLowerCase().includes("cours"))
+  );
+  if (polyFiche && polyFiche.url) {
+    return {
+      url: polyFiche.url,
+      titre: polyFiche.titre,
+      sous: polyFiche.sous || "Polycopié officiel CPGE · Pr. Hassan EDDAMS",
+    };
+  }
+
+  // 4. Mémento / Cours Résumé Général CPGE de référence par défaut
+  return {
+    url: "https://drive.google.com/file/d/1iM7YxwyBKkIDLv1SBYmfJHc7QgSNHxjf/preview",
+    titre: `Polycopié de Cours : ${chapter.titre}`,
+    sous: "Cours de référence multi-filières CPGE · Pr. Hassan EDDAMS",
+  };
+}
+
+// ── Extraction et Agrégation des Vidéos du Chapitre (Enseignant + E-Learning Physique) ──
+function getChapterUnifiedVideos(
+  chapter: ChapitreItem & { moduleId?: string },
+  selectedFiliere: FiliereCPGE | "ALL"
+): ChapterVideoItem[] {
+  const result: ChapterVideoItem[] = [];
+
+  // 1. Ajouter d'abord les séances créées directement ou existantes avec vidéo sur le chapitre
+  if (chapter.cours) {
+    chapter.cours.forEach((s, idx) => {
+      if (s.video && s.video.trim() !== "") {
+        result.push({
+          id: s.id || `custom-sess-${idx}`,
+          titre: s.titre,
+          sous: s.sous || "Séance de cours & Replay interactif",
+          video: s.video,
+          support: s.support,
+          thumbnail: s.thumbnail,
+          badge: "Séance du Professeur",
+          isCustom: true,
+          rawSession: s,
+        });
+      }
+    });
+  }
+
+  // 2. Extraire les vidéos YouTube correspondantes du catalogue E-Learning Physique
+  const modId = chapter.moduleId || "";
+  const chapTitleLower = chapter.titre.toLowerCase();
+
+  const matchingElearningVideos = ELEARNING_PHYSICS_VIDEOS.filter((v) => {
+    // Vérification filière
+    if (selectedFiliere !== "ALL" && !v.filieres.includes(selectedFiliere)) {
+      return false;
+    }
+
+    // Vérification niveau
+    if (chapter.niveau && v.niveau !== "tous" && v.niveau !== chapter.niveau) {
+      return false;
+    }
+
+    // Correspondance par module
+    let matchesModule = false;
+    if (modId.includes("elec") && v.moduleId === "elec") matchesModule = true;
+    else if (modId.includes("thermo") && v.moduleId === "thermo") matchesModule = true;
+    else if (modId.includes("meca") && v.moduleId === "meca") matchesModule = true;
+    else if (modId.includes("optique") && v.moduleId === "optique") matchesModule = true;
+    else if (modId.includes("em") && v.moduleId === "em") matchesModule = true;
+    else if (modId.includes("ondes") && v.moduleId === "ondes") matchesModule = true;
+    else if (modId.includes("quantique") && v.moduleId === "quantique") matchesModule = true;
+    else if (modId.includes("fluides") && v.moduleId === "fluides") matchesModule = true;
+    else if (modId.includes("chimie") && v.moduleId === "chimie") matchesModule = true;
+
+    if (!matchesModule) return false;
+
+    // Raffinement pour les modules multi-chapitres
+    if (modId.includes("em-sup")) {
+      if (chapter.num === 1) {
+        return (
+          v.chapitre.toLowerCase().includes("électrostatique") ||
+          v.title.toLowerCase().includes("gauss") ||
+          v.title.toLowerCase().includes("dipôle")
+        );
+      } else if (chapter.num === 2) {
+        return (
+          v.chapitre.toLowerCase().includes("magnétostatique") ||
+          v.title.toLowerCase().includes("ampère") ||
+          v.title.toLowerCase().includes("biot")
+        );
+      }
+    }
+
+    if (modId.includes("thermo-sup")) {
+      if (chapTitleLower.includes("statique des fluides")) {
+        return (
+          v.chapitre.toLowerCase().includes("statique des fluides") ||
+          v.title.toLowerCase().includes("fluide")
+        );
+      }
+    }
+
+    return true;
+  });
+
+  const existingUrls = new Set(result.map((r) => r.video));
+  for (const ev of matchingElearningVideos) {
+    if (!existingUrls.has(ev.youtubeUrl)) {
+      existingUrls.add(ev.youtubeUrl);
+      let filiereBadge = "Tronc Commun MP / PSI";
+      if (ev.isCommon) {
+        filiereBadge = "Tronc Commun CPGE";
+      } else if (ev.filieres.includes("PSI") && !ev.filieres.includes("MP")) {
+        filiereBadge = "Spécifique PSI";
+      } else if (ev.filieres.includes("MP") && !ev.filieres.includes("PSI")) {
+        filiereBadge = "Spécifique MP";
+      } else if (ev.filieres.includes("PC")) {
+        filiereBadge = "Spécifique PC";
+      } else if (ev.filieres.length === 1 && ev.filieres[0] === "PSI") {
+        filiereBadge = "Spécifique PSI";
+      }
+
+      result.push({
+        id: ev.id,
+        titre: ev.title,
+        sous: `${ev.domaine} · ${ev.chapitre}`,
+        video: ev.youtubeUrl,
+        thumbnail: ev.thumbnailUrl,
+        durationFormatted: ev.durationFormatted,
+        badge: filiereBadge,
+        isCustom: false,
+      });
+    }
+  }
+
+  return result;
+}
+
+// ── BANDEAU MAJESTUEUX : POLYCOPIÉ DE COURS OFFICIEL (EN HAUT DU CHAPITRE) ──
+function ChapterOfficialPdfBanner({
+  pdf,
+  chapterTitre,
+  selectedFiliere,
+  onOpenPdf,
+}: {
+  pdf: { url: string; titre: string; sous: string };
+  chapterTitre: string;
+  selectedFiliere: FiliereCPGE | "ALL";
+  onOpenPdf: (url: string, title: string) => void;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-900/10 via-indigo-900/10 to-transparent dark:from-purple-950/50 dark:via-indigo-950/35 dark:to-[#0d1322] border-2 border-purple-200/90 dark:border-purple-500/40 p-4 sm:p-5 shadow-sm transition-all hover:shadow-md">
+      <div className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full bg-purple-500/15 blur-2xl" />
+
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Côté Gauche : Icône Polycopié + Titres + Note Pédagogique */}
+        <div className="flex items-start gap-3.5 sm:gap-4 flex-1 min-w-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800 text-white flex items-center justify-center shrink-0 shadow-lg shadow-purple-600/25 border border-white/20">
+            <FileText className="w-6 h-6 sm:w-7 sm:h-7" />
+          </div>
+
+          <div className="flex-1 min-w-0 space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
+                <BookOpen className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                <span>Polycopié de Cours Officiel · Pr. Hassan EDDAMS</span>
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
+                <span>Multi-Filières CPGE (MP · PSI · PC · TSI)</span>
+              </span>
+            </div>
+
+            <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug">
+              {pdf.titre}
+            </h4>
+
+            {pdf.sous && (
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                {pdf.sous}
+              </p>
+            )}
+
+            {/* Note pédagogique explicite du professeur */}
+            <div className="mt-2 p-2.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/70 dark:border-purple-500/20 text-[11px] sm:text-xs text-purple-900 dark:text-purple-200 leading-relaxed font-medium flex items-start gap-2">
+              <span className="text-sm shrink-0">📌</span>
+              <span>
+                <strong>Repères Filières du Professeur :</strong> Dans ce polycopié complet, le professeur signale directement dans le cours les paragraphes et compléments exigibles selon votre filière ({selectedFiliere === "ALL" ? "MP, PSI, PC, TSI" : `filière active : ${selectedFiliere}`}).
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Côté Droit : Bouton d'accès au document PDF */}
+        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-purple-100 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={() => onOpenPdf(pdf.url, `${pdf.titre} — ${chapterTitre}`)}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-600/25 transition-all hover:scale-[1.02] cursor-pointer"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Consulter le Polycopié (PDF)</span>
+          </button>
+
+          <a
+            href={pdf.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 hover:underline flex items-center gap-1"
+          >
+            <span>Ouvrir dans Google Drive</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CARTE VIDÉO UNIFIÉE (JUSTE EN BAS DU POLYCOPIÉ) ──
+function UnifiedChapterVideoCard({
+  vid,
+  index,
+  chapTitre,
+  onOpenPdf,
+  onOpenVideo,
+  isTeacherView,
+  onEdit,
+  onDelete,
+}: {
+  vid: ChapterVideoItem;
+  index: number;
+  chapTitre: string;
+  onOpenPdf: (url: string, title: string) => void;
+  onOpenVideo: (url: string, title: string) => void;
+  isTeacherView?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) {
+  const titre = vid.titre || `Vidéo ${index + 1}`;
+  const sous = vid.sous || "Replay de cours & Résolution méthodique";
+  const videoUrl = vid.video || "";
+  const supportUrl = vid.support || "";
+  const hasVideo = Boolean(videoUrl && videoUrl.trim() !== "");
+  const hasSupport = Boolean(supportUrl && supportUrl.trim() !== "");
+
+  const thumbnailCandidates = useMemo(() => {
+    const list: string[] = [];
+    if (vid.thumbnail && vid.thumbnail.trim()) {
+      list.push(vid.thumbnail.trim());
+    }
+    if (videoUrl) {
+      const ytCandidates = getYoutubeThumbnailCandidates(videoUrl);
+      list.push(...ytCandidates);
+    }
+    return list;
+  }, [vid.thumbnail, videoUrl]);
+
+  const [thumbIdx, setThumbIdx] = useState(0);
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const [thumbLoaded, setThumbLoaded] = useState(false);
+
+  const handleThumbError = () => {
+    if (thumbIdx + 1 < thumbnailCandidates.length) {
+      setThumbIdx((prev) => prev + 1);
+    } else {
+      setThumbFailed(true);
+    }
+  };
+
+  const hasValidThumb = thumbnailCandidates.length > 0 && !thumbFailed;
+
+  return (
+    <article className="group relative bg-white dark:bg-[#0d1322] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs hover:shadow-md hover:border-purple-300 dark:hover:border-purple-500/40 transition-all flex flex-col justify-between">
+      {/* Boutons d'édition & suppression enseignant si séance personnalisée */}
+      {isTeacherView && (
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="p-1.5 rounded-lg bg-purple-700/90 hover:bg-purple-800 text-white shadow-xs transition-all cursor-pointer"
+              title="Modifier cette séance"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`Supprimer la séance "${titre}" ?`)) onDelete();
+              }}
+              className="p-1.5 rounded-lg bg-red-600/90 hover:bg-red-700 text-white shadow-xs transition-all cursor-pointer"
+              title="Supprimer cette séance"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Vignette Vidéo / Support avec Héritage Miniature */}
+      {hasVideo ? (
+        <div
+          className="relative w-full aspect-video bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 overflow-hidden cursor-pointer select-none"
+          onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+          title={`Regarder : ${titre}`}
+        >
+          {hasValidThumb ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              key={thumbnailCandidates[thumbIdx]}
+              className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${
+                thumbLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              src={thumbnailCandidates[thumbIdx]}
+              alt={titre}
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+              loading="lazy"
+              onLoad={() => setThumbLoaded(true)}
+              onError={handleThumbError}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0a1024] via-[#121b36] to-[#1c1236] flex flex-col items-center justify-center p-4 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-300 mb-2 shadow-inner">
+                <Atom className="w-6 h-6 animate-pulse text-purple-400" />
+              </div>
+              <span className="text-xs font-bold text-white line-clamp-1 max-w-[85%] drop-shadow-xs">
+                {titre}
+              </span>
+              <span className="text-[10px] text-purple-300/90 font-mono mt-0.5">
+                Replay HD · Physique-Chimie CPGE
+              </span>
+            </div>
+          )}
+
+          {/* Calque Sombre & Badge Filière & Bouton Play */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex flex-col justify-between p-2.5 sm:p-3 pointer-events-none">
+            <div className="flex items-center justify-between gap-1 w-full">
+              {vid.badge && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-900/90 text-purple-200 border border-purple-400/30 shadow-xs">
+                  {vid.badge}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 shadow-xs ml-auto">
+                <Lock className="w-2.5 h-2.5" />
+                MEMBRE
+              </span>
+            </div>
+
+            <div className="self-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-red-600/90 group-hover:bg-red-600 group-hover:scale-110 flex items-center justify-center text-white shadow-xl shadow-red-950/50 transition-all pointer-events-auto">
+              <PlayCircle className="w-7 h-7" />
+            </div>
+
+            <div className="flex items-center justify-between text-[10px] text-white/90 font-medium">
+              <span className="truncate max-w-[70%] drop-shadow-xs">{chapTitre}</span>
+              {vid.durationFormatted && (
+                <span className="bg-black/70 px-1.5 py-0.5 rounded font-mono text-[9px] text-purple-200 border border-white/10">
+                  {vid.durationFormatted}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : hasSupport ? (
+        <div
+          className="relative w-full aspect-video bg-gradient-to-br from-indigo-900 to-purple-950 flex flex-col items-center justify-center p-3 cursor-pointer text-indigo-100"
+          onClick={() => onOpenPdf(supportUrl, `Support : ${titre} — ${chapTitre}`)}
+        >
+          <FileText className="w-7 h-7 mb-1 opacity-90 text-indigo-300" />
+          <span className="text-[10px] font-bold tracking-wider uppercase text-indigo-100">
+            Support de Cours PDF
+          </span>
+        </div>
+      ) : null}
+
+      {/* Informations de la séance */}
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
+            {titre}
+          </h4>
+          {sous && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+              {sous}
+            </p>
+          )}
+        </div>
+
+        {/* Boutons d'action */}
+        <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+          {hasSupport && (
+            <button
+              type="button"
+              onClick={() => onOpenPdf(supportUrl, `Support : ${titre} — ${chapTitre}`)}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-500/30 transition-colors cursor-pointer"
+            >
+              <FileText className="w-3 h-3" />
+              <span>Support PDF</span>
+            </button>
+          )}
+
+          {hasVideo && (
+            <button
+              type="button"
+              onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer ml-auto shadow-2xs"
+            >
+              <PlayCircle className="w-3 h-3" />
+              <span>Regarder</span>
+              <Lock className="w-2.5 h-2.5 ml-0.5 opacity-80" />
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
 }
 
 // ── 1. Carte Séance de cours & Replay Vidéo (Colonne Gauche) ──
@@ -525,6 +1006,20 @@ export function CoursesWidget({
       }
       window.history.pushState(null, "", url.toString());
     }
+  };
+
+  // Filière active (PSI par défaut, MP, PC, TSI, Toutes)
+  const [selectedFiliere, setSelectedFiliere] = useState<FiliereCPGE | "ALL">("PSI");
+  const [courseViewMode, setCourseViewMode] = useState<"chapitres" | "videotheque">("chapitres");
+  const [expandedVideoChapters, setExpandedVideoChapters] = useState<Set<string>>(new Set());
+
+  const toggleExpandVideos = (chapId: string) => {
+    setExpandedVideoChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(chapId)) next.delete(chapId);
+      else next.add(chapId);
+      return next;
+    });
   };
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -1200,7 +1695,83 @@ export function CoursesWidget({
             </div>
           </div>
 
-      {/* 2. Filtres par Module & Recherche */}
+          {/* 1 bis. Barre de Bascule Filières CPGE (PSI / MP / PC / TSI) & Mode de Vue */}
+          <div className="bg-white/90 dark:bg-[#0d1322]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-purple-500/25 p-3.5 sm:p-4 shadow-xs mb-5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Sélecteur de Filière */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <span>🎯</span>
+                <span>Filière CPGE :</span>
+              </span>
+
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+                {(["PSI", "MP", "PC", "TSI", "ALL"] as const).map((fil) => {
+                  const isSel = selectedFiliere === fil;
+                  const label = fil === "ALL" ? "Toutes filières" : fil;
+                  return (
+                    <button
+                      key={fil}
+                      type="button"
+                      onClick={() => setSelectedFiliere(fil)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                        isSel
+                          ? "bg-purple-600 text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <span className="text-[11px] text-purple-700 dark:text-purple-300 font-semibold hidden lg:inline">
+                {selectedFiliere === "PSI" && "✨ Mode PSI : Tronc commun (partagé avec MP) + Spécificités (Navier-Stokes, Poiseuille, bilans)"}
+                {selectedFiliere === "MP" && "✨ Mode MP : Tronc commun + Spécificités (Physique quantique, Boltzmann)"}
+                {selectedFiliere === "PC" && "✨ Mode PC : Tronc commun + Spécificités (Mécanique des fluides & Chimie)"}
+                {selectedFiliere === "TSI" && "✨ Mode TSI : Programme officiel des Sciences Physiques"}
+                {selectedFiliere === "ALL" && "✨ Mode Global : Toutes les filières CPGE"}
+              </span>
+            </div>
+
+            {/* Bascule Vue par Chapitre vs Catalogue Vidéothèque */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 self-end md:self-auto shrink-0">
+              <button
+                type="button"
+                onClick={() => setCourseViewMode("chapitres")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  courseViewMode === "chapitres"
+                    ? "bg-white dark:bg-purple-950 text-purple-700 dark:text-purple-200 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Vue par Chapitre (PDF + Vidéos)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCourseViewMode("videotheque")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  courseViewMode === "videotheque"
+                    ? "bg-white dark:bg-purple-950 text-purple-700 dark:text-purple-200 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                <span>Vidéothèque Complète</span>
+              </button>
+            </div>
+          </div>
+
+          {courseViewMode === "videotheque" ? (
+            <VideothequeWidget
+              onOpenVideo={onOpenVideo}
+              onOpenPdf={onOpenPdf}
+              initialFiliere={selectedFiliere}
+            />
+          ) : (
+            <>
+              {/* 2. Filtres par Module & Recherche */}
       <div className="bg-white/90 dark:bg-[#0d1322]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-purple-500/25 p-4 sm:p-5 shadow-xs mb-6 space-y-3.5">
         {/* Ligne 1 : Liste Déroulante des Modules + Actions Déplier/Replier */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -1478,21 +2049,38 @@ export function CoursesWidget({
                 </div>
               </div>
 
-              {/* Contenu Déplié : MISE EN PAGE EXACTE DU SITE DE RÉFÉRENCE */}
-              {isOpen && (
-                <div className="border-t border-slate-100 dark:border-slate-800/80 bg-[#f8faff] dark:bg-[#090d18]/60 p-5 sm:p-7 space-y-7">
-                  {/* HAUT : 2 COLONNES (SÉANCES À GAUCHE, FICHES DE SYNTHÈSE À DROITE) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    {/* Colonne Gauche (7 ou 8 cols) : SÉANCES DE COURS & REPLAYS VIDÉO */}
-                    <div className="lg:col-span-7 xl:col-span-8 space-y-3.5">
+              {/* Contenu Déplié : Polycopié officiel en haut, vidéos juste en bas, puis Fiches et TDs */}
+              {isOpen && (() => {
+                const chapterPdf = getChapterOfficialPdf(chapter);
+                const chapterVideos = getChapterUnifiedVideos(chapter, selectedFiliere);
+                const isExpanded = expandedVideoChapters.has(chapter.id);
+                const displayedVideos = isExpanded ? chapterVideos : chapterVideos.slice(0, 6);
+
+                return (
+                  <div className="border-t border-slate-100 dark:border-slate-800/80 bg-[#f8faff] dark:bg-[#090d18]/60 p-5 sm:p-7 space-y-7">
+                    {/* ── 1. EN HAUT : POLYCOPIÉ DE COURS OFFICIEL (STYLE & PRÉSENTABLE) ── */}
+                    <ChapterOfficialPdfBanner
+                      pdf={chapterPdf}
+                      chapterTitre={chapter.titre}
+                      selectedFiliere={selectedFiliere}
+                      onOpenPdf={onOpenPdf}
+                    />
+
+                    {/* ── 2. JUSTE EN BAS : SÉANCES & REPLAYS VIDÉO FILTRÉS PAR FILIÈRE ── */}
+                    <div className="space-y-3.5">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
                             🎬 SÉANCES DE COURS & REPLAYS VIDÉO
                           </span>
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            {seances.length}
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
+                            {chapterVideos.length}
                           </span>
+                          {selectedFiliere !== "ALL" && (
+                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                              · Programme {selectedFiliere} (Tronc commun + Spécificités)
+                            </span>
+                          )}
                         </div>
 
                         {/* Bouton Enseignant pour ajouter directement une vidéo/séance */}
@@ -1508,64 +2096,86 @@ export function CoursesWidget({
                         )}
                       </div>
 
-                      {seances.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {seances.map((se, sIdx) => (
-                            <CourseSessionCard
-                              key={se.id || sIdx}
-                              seance={se}
-                              index={sIdx}
+                      {chapterVideos.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {displayedVideos.map((vid, vIdx) => (
+                            <UnifiedChapterVideoCard
+                              key={vid.id || vIdx}
+                              vid={vid}
+                              index={vIdx}
                               chapTitre={chapter.titre}
                               onOpenPdf={onOpenPdf}
                               onOpenVideo={onOpenVideo}
-                              isTeacherView={isTeacherView}
+                              isTeacherView={isTeacherView && vid.isCustom}
                               onEdit={
-                                isTeacherView
-                                  ? () => openEditSession(chapter, se)
+                                isTeacherView && vid.isCustom && vid.rawSession
+                                  ? () => openEditSession(chapter, vid.rawSession!)
                                   : undefined
                               }
                               onDelete={
-                                isTeacherView && se.id
-                                  ? () => deleteSession(chapter.moduleId, chapter.id, se.id!)
+                                isTeacherView && vid.isCustom && vid.id
+                                  ? () => deleteSession(chapter.moduleId, chapter.id, vid.id)
                                   : undefined
                               }
                             />
                           ))}
                         </div>
                       ) : (
-                        <div className="p-6 text-center rounded-xl bg-white/60 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-800 text-xs text-slate-500">
-                          Aucune séance pour ce chapitre pour le moment.
+                        <div className="p-5 text-center rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200/70 dark:border-purple-500/20 text-xs text-purple-900 dark:text-purple-300">
+                          {selectedFiliere === "PSI" && chapter.id.includes("quantique") ? (
+                            <span>
+                              ℹ️ La Physique Quantique est spécifique aux filières MP et PC (hors programme pour la filière PSI). Basculez sur <strong>MP</strong> ou <strong>Toutes filières</strong> pour visualiser les replays de ce cours.
+                            </span>
+                          ) : (
+                            <span>Aucune séance vidéo pour ce chapitre avec le filtre de filière actuel.</span>
+                          )}
+                        </div>
+                      )}
+
+                      {chapterVideos.length > 6 && (
+                        <div className="text-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleExpandVideos(chapter.id)}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30 transition-all cursor-pointer shadow-2xs"
+                          >
+                            <span>
+                              {isExpanded
+                                ? "Afficher moins de vidéos"
+                                : `Afficher l'intégralité des vidéos (${chapterVideos.length} disponibles)`}
+                            </span>
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                          </button>
                         </div>
                       )}
                     </div>
 
-                    {/* Colonne Droite (5 ou 4 cols) : FICHES DE SYNTHÈSE DANS BOÎTIER ÉLÉGANT */}
-                    <div className="lg:col-span-5 xl:col-span-4 bg-[#fdfaf5] dark:bg-[#111827] border border-[#f2e7d7] dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
-                      <div className="flex items-center justify-between pb-2 border-b border-[#ebdccd] dark:border-slate-800">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                            📑 FICHES DE SYNTHÈSE
-                          </span>
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-slate-700">
-                            {fiches.length}
-                          </span>
+                    {/* ── 3. FICHES DE SYNTHÈSE DANS BOÎTIER ÉLÉGANT ── */}
+                    {fiches.length > 0 && (
+                      <div className="bg-[#fdfaf5] dark:bg-[#111827] border border-[#f2e7d7] dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
+                        <div className="flex items-center justify-between pb-2 border-b border-[#ebdccd] dark:border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                              📑 FICHES DE SYNTHÈSE
+                            </span>
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-slate-700">
+                              {fiches.length}
+                            </span>
+                          </div>
+
+                          {isTeacherView && (
+                            <button
+                              type="button"
+                              onClick={() => openAddFiche(chapter)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-700 hover:bg-amber-800 text-white transition-colors cursor-pointer shadow-xs"
+                            >
+                              <PlusCircle className="w-3.5 h-3.5" />
+                              <span>+ Fiche</span>
+                            </button>
+                          )}
                         </div>
 
-                        {/* Bouton Enseignant pour ajouter directement une fiche */}
-                        {isTeacherView && (
-                          <button
-                            type="button"
-                            onClick={() => openAddFiche(chapter)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-700 hover:bg-amber-800 text-white transition-colors cursor-pointer shadow-xs"
-                          >
-                            <PlusCircle className="w-3.5 h-3.5" />
-                            <span>+ Fiche</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {fiches.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                           {fiches.map((f, fIdx) => (
                             <CourseFicheCard
                               key={f.id || fIdx}
@@ -1586,66 +2196,61 @@ export function CoursesWidget({
                             />
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* ── 4. PLEINE LARGEUR TD & DEVOIRS LIBRES (DL) ── */}
+                    <div className="space-y-3.5 pt-2">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                            ✍️ TD & DEVOIRS LIBRES (DL) · FICHES D&apos;EXERCICES & ANNALES
+                          </span>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            {tds.length}
+                          </span>
+                        </div>
+
+                        {isTeacherView && (
+                          <button
+                            type="button"
+                            onClick={() => openAddExercise(chapter)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer shadow-xs"
+                          >
+                            <PlusCircle className="w-3.5 h-3.5" />
+                            <span>+ Ajouter un TD / Énoncé / Corrigé</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {tds.length > 0 ? (
+                        <div className="space-y-2.5">
+                          {tds.map((td, tIdx) => (
+                            <CourseExerciseLine
+                              key={td.id || tIdx}
+                              item={td}
+                              index={tIdx}
+                              chapTitre={chapter.titre}
+                              onOpenPdf={onOpenPdf}
+                              onOpenVideo={onOpenVideo}
+                              isTeacherView={isTeacherView}
+                              onDelete={
+                                isTeacherView && td.id
+                                  ? () => deleteExercise(chapter.moduleId, chapter.id, td.id!)
+                                  : undefined
+                              }
+                            />
+                          ))}
+                        </div>
                       ) : (
-                        <div className="p-5 text-center rounded-xl bg-white/60 dark:bg-slate-900/40 border border-dashed border-amber-200 dark:border-slate-800 text-xs text-amber-700/70 dark:text-amber-300/70">
-                          Aucune fiche de synthèse pour le moment.
+                        <div className="p-6 text-center rounded-xl bg-white/60 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-800 text-xs text-slate-500">
+                          Aucun TD pour ce chapitre pour le moment.
                         </div>
                       )}
                     </div>
                   </div>
-
-                  {/* BAS : PLEINE LARGEUR TD & DEVOIRS LIBRES (DL) / S'ENTRAÎNER */}
-                  <div className="space-y-3.5 pt-2">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-                          ✍️ TD & DEVOIRS LIBRES (DL) · FICHES D&apos;EXERCICES & ANNALES
-                        </span>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                          {tds.length}
-                        </span>
-                      </div>
-
-                      {/* Bouton Enseignant pour ajouter directement un TD */}
-                      {isTeacherView && (
-                        <button
-                          type="button"
-                          onClick={() => openAddExercise(chapter)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer shadow-xs"
-                        >
-                          <PlusCircle className="w-3.5 h-3.5" />
-                          <span>+ Ajouter un TD / Énoncé / Corrigé</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {tds.length > 0 ? (
-                      <div className="space-y-2.5">
-                        {tds.map((td, tIdx) => (
-                          <CourseExerciseLine
-                            key={td.id || tIdx}
-                            item={td}
-                            index={tIdx}
-                            chapTitre={chapter.titre}
-                            onOpenPdf={onOpenPdf}
-                            onOpenVideo={onOpenVideo}
-                            isTeacherView={isTeacherView}
-                            onDelete={
-                              isTeacherView && td.id
-                                ? () => deleteExercise(chapter.moduleId, chapter.id, td.id!)
-                                : undefined
-                            }
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-6 text-center rounded-xl bg-white/60 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-800 text-xs text-slate-500">
-                        Aucun TD pour ce chapitre pour le moment.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           );
         })}
@@ -1656,6 +2261,8 @@ export function CoursesWidget({
           </div>
         )}
       </div>
+            </>
+          )}
         </div>
       )}
 

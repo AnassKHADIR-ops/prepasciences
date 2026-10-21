@@ -1210,7 +1210,7 @@ export const PC_COURSES_DATA_SPE: ModuleCoursBlock[] = [
   {
     id: "quantique-spe",
     niveau: "spe",
-    titre: "Physique Quantique (Spé MP / PSI / TSI)",
+    titre: "Physique Quantique (Spé MP / PC)",
     icon: "⚛️",
     description: "Dualité onde-corpuscule, relations de de Broglie et Planck-Einstein, paquet d'ondes, fonction d'onde, équation de Schrödinger à 1D, puits de potentiel et effet tunnel.",
     chapitres: [
@@ -1219,7 +1219,7 @@ export const PC_COURSES_DATA_SPE: ModuleCoursBlock[] = [
         num: 1,
         niveau: "spe",
         titre: "Dualité Onde-Corpuscule & Équation de Schrödinger",
-        badge: "Spé MP / PSI / TSI",
+        badge: "Spé MP / PC",
         moduleName: "Physique Quantique Spé",
         description: "Inégalités d'Heisenberg, probabilité de présence, états stationnaires et quantification de l'énergie.",
         cours: [
@@ -1239,6 +1239,50 @@ export const PC_COURSES_DATA_SPE: ModuleCoursBlock[] = [
           },
         ],
         tds: [],
+      },
+    ],
+  },
+
+  // ── 2.7 MÉCANIQUE DES FLUIDES SPÉ (NAVİER-STOKES & BILANS) ──
+  {
+    id: "fluides-spe",
+    niveau: "spe",
+    titre: "Mécanique des Fluides Spé & Dynamique (Navier-Stokes)",
+    icon: "🌊",
+    description: "Écoulements parfaits et visqueux newtoniens, équations de Navier-Stokes, écoulements de Poiseuille et Couette, analyse dimensionnelle, bilans de quantité de mouvement et pertes de charge (Cœur PSI / PC).",
+    chapitres: [
+      {
+        id: "fluides-spe-ch1",
+        num: 1,
+        niveau: "spe",
+        titre: "Dynamique des Fluides Incompressibles & Navier-Stokes",
+        badge: "Cœur PSI / PC",
+        moduleName: "Mécanique des Fluides Spé",
+        description: "Dérivée particulaire, viscosité dynamique, équation de Navier-Stokes, écoulements unidirectionnels de Poiseuille et bilans de forces.",
+        cours: [
+          {
+            id: "sess-fluides-spe-poly",
+            titre: "Polycopié de Cours : Mécanique des Fluides Spé (PSI / PC)",
+            sous: "Support officiel de référence CPGE · Pr. Hassan EDDAMS",
+            support: "https://drive.google.com/file/d/1NPZxjL3QCNWkQtUfyeoOVhfB7nXqk4Sx/preview",
+          },
+        ],
+        fiches: [
+          {
+            id: "fiche-fluides-spe",
+            titre: "Formulaire : Navier-Stokes, Nombre de Reynolds & Profils de Vitesse",
+            sous: "Formulaire de synthèse pour concours écrits et oraux",
+            url: "https://drive.google.com/file/d/1NPZxjL3QCNWkQtUfyeoOVhfB7nXqk4Sx/preview",
+          },
+        ],
+        tds: [
+          {
+            id: "td-fluides-spe-poiseuille",
+            titre: "TD · Écoulements Visqueux & Équation de Navier-Stokes",
+            sous: "Écoulement plan de Poiseuille, profil parabolique et débit volumique",
+            enonce: "https://drive.google.com/file/d/1NPZxjL3QCNWkQtUfyeoOVhfB7nXqk4Sx/preview",
+          },
+        ],
       },
     ],
   },

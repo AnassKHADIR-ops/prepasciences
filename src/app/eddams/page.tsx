@@ -8,7 +8,6 @@ import { GateCards3D, SectionType } from "@/components/eddams/GateCards3D";
 import { ConcoursWidget } from "@/components/eddams/ConcoursWidget";
 import { CoursesWidget } from "@/components/eddams/CoursesWidget";
 import { ReferencesWidget } from "@/components/eddams/ReferencesWidget";
-import { VideothequeWidget } from "@/components/eddams/VideothequeWidget";
 import { PdfViewerModal } from "@/components/eddams/PdfViewerModal";
 import { VideoPlayerModal } from "@/components/eddams/VideoPlayerModal";
 import { FreemiumLockModal } from "@/components/video/FreemiumLockModal";
@@ -32,7 +31,7 @@ function EddamsPortal() {
   const activeCurrentUser = isMounted ? currentUser : null;
 
   const activeSection =
-    rubriqueParam && ["cours", "videotheque", "concours", "references"].includes(rubriqueParam)
+    rubriqueParam && ["cours", "concours", "references"].includes(rubriqueParam)
       ? rubriqueParam
       : null;
 
@@ -235,14 +234,6 @@ function EddamsPortal() {
                   router.push(`/eddams?rubrique=cours`);
                 }
               }}
-            />
-          )}
-
-          {activeSection === "videotheque" && (
-            <VideothequeWidget
-              onOpenVideo={handleOpenVideo}
-              onOpenPdf={handleOpenPdf}
-              initialFiliere="PSI"
             />
           )}
 

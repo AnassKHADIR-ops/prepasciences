@@ -3,7 +3,7 @@
 import React from "react";
 import { BookOpen, Trophy, BookmarkCheck, ArrowRight, PlayCircle } from "lucide-react";
 
-export type SectionType = "cours" | "videotheque" | "concours" | "references";
+export type SectionType = "cours" | "concours" | "references";
 
 interface GateCards3DProps {
   onSelectSection: (section: SectionType) => void;
@@ -22,17 +22,9 @@ export function GateCards3D({ onSelectSection }: GateCards3DProps) {
       id: "cours",
       badge: "Syllabus Sup & Spé CPGE",
       title: "Cours et TDs",
-      subtitle: "11 modules fondamentaux de Physique-Chimie (Sup & Spé), fiches méthodologiques, séries de TD avec corrigés rédigés et vidéos d'application.",
+      subtitle: "Polycopiés de cours officiels de Physique-Chimie rédigés par Pr. Hassan EDDAMS, fiches de synthèse, séries de TD et vidéos d'application par filière.",
       icon: <BookOpen className="w-8 h-8 text-purple-700 dark:text-purple-400" />,
-      count: "Sup & Spé (11 Modules)",
-    },
-    {
-      id: "videotheque",
-      badge: "Vidéothèque Officielle · 387 Vidéos",
-      title: "Vidéothèque CPGE",
-      subtitle: "387 cours & corrigés vidéos par E-Learning Physique. Filtrez par filière (PSI, MP, PC, TSI) avec gestion intégrée du tronc commun.",
-      icon: <PlayCircle className="w-8 h-8 text-purple-700 dark:text-purple-400" />,
-      count: "387 Vidéos Classées",
+      count: "Cours, TDs & Vidéos",
     },
     {
       id: "concours",
@@ -46,15 +38,15 @@ export function GateCards3D({ onSelectSection }: GateCards3DProps) {
       id: "references",
       badge: "Bibliothèque & Formulaires",
       title: "Références",
-      subtitle: "Collection d'ouvrages recommandés, programme officiel de la filière MP, formulaire des constantes physiques universelles SI et méthodes de jurys.",
+      subtitle: "Programmes officiels complets des filières MP, PSI, PC et TSI avec inspection des couvertures, formulaire des constantes et collection recommandée.",
       icon: <BookmarkCheck className="w-8 h-8 text-purple-700 dark:text-purple-400" />,
-      count: "Programme & Formulaires",
+      count: "Programmes & Ouvrages",
     },
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-12 px-4 sm:px-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 [perspective:1200px]">
+    <div className="w-full max-w-5xl mx-auto py-12 px-4 sm:px-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 [perspective:1200px]">
         {cards.map((card) => {
           return (
             <div
