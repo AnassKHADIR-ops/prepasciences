@@ -47,18 +47,18 @@ export function CleanLightLanding() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-7 space-y-5 text-left"
           >
-            {/* Titre Principal exact du mockup */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.1] text-slate-900 font-sans">
-              <span>L&apos;excellence </span>
+            {/* Titre Principal Option 1 avec typographie style Apple */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold sm:font-extrabold tracking-[-0.03em] leading-[1.08] text-[#1d1d1f]">
+              <span>L&apos;excellence en </span>
               <span className="text-purple-800">CPGE,</span>
               <br />
-              <span>à portée de </span>
-              <span className="text-purple-800">méthode.</span>
+              <span>par la méthode </span>
+              <span className="text-purple-800">de nos experts.</span>
             </h1>
 
-            {/* Sous-titre exact du mockup */}
-            <p className="text-base sm:text-lg lg:text-xl text-slate-600 font-normal max-w-xl leading-relaxed">
-              Des cours rigoureux, des exercices ciblés et un accompagnement pour réussir les concours.
+            {/* Sous-titre Option 1 */}
+            <p className="text-base sm:text-lg lg:text-xl text-[#515154] font-normal max-w-xl leading-relaxed tracking-[-0.01em]">
+              L&apos;accompagnement rigoureux de professeurs agrégés pour dominer les épreuves de Maths et de Physique-Chimie.
             </p>
 
             {/* Deux Boutons CTA exacts du mockup */}

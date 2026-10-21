@@ -22,7 +22,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
   --color-navy-950: var(--navy-950);
   --color-navy-900: var(--navy-900);
@@ -35,12 +36,14 @@
 html, body {
   scroll-behavior: smooth;
   background-color: #FFFDF9;
-  color: #17142D;
+  color: #1d1d1f;
   overflow-x: clip;
   max-width: 100vw;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
-  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   selection-background-color: #E9D5FF;
   selection-color: #581C87;
 }
