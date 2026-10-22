@@ -1,0 +1,360 @@
+{
+  "metadata": {
+    "titre": "RAPPORT D'AUDIT PÉDAGOGIQUE ET TECHNIQUE CPGE — CATALOGUE E-LEARNING PHYSIQUE",
+    "projet": "Plateforme PrépaSciences — Pôle Physique-Chimie CPGE Pr. Hassan EDDAMS",
+    "chaine_source": "E-Learning Physique (@e-learningphysique4910 — Olivier Granier)",
+    "destinataire": "Direction Générale & Chef d'Entreprise",
+    "auditeur": "Inspection Pédagogique Générale CPGE & Lead Full-Stack Architect",
+    "date_audit": "2026-10-22",
+    "statut": "RÉCONCILIÉ ET DÉPLOYÉ EN PRODUCTION (origin/main)"
+  },
+  "synthese_executive": {
+    "catalogue_videos_total": 387,
+    "taux_disponibilite_avant_audit": "56.6% (168 vidéos absentes des chapitres de cours)",
+    "taux_disponibilite_apres_audit": "100.0% (387 vidéos réconciliées et accessibles)",
+    "modules_reconcilies": 11,
+    "chapitres_alimentes": 31,
+    "liens_cours_videos_generes": 798,
+    "diagnostic_cle": "144 vidéos de concours et 24 vidéos de méthodes étaient exclues du switch dans CoursesWidget.tsx, et ConcoursWidget.tsx n'importait pas la base de données vidéo YouTube.",
+    "statut_deploiement": {
+      "build_nextjs": "Succès (0 erreur, compiled in 16.3s)",
+      "git_commit": "6403465",
+      "git_branche": "main",
+      "git_remote": "https://github.com/AnassKHADIR-ops/prepasciences.git"
+    }
+  },
+  "referentiel_programmes_officiels": {
+    "syllabus_sources": [
+      {
+        "filiere": "MPSI 1",
+        "titre": "physique- 1er année MPSI.pdf",
+        "pages": 37
+      },
+      {
+        "filiere": "PCSI 1",
+        "titre": "physique-pcsi 1er année.pdf",
+        "pages": 39
+      },
+      {
+        "filiere": "TSI 1",
+        "titre": "Physique TSI 1er année.pdf",
+        "pages": 33
+      },
+      {
+        "filiere": "MP 2",
+        "titre": "programme 2eme année MP.pdf",
+        "pages": 34
+      },
+      {
+        "filiere": "PSI 2",
+        "titre": "physique-psi 2eme année.pdf",
+        "pages": 45
+      },
+      {
+        "filiere": "TSI 2",
+        "titre": "physique-TSI 2e année.pdf",
+        "pages": 30
+      }
+    ],
+    "tronc_commun_fondamental": {
+      "sup_1ere_annee": [
+        "Électronique : Circuits dans l'ARQS, lois de Kirchhoff, Thévenin/Norton/Millman, régimes transitoires 1er et 2nd ordre, RSF, résonance, filtrage analogique, AOP/ALI.",
+        "Optique géométrique : Lois de Snell-Descartes, conditions de Gauss, miroirs et lentilles minces, instruments d'optique (œil, loupe, microscope, lunette afocale).",
+        "Mécanique du point : Cinématique (cartésienne, polaire, cylindrique, sphérique, Frenet), PFD, frottements de Coulomb et visqueux, théorèmes énergétiques, oscillateurs, forces centrales conservatives et lois de Kepler, référentiels non galiléens et forces d'inertie.",
+        "Thermodynamique Sup : Description macroscopique/microscopique, équation d'état du gaz parfait, statique des fluides en référentiel galiléen, 1er principe (U, H), 2nd principe (entropie S), changements de phase du corps pur, machines thermiques.",
+        "Électromagnétisme Sup : Électrostatique dans le vide, théorème de Gauss, dipôle électrostatique, magnétostatique dans le vide, théorème d'Ampère, loi de Biot et Savart, dipôle magnétique."
+      ],
+      "spe_2eme_annee": [
+        "Électromagnétisme Spé : Opérateurs différentiels (grad, div, rot, laplacien), équation de continuité locale, loi d'Ohm locale, équations de Maxwell (MG, MT, MF, MA), potentiel scalaire et vecteur, vecteur de Poynting et théorème de Poynting.",
+        "Induction électromagnétique : Induction de Neumann (circuit mobile dans champ B stationnaire), induction de Faraday (champ B variable dans circuit fixe), auto et mutuelle induction, forces de Laplace.",
+        "Mécanique du solide : Champ des vitesses (Varignon), torseurs cinématique, cinétique et dynamique, matrice et moments d'inertie, théorème de Huygens, PFD solide, roulement sans glissement.",
+        "Physique des ondes : Équation de d'Alembert 1D, OPPH, ondes sonores dans les fluides (surpression, impédance acoustique), ondes transversales sur cordes vibrantes.",
+        "Optique ondulatoire : Modèle scalaire, cohérence temporelle et spatiale, formule de Fresnel, interférences à 2 ondes (trous d'Young), interféromètre de Michelson (lame d'air et coin d'air).",
+        "Transferts thermiques : Conduction thermique, loi de Fourier, équation de diffusion thermique 1D et 3D, résistances thermiques de conduction et convection."
+      ]
+    },
+    "regles_exclusions_filiere": {
+      "PSI_PSI_etoile": {
+        "exigible_majeur": [
+          "Mécanique des fluides visqueux : équations de Navier-Stokes, nombre de Reynolds, écoulements rampants, profils de Poiseuille et Couette.",
+          "Bilans industriels et écoulements en conduite : théorème d'Euler pour système ouvert, bilans de quantité de mouvement, pertes de charge de Darcy-Weisbach.",
+          "Conversion électromécanique : transformateur parfait et réel, machines synchrones et asynchrones, bilans de puissances active et réactive.",
+          "Électronique numérique & Traitement du signal : CAN/CNA, échantillonnage de Shannon, filtrage numérique, modulation d'amplitude."
+        ],
+        "strictement_hors_programme": [
+          "Physique quantique (équation de Schrödinger, puits de potentiel, effet tunnel)",
+          "Thermodynamique statistique (facteur de Boltzmann, capacités d'Einstein/Dulong-Petit)",
+          "Rayonnement dipolaire et formule de Larmor"
+        ]
+      },
+      "MP_MP_etoile": {
+        "exigible_majeur": [
+          "Physique quantique formelle : équation de Schrödinger 1D, états stationnaires, puits de potentiel infini/fini, effet tunnel, barrières de potentiel.",
+          "Thermodynamique statistique : modèle microscopique discret, facteur de Boltzmann exp(-E/kT), capacités thermiques statistiques.",
+          "Rayonnement électromagnétique : approximation dipolaire électrique, puissance rayonnée de Larmor."
+        ],
+        "strictement_hors_programme": [
+          "Mécanique des fluides visqueux et Navier-Stokes (seul le fluide parfait / Bernoulli est au programme)",
+          "Machines électriques tournantes synchrones et asynchrones"
+        ]
+      },
+      "PC_PC_etoile": {
+        "exigible_majeur": [
+          "Mécanique des fluides complet (Euler et Navier-Stokes)",
+          "Optique de Fourier et diffraction de Fraunhofer à 2D par ouvertures et fentes, réseaux de diffraction",
+          "Thermodynamique chimique approfondie, diagrammes d'Ellingham et Pourbaix"
+        ],
+        "hors_programme": [
+          "Physique quantique formelle (version simplifiée sans formalisme d'opérateurs avancés)"
+        ]
+      },
+      "TSI": {
+        "exigible_majeur": [
+          "Électrotechnique industrielle, machines tournantes et conversion statique de puissance",
+          "Mécanique du solide et dynamique des mécanismes",
+          "Thermodynamique industrielle des cycles de centrales et moteurs thermiques"
+        ],
+        "strictement_hors_programme": [
+          "Physique quantique formelle",
+          "Thermodynamique statistique",
+          "Optique de Fourier"
+        ]
+      }
+    }
+  },
+  "cartographie_catalogue_387_videos": {
+    "total_exact": 387,
+    "repartition_par_module": {
+      "concours": {
+        "count": 144,
+        "pourcentage": "37.2%"
+      },
+      "em": {
+        "count": 35,
+        "pourcentage": "9.0%"
+      },
+      "ondes": {
+        "count": 32,
+        "pourcentage": "8.3%"
+      },
+      "thermo": {
+        "count": 30,
+        "pourcentage": "7.8%"
+      },
+      "elec": {
+        "count": 27,
+        "pourcentage": "7.0%"
+      },
+      "fluides": {
+        "count": 26,
+        "pourcentage": "6.7%"
+      },
+      "meca": {
+        "count": 25,
+        "pourcentage": "6.5%"
+      },
+      "methodes": {
+        "count": 24,
+        "pourcentage": "6.2%"
+      },
+      "quantique": {
+        "count": 21,
+        "pourcentage": "5.4%"
+      },
+      "optique": {
+        "count": 17,
+        "pourcentage": "4.4%"
+      },
+      "chimie": {
+        "count": 6,
+        "pourcentage": "1.6%"
+      }
+    },
+    "repartition_par_niveau": {
+      "spe": 283,
+      "sup": 104
+    },
+    "repartition_par_filiere": {
+      "PC": 369,
+      "MP": 338,
+      "PSI": 328,
+      "TSI": 273
+    },
+    "repartition_concours_detaillee": {
+      "X-ENS": 92,
+      "TP Concours": 31,
+      "Mines-Ponts": 14,
+      "Centrale-Supelec": 4,
+      "CCINP / CCP": 2,
+      "Concours CPGE Transversal": 1
+    }
+  },
+  "diagnostic_root_causes": {
+    "cause_1_omission_modules": {
+      "composant_impacte": "src/components/eddams/CoursesWidget.tsx",
+      "description": "L'instruction de filtrage par module n'admettait que 9 modules et excluait systématiquement v.moduleId === 'concours' et v.moduleId === 'methodes'.",
+      "consequence": "168 vidéos (43.4% du catalogue global) étaient automatiquement purgées lors de la navigation dans les cours."
+    },
+    "cause_2_cloisonnement_concours": {
+      "composant_impacte": "src/components/eddams/ConcoursWidget.tsx",
+      "description": "Le composant officiel des concours lisait uniquement les sujets PDF de pcConcoursData.ts et n'importait pas le catalogue vidéo d'Olivier Granier.",
+      "consequence": "Les étudiants préparant les concours ne disposaient d'aucune vidéo de correction dans l'espace Concours."
+    },
+    "cause_3_erreur_niveau": {
+      "composant_impacte": "src/data/elearningPhysiqueVideos.json",
+      "description": "Des vidéos fondamentales de 1ère année (ex: Second principe de la thermodynamique) étaient labellisées 'spe' dans le JSON, provoquant leur rejet dans les chapitres de Sup.",
+      "consequence": "Vidéos de cours théoriques introuvables dans thermo-sup."
+    },
+    "cause_4_granularite_insuffisante": {
+      "composant_impacte": "src/components/eddams/CoursesWidget.tsx",
+      "description": "L'appariement ancien déversait tout le module de mécanique (25 vids) ou d'électronique (27 vids) dans chaque chapitre sans distinction de sujet.",
+      "consequence": "Noyade de l'étudiant sous des vidéos non pertinentes par rapport au sous-thème étudié."
+    }
+  },
+  "actions_correctives_realisees": [
+    {
+      "fichier": "src/components/eddams/CoursesWidget.tsx",
+      "action": "Refonte de getChapterUnifiedVideos avec appariement fin par mots-clés conceptuels (ARQS, transitoires, Bode, Navier-Stokes, Fourier, Coriolis, etc.), application des règles d'exclusion de filières (PSI vs MP), et injection des vidéos de méthodes et d'annales de concours pertinentes dans chaque chapitre."
+    },
+    {
+      "fichier": "src/components/eddams/ConcoursWidget.tsx",
+      "action": "Intégration d'ELEARNING_PHYSICS_VIDEOS, mise à jour des statistiques dynamiques, et création d'une section dédiée affichant les 144 corrigés vidéos et oraux CPGE avec filtres par concours (X-ENS, Mines-Ponts, Centrale, CCINP, TP)."
+    },
+    {
+      "fichier": "src/data/elearningPhysiqueVideos.json",
+      "action": "Correction des tags de niveau pour les principes thermodynamiques (vers 'sup'), reclassement de l'optique de Fourier, et alignement des filières standards."
+    }
+  ],
+  "tableau_reconciliation_exhaustif": [
+    {
+      "module_id": "fluides",
+      "nom_module": "Mécanique des Fluides",
+      "total_videos": 26,
+      "repartition": "6 Sup (Statique) / 20 Spé (Dynamique Navier-Stokes)",
+      "statut_filiere": "Statique = Tronc Commun ; Dynamique visqueuse = PSI / PC / TSI (Strictement Hors Programme MP)",
+      "chapitres_cibles": [
+        "thermo-sup-ch2 (Statique des fluides)",
+        "fluides-spe-ch1 (Navier-Stokes, Reynolds, bilans ouverts)"
+      ],
+      "statut_integration": "RÉCONCILIÉ"
+    },
+    {
+      "module_id": "quantique",
+      "nom_module": "Physique Quantique",
+      "total_videos": 21,
+      "repartition": "21 Spé (Schrödinger 1D, puits, effet tunnel)",
+      "statut_filiere": "Exigible MP / PC (Strictement Hors Programme PSI et TSI)",
+      "chapitres_cibles": [
+        "quantique-spe-ch1 (Dualité onde-corpuscule & équation de Schrödinger)"
+      ],
+      "statut_integration": "RÉCONCILIÉ (Masquage automatique en filière PSI/TSI)"
+    },
+    {
+      "module_id": "thermo",
+      "nom_module": "Thermodynamique & Transferts",
+      "total_videos": 30,
+      "repartition": "8 Sup (Principes, équilibres) / 22 Spé (Diffusion, Fourier, Thermo stat)",
+      "statut_filiere": "Principes et Diffusion = Tronc Commun ; Thermo statistique = MP uniquement (Hors Programme PSI)",
+      "chapitres_cibles": [
+        "thermo-sup-ch1 à ch6",
+        "thermo-spe-ch1 (Diffusion thermique & conduction)"
+      ],
+      "statut_integration": "RÉCONCILIÉ"
+    },
+    {
+      "module_id": "em",
+      "nom_module": "Électromagnétisme & Induction",
+      "total_videos": 35,
+      "repartition": "21 Sup (Gauss, Ampère) / 14 Spé (Maxwell, Induction, Conversion)",
+      "statut_filiere": "Électrostatique, Magnétostatique, Maxwell, Induction = Tronc Commun ; Conversion électromécanique = PSI / TSI (Hors Programme MP)",
+      "chapitres_cibles": [
+        "em-sup-ch1",
+        "em-sup-ch2",
+        "em-spe-ch1",
+        "em-spe-ch2"
+      ],
+      "statut_integration": "RÉCONCILIÉ"
+    },
+    {
+      "module_id": "ondes",
+      "nom_module": "Physique des Ondes",
+      "total_videos": 32,
+      "repartition": "11 Sup (Cordes de Melde) / 21 Spé (Acoustique fluides, OEM dans le vide)",
+      "statut_filiere": "Tronc Commun Fondamental (MP / PSI / PC / TSI)",
+      "chapitres_cibles": [
+        "ondes-spe-ch1 (Propagation des ondes mécaniques & sonores)"
+      ],
+      "statut_integration": "RÉCONCILIÉ"
+    },
+    {
+      "module_id": "optique",
+      "nom_module": "Optique Géométrique & Ondulatoire",
+      "total_videos": 17,
+      "repartition": "3 Sup (Lentilles, instruments) / 14 Spé (Michelson, Réseaux, Fourier, Lasers)",
+      "statut_filiere": "Géométrique & Michelson = Tronc Commun ; Diffraction 2D & Fourier = PC (partiel MP, HP PSI)",
+      "chapitres_cibles": [
+        "optique-sup-ch1 & ch2",
+        "optique-spe-ch1 (Interférences & Michelson)"
+      ],
+      "statut_integration": "RÉCONCILIÉ"
+    },
+    {
+      "module_id": "elec",
+      "nom_module": "Électronique & Signal",
+      "total_videos": 27,
+      "repartition": "23 Sup (Kirchhoff, Transitoires, RSF, Bode) / 4 Spé (CAN/CNA, Shannon)",
+      "statut_filiere": "Électrocinétique Sup = Tronc Commun ; Numérique & Échantillonnage = PSI / TSI",
+      "chapitres_cibles": [
+        "elec-sup-ch1 à ch6",
+        "elec-spe-ch1 & ch2"
+      ],
+      "statut_integration": "RÉCONCILIÉ"
+    },
+    {
+      "module_id": "meca",
+      "nom_module": "Mécanique du Point & Solide",
+      "total_videos": 25,
+      "repartition": "24 Sup (Newton, Coriolis, Forces centrales) / 1 Spé (Solide rotation axe fixe)",
+      "statut_filiere": "Tronc Commun Fondamental (MP / PSI / PC / TSI)",
+      "chapitres_cibles": [
+        "meca-sup-ch1 à ch6",
+        "Module Spé Solide"
+      ],
+      "statut_integration": "RÉCONCILIÉ"
+    },
+    {
+      "module_id": "methodes",
+      "nom_module": "Méthodes & Outils Numériques",
+      "total_videos": 24,
+      "repartition": "24 Sup/Spé transversales (Python pour la physique, Euler, incertitudes)",
+      "statut_filiere": "Tronc Commun Fondamental (MP / PSI / PC / TSI)",
+      "chapitres_cibles": [
+        "Injectées contextuellement dans les chapitres de simulation et TP"
+      ],
+      "statut_integration": "RÉCONCILIÉ (Badge Méthode & Simulation CPGE)"
+    },
+    {
+      "module_id": "concours",
+      "nom_module": "Annales & Corrigés de Concours",
+      "total_videos": 144,
+      "repartition": "144 Spé (X-ENS 92, TP Concours 31, Mines-Ponts 14, Centrale 4, CCINP 2)",
+      "statut_filiere": "Ventilées par filière et banques d'épreuves",
+      "chapitres_cibles": [
+        "ConcoursWidget.tsx (Section dédiée)",
+        "Injectées dans les chapitres théoriques"
+      ],
+      "statut_integration": "RÉCONCILIÉ (Badge Annales & Oral Concours)"
+    },
+    {
+      "module_id": "chimie",
+      "nom_module": "Chimie CPGE",
+      "total_videos": 6,
+      "repartition": "6 Sup (Cinétique, liaisons, architecture de la matière)",
+      "statut_filiere": "PCSI / MPSI / PC / PSI",
+      "chapitres_cibles": [
+        "Pôle Chimie Plateforme"
+      ],
+      "statut_integration": "RÉCONCILIÉ"
+    }
+  ]
+}
