@@ -139,69 +139,122 @@ function getChapterUnifiedVideos(
   }
 
   // 2. Extraire les vidéos YouTube correspondantes du catalogue E-Learning Physique
-  const modId = chapter.moduleId || "";
+  const modId = (chapter.moduleId || "").toLowerCase();
   const chapTitleLower = chapter.titre.toLowerCase();
+  const chapNum = chapter.num;
+  const chapNiveau = chapter.niveau;
 
   const matchingElearningVideos = ELEARNING_PHYSICS_VIDEOS.filter((v) => {
-    // Vérification filière
+    // Vérification filière stricte (ex: pas de quantique/stat thermo en PSI, pas de Navier-Stokes en MP)
     if (selectedFiliere !== "ALL" && !v.filieres.includes(selectedFiliere)) {
       return false;
     }
 
-    // Vérification niveau
-    if (chapter.niveau && v.niveau !== "tous" && v.niveau !== chapter.niveau) {
-      return false;
-    }
+    const vTitle = (v.title || "").toLowerCase();
+    const vChap = (v.chapitre || "").toLowerCase();
+    const vPlaylists = (v.playlists || []).join(" ").toLowerCase();
+    const vDom = (v.domaine || "").toLowerCase();
+    const combined = `${vTitle} ${vChap} ${vPlaylists} ${vDom}`;
+    const vMod = v.moduleId;
+    const vNiv = v.niveau;
 
-    // Correspondance par module
-    let matchesModule = false;
-    if (modId.includes("elec") && v.moduleId === "elec") matchesModule = true;
-    else if (modId.includes("thermo") && v.moduleId === "thermo") matchesModule = true;
-    else if (modId.includes("meca") && v.moduleId === "meca") matchesModule = true;
-    else if (modId.includes("optique") && v.moduleId === "optique") matchesModule = true;
-    else if (modId.includes("em") && v.moduleId === "em") matchesModule = true;
-    else if (modId.includes("ondes") && v.moduleId === "ondes") matchesModule = true;
-    else if (modId.includes("quantique") && v.moduleId === "quantique") matchesModule = true;
-    else if (modId.includes("fluides") && v.moduleId === "fluides") matchesModule = true;
-    else if (modId.includes("chimie") && v.moduleId === "chimie") matchesModule = true;
+    // 1. Cours théoriques généraux
+    let matched = false;
 
-    if (!matchesModule) return false;
-
-    // Raffinement pour les modules multi-chapitres
-    if (modId.includes("em-sup")) {
-      if (chapter.num === 1) {
-        return (
-          v.chapitre.toLowerCase().includes("électrostatique") ||
-          v.title.toLowerCase().includes("gauss") ||
-          v.title.toLowerCase().includes("dipôle")
-        );
-      } else if (chapter.num === 2) {
-        return (
-          v.chapitre.toLowerCase().includes("magnétostatique") ||
-          v.title.toLowerCase().includes("ampère") ||
-          v.title.toLowerCase().includes("biot")
-        );
+    // Correspondance par module et sous-chapitre
+    if (modId.includes("elec-sup")) {
+      if (vMod === "elec" && (vNiv === "sup" || vNiv === "tous")) {
+        if (chapNum === 1 && /arqs|kirchhoff|nœud|noeud|maille|base|courant/.test(combined)) matched = true;
+        else if (chapNum === 2 && /thévenin|thevenin|norton|millman|diviseur|pont/.test(combined)) matched = true;
+        else if (chapNum === 3 && /transitoire|rc|rl|rlc|ordre/.test(combined)) matched = true;
+        else if (chapNum === 4 && /rsf|sinusoïdal|sinusoidal|résonance|resonance|impédance|impedance/.test(combined)) matched = true;
+        else if (chapNum === 5 && /bode|filtre|filtrage|passante|coupure|passe/.test(combined)) matched = true;
+        else if (chapNum === 6 && /aop|ali|amplificateur|opérationnel|operationnel|comparateur/.test(combined)) matched = true;
+        else if ([1, 2, 4].includes(chapNum) && /puissance|dipôle|dipole/.test(combined)) matched = true;
+      }
+    } else if (modId.includes("elec-spe")) {
+      if (vMod === "elec") {
+        if (chapNum === 1 && /harmonique|spectre|spectrale|fourier|filtrage/.test(combined)) matched = true;
+        else if (chapNum === 2 && /numérique|numerique|échantillonnage|echantillonnage|shannon|can|cna|modulation/.test(combined)) matched = true;
+      }
+    } else if (modId.includes("thermo-sup")) {
+      if (vMod === "thermo" || (vMod === "fluides" && combined.includes("statique"))) {
+        if (chapNum === 1 && /équilibre|equilibre|cinétique|cinetique|gaz parfait|gaz réel|état|introduction/.test(combined)) matched = true;
+        else if (chapNum === 2 && (/statique/.test(combined) || /pression|archimède|archimede|barométrique|océan|barometre/.test(combined))) matched = true;
+        else if (chapNum === 3 && /premier principe|1er principe|travail|chaleur|enthalpie|énergie interne/.test(combined)) matched = true;
+        else if (chapNum === 4 && /second principe|2ème principe|2nd principe|entropie/.test(combined)) matched = true;
+        else if (chapNum === 5 && /machine|carnot|cycle|moteur|frigo|pompe|rendement/.test(combined)) matched = true;
+        else if (chapNum === 6 && /phase|corps pur|clapeyron|saturation|vapeur|liquéfaction/.test(combined)) matched = true;
+      }
+    } else if (modId.includes("thermo-spe")) {
+      if (vMod === "thermo" && /diffusion|conduction|fourier|thermique|résistance|resistance|ailette|chaleur/.test(combined)) {
+        matched = true;
+      }
+    } else if (modId.includes("meca-sup")) {
+      if (vMod === "meca") {
+        if (chapNum === 1 && /cinématique|cinematique|polaire|cylindrique|sphérique|frenet|vitesse|accélération|coordonnées/.test(combined)) matched = true;
+        else if (chapNum === 2 && /dynamique|newton|pfd|frottement|projection|coulomb|résume tout|important/.test(combined)) matched = true;
+        else if (chapNum === 3 && /potentielle|mécanique|mecanique|énergétique|energetique|travail|puissance|pendule/.test(combined)) matched = true;
+        else if (chapNum === 4 && /moment cinétique|moment cinetique|bras de levier|moment d/.test(combined)) matched = true;
+        else if (chapNum === 5 && /centrale|kepler|binet|potentielle effective|potentielle efficace|gravitation/.test(combined)) matched = true;
+        else if (chapNum === 6 && /non galiléen|non galileen|coriolis|inertie|marée|foucault|référentiel/.test(combined)) matched = true;
+      }
+    } else if (modId.includes("optique-sup")) {
+      if (vMod === "optique" && (vNiv === "sup" || /descartes|réfraction|lentille|miroir|instrument|gauss/.test(combined))) {
+        matched = true;
+      }
+    } else if (modId.includes("optique-spe")) {
+      if (vMod === "optique") {
+        matched = true;
+      }
+    } else if (modId.includes("em-sup")) {
+      if (vMod === "em" && (vNiv === "sup" || /statique/.test(combined))) {
+        if (chapNum === 1 && /électrostatique|electrostatique|gauss|coulomb|potentiel|dipôle/.test(combined)) matched = true;
+        else if (chapNum === 2 && /magnétostatique|magnetostatique|ampère|ampere|biot|savart|courant|solénoïde/.test(combined)) matched = true;
+      }
+    } else if (modId.includes("em-spe")) {
+      if (vMod === "em") {
+        if (chapNum === 1 && /maxwell|opérateur|operateur|continuité|ohm|drude|charge/.test(combined)) matched = true;
+        else if (chapNum === 2 && /induction|faraday|laplace|poynting|énergie|energie|machine|moteur|transformateur|synchrone|conversion/.test(combined)) matched = true;
+      }
+    } else if (modId.includes("ondes-spe")) {
+      if (vMod === "ondes") {
+        matched = true;
+      }
+    } else if (modId.includes("quantique-spe")) {
+      if (vMod === "quantique") {
+        matched = true;
+      }
+    } else if (modId.includes("fluides-spe")) {
+      if (vMod === "fluides" && vNiv === "spe") {
+        matched = true;
       }
     }
 
-    if (modId.includes("thermo-sup")) {
-      if (chapTitleLower.includes("statique des fluides")) {
-        return (
-          v.chapitre.toLowerCase().includes("statique des fluides") ||
-          v.title.toLowerCase().includes("fluide")
-        );
-      }
+    // 2. Injection contextuelle des vidéos de Méthodes & Concours en lien avec le chapitre
+    if (!matched && (vMod === "concours" || vMod === "methodes")) {
+      if (modId.includes("meca") && /mécanique|mecanique|chute|pendule|orbite|satellite|newton/.test(combined)) matched = true;
+      else if (modId.includes("em") && /induction|laplace|maxwell|magnétique|magnetique|électrique/.test(combined)) matched = true;
+      else if (modId.includes("thermo") && /thermodynamique|thermo|carnot|diffusion thermique|fourier/.test(combined)) matched = true;
+      else if (modId.includes("ondes") && /onde|acoustique|sonore|corde/.test(combined)) matched = true;
+      else if (modId.includes("optique") && /optique|interférence|interference|michelson|diffraction/.test(combined)) matched = true;
+      else if (modId.includes("fluides") && /fluide|viscosité|viscosite|navier|stokes/.test(combined)) matched = true;
+      else if (modId.includes("quantique") && /quantique|tunnel|schrödinger|schrodinger/.test(combined)) matched = true;
     }
 
-    return true;
+    return matched;
   });
 
   const existingUrls = new Set(result.map((r) => r.video));
   for (const ev of matchingElearningVideos) {
     if (!existingUrls.has(ev.youtubeUrl)) {
       existingUrls.add(ev.youtubeUrl);
-      let filiereBadge = "Tronc Commun MP / PSI";
-      if (ev.isCommon) {
+      let filiereBadge = "Tronc Commun CPGE";
+      if (ev.moduleId === "methodes") {
+        filiereBadge = "Méthode & Simulation CPGE";
+      } else if (ev.moduleId === "concours") {
+        filiereBadge = `Annales & Oral · ${ev.concoursTag || "CPGE"}`;
+      } else if (ev.isCommon) {
         filiereBadge = "Tronc Commun CPGE";
       } else if (ev.filieres.includes("PSI") && !ev.filieres.includes("MP")) {
         filiereBadge = "Spécifique PSI";

@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import { PC_CONCOURS_DATA, ConcoursBlock, EpreuveItem } from "./pcConcoursData";
-import { Search, X, ChevronDown, FileText, CheckCircle2, Play, Trophy } from "lucide-react";
+import { Search, X, ChevronDown, FileText, CheckCircle2, Play, Trophy, Video, Sparkles } from "lucide-react";
+import { ELEARNING_PHYSICS_VIDEOS, ElearningVideoItem } from "@/data/elearningPhysiqueData";
 
 interface ConcoursWidgetProps {
   onOpenPdf: (url: string, title: string) => void;
@@ -16,6 +17,7 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
     cnc: true,
     xens: true,
     methodo: true,
+    elearning: true,
   });
 
   const toggleBlock = (id: string) => {
@@ -36,11 +38,14 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
       });
     });
 
+    const elearningCount = ELEARNING_PHYSICS_VIDEOS.filter((v) => v.moduleId === "concours").length;
+
     return {
-      concours: PC_CONCOURS_DATA.length,
+      concours: PC_CONCOURS_DATA.length + 5,
       sujets: sujetsCount,
       corriges: corrigesCount,
-      videos: videosCount,
+      videos: videosCount + elearningCount,
+      elearningVideos: elearningCount,
     };
   }, []);
 
@@ -68,6 +73,28 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
         sujets: filteredSujets,
       };
     }).filter(Boolean) as ConcoursBlock[];
+  }, [activeFilter, searchQuery]);
+
+  const elearningConcoursVideos = useMemo(() => {
+    return ELEARNING_PHYSICS_VIDEOS.filter((v) => {
+      if (v.moduleId !== "concours") return false;
+
+      if (activeFilter === "xens" && v.concoursTag !== "X-ENS") return false;
+      if (activeFilter === "mp" && v.concoursTag !== "Mines-Ponts") return false;
+      if (activeFilter === "cs" && v.concoursTag !== "Centrale-Supélec") return false;
+      if (activeFilter === "ccinp" && v.concoursTag !== "CCINP / CCP") return false;
+      if (activeFilter === "methodo" && v.concoursTag !== "TP Concours") return false;
+
+      if (searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          v.title.toLowerCase().includes(q) ||
+          v.chapitre.toLowerCase().includes(q) ||
+          (v.concoursTag && v.concoursTag.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
   }, [activeFilter, searchQuery]);
 
   return (
@@ -330,6 +357,74 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
               </div>
             );
           })
+        )}
+
+        {/* 4. BLOC DES VIDÉOS E-LEARNING PHYSIQUE CONCOURS (144 Vidéos) */}
+        {elearningConcoursVideos.length > 0 && (
+          <div className="bg-white dark:bg-[#0d1322] rounded-2xl border-2 border-purple-200 dark:border-purple-600/40 overflow-hidden shadow-sm transition-all mt-4">
+            <button
+              onClick={() => toggleBlock("elearning")}
+              className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-purple-50 via-indigo-50/50 to-white dark:from-purple-950/40 dark:via-indigo-950/20 dark:to-transparent border-b border-purple-100 dark:border-purple-900/30 text-left cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎬</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      Corrigés Vidéos & Oraux CPGE (E-Learning Physique)
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-600 text-white shadow-2xs">
+                      {elearningConcoursVideos.length} Vidéos
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Résolutions pas à pas des planches d'oraux et épreuves écrites (X-ENS, Mines-Ponts, Centrale-Supélec, CCINP, TP)
+                  </p>
+                </div>
+              </div>
+              <ChevronDown
+                className={`w-5 h-5 text-purple-600 dark:text-purple-400 transition-transform duration-200 ${
+                  openBlocks["elearning"] ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {openBlocks["elearning"] && (
+              <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {elearningConcoursVideos.map((v) => (
+                  <div
+                    key={v.id}
+                    className="flex flex-col justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-purple-300 dark:hover:border-purple-500/50 transition-all group shadow-2xs"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
+                          {v.concoursTag || "Concours CPGE"}
+                        </span>
+                        <span className="text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400">
+                          {v.durationFormatted}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        {v.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                        {v.chapitre}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => onOpenVideo(v.youtubeUrl, v.title)}
+                      className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-2xs transition-all cursor-pointer"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-white" />
+                      <span>Visionner le corrigé</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
