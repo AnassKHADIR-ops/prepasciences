@@ -112,14 +112,23 @@ function getChapterOfficialPdf(chapter: ChapitreItem & { moduleId?: string; modu
   };
 }
 
-// ── Extraction et Agrégation des Vidéos du Chapitre (Enseignant + E-Learning Physique) ──
-function getChapterUnifiedVideos(
+// ── Détection des Vidéos d'Extraits de Concours & Oraux CPGE ──
+export function isConcoursVideo(v: ElearningVideoItem): boolean {
+  if (v.moduleId === "concours" || Boolean(v.concoursTag)) return true;
+  const p = (v.playlists || []).join(" ").toLowerCase();
+  if (p.includes("concours")) return true;
+  const title = (v.title || "").toLowerCase();
+  return /\b(corrigé|corrigé|concours|centrale|mines-ponts|mines ponts|x-ens|x\/ens|ccp|ccinp|e3a|oral centrale|oral mines|planche|sujet)\b/i.test(title);
+}
+
+// ── Extraction des Séances & Replays Théoriques de Cours du Chapitre ──
+export function getChapterCourseVideos(
   chapter: ChapitreItem & { moduleId?: string },
   selectedFiliere: FiliereCPGE | "ALL"
 ): ChapterVideoItem[] {
   const result: ChapterVideoItem[] = [];
 
-  // 1. Ajouter d'abord les séances créées directement ou existantes avec vidéo sur le chapitre
+  // 1. Séances créées par l'enseignant (Direct ou Custom)
   if (chapter.cours) {
     chapter.cours.forEach((s, idx) => {
       if (s.video && s.video.trim() !== "") {
@@ -138,17 +147,14 @@ function getChapterUnifiedVideos(
     });
   }
 
-  // 2. Extraire les vidéos YouTube correspondantes du catalogue E-Learning Physique
+  // 2. Vidéos théoriques E-Learning Physique (non-concours)
   const modId = (chapter.moduleId || "").toLowerCase();
-  const chapTitleLower = chapter.titre.toLowerCase();
   const chapNum = chapter.num;
   const chapNiveau = chapter.niveau;
 
   const matchingElearningVideos = ELEARNING_PHYSICS_VIDEOS.filter((v) => {
-    // Vérification filière stricte (ex: pas de quantique/stat thermo en PSI, pas de Navier-Stokes en MP)
-    if (selectedFiliere !== "ALL" && !v.filieres.includes(selectedFiliere)) {
-      return false;
-    }
+    if (selectedFiliere !== "ALL" && !v.filieres.includes(selectedFiliere)) return false;
+    if (isConcoursVideo(v)) return false; // Exclus ici car réservés à la rubrique Extraits de Concours
 
     const vTitle = (v.title || "").toLowerCase();
     const vChap = (v.chapitre || "").toLowerCase();
@@ -158,10 +164,7 @@ function getChapterUnifiedVideos(
     const vMod = v.moduleId;
     const vNiv = v.niveau;
 
-    // 1. Cours théoriques généraux
     let matched = false;
-
-    // Correspondance par module et sous-chapitre
     if (modId.includes("elec-sup")) {
       if (vMod === "elec" && (vNiv === "sup" || vNiv === "tous")) {
         if (chapNum === 1 && /arqs|kirchhoff|nœud|noeud|maille|base|courant/.test(combined)) matched = true;
@@ -231,17 +234,6 @@ function getChapterUnifiedVideos(
       }
     }
 
-    // 2. Injection contextuelle des vidéos de Méthodes & Concours en lien avec le chapitre
-    if (!matched && (vMod === "concours" || vMod === "methodes")) {
-      if (modId.includes("meca") && /mécanique|mecanique|chute|pendule|orbite|satellite|newton/.test(combined)) matched = true;
-      else if (modId.includes("em") && /induction|laplace|maxwell|magnétique|magnetique|électrique/.test(combined)) matched = true;
-      else if (modId.includes("thermo") && /thermodynamique|thermo|carnot|diffusion thermique|fourier/.test(combined)) matched = true;
-      else if (modId.includes("ondes") && /onde|acoustique|sonore|corde/.test(combined)) matched = true;
-      else if (modId.includes("optique") && /optique|interférence|interference|michelson|diffraction/.test(combined)) matched = true;
-      else if (modId.includes("fluides") && /fluide|viscosité|viscosite|navier|stokes/.test(combined)) matched = true;
-      else if (modId.includes("quantique") && /quantique|tunnel|schrödinger|schrodinger/.test(combined)) matched = true;
-    }
-
     return matched;
   });
 
@@ -251,9 +243,7 @@ function getChapterUnifiedVideos(
       existingUrls.add(ev.youtubeUrl);
       let filiereBadge = "Tronc Commun CPGE";
       if (ev.moduleId === "methodes") {
-        filiereBadge = "Méthode & Simulation CPGE";
-      } else if (ev.moduleId === "concours") {
-        filiereBadge = `Annales & Oral · ${ev.concoursTag || "CPGE"}`;
+        filiereBadge = "Méthode CPGE";
       } else if (ev.isCommon) {
         filiereBadge = "Tronc Commun CPGE";
       } else if (ev.filieres.includes("PSI") && !ev.filieres.includes("MP")) {
@@ -262,8 +252,6 @@ function getChapterUnifiedVideos(
         filiereBadge = "Spécifique MP";
       } else if (ev.filieres.includes("PC")) {
         filiereBadge = "Spécifique PC";
-      } else if (ev.filieres.length === 1 && ev.filieres[0] === "PSI") {
-        filiereBadge = "Spécifique PSI";
       }
 
       result.push({
@@ -274,6 +262,109 @@ function getChapterUnifiedVideos(
         thumbnail: ev.thumbnailUrl,
         durationFormatted: ev.durationFormatted,
         badge: filiereBadge,
+        isCustom: false,
+      });
+    }
+  }
+
+  return result;
+}
+
+// ── Extraction Spécifique des Extraits de Concours & Problèmes Types pour le Chapitre ──
+export function getChapterConcoursVideos(
+  chapter: ChapitreItem & { moduleId?: string },
+  selectedFiliere: FiliereCPGE | "ALL"
+): ChapterVideoItem[] {
+  const result: ChapterVideoItem[] = [];
+  const modId = (chapter.moduleId || "").toLowerCase();
+  const chapNum = chapter.num;
+  const chapterId = (chapter.id || "").toLowerCase();
+
+  const matchingConcoursVideos = ELEARNING_PHYSICS_VIDEOS.filter((v) => {
+    if (!isConcoursVideo(v)) return false;
+    if (selectedFiliere !== "ALL" && v.filieres && !v.filieres.includes(selectedFiliere)) {
+      return false;
+    }
+
+    const t = ` ${v.title || ""} ${v.chapitre || ""} ${(v.playlists || []).join(" ")} ${v.domaine || ""} `.toLowerCase();
+
+    // 1. Physique Quantique
+    if (chapterId.includes("quantique") || modId.includes("quantique")) {
+      return /\b(quantique|schrödinger|schrodinger|bohr|stern|gerlach|heisenberg|photoélectrique|photoélectrique|photoelectrique|effet tunnel|ammoniac|radioactivité|alpha)\b/i.test(t);
+    }
+    // 2. Mécanique des Fluides Spé
+    if (chapterId.includes("fluides") || modId.includes("fluides")) {
+      return /\b(poiseuille|navier|stokes|viscosité|viscosite|mascaret|éolienne|eolienne|circulation sanguine|vaisseaux|reynolds|pression négative|pression negative|traînée|trainee)\b/i.test(t) ||
+        (t.includes("espci") && !t.includes("quantique"));
+    }
+    // 3. Diffusion Thermique Spé
+    if (chapterId.includes("thermo-spe") || modId.includes("thermo-spe")) {
+      return /\b(diffusion|conduction|fourier|ailette|ailettes|croissance de la glace|ondes thermiques)\b/i.test(t);
+    }
+    // 4. Thermodynamique Sup
+    if (chapterId.includes("thermo-sup") || modId.includes("thermo-sup")) {
+      if (chapNum === 5) return /\b(1er principe|premier principe|machines? thermiques?|moteurs?|pompe à chaleur|pseudo sources|tuyère|tuyere|effet de serre|carnot|cycle)\b/i.test(t);
+      if (chapNum === 2) return /\b(statique des fluides|archimède|archimede|barométrique|barometrique)\b/i.test(t);
+      if (chapNum === 6) return /\b(clapeyron|changement de phase|corps pur|vapeur)\b/i.test(t);
+      if (chapNum === 3) return /\b(1er principe|premier principe|enthalpie|énergie interne)\b/i.test(t);
+    }
+    // 5. Ondes Spé & Acoustique
+    if (chapterId.includes("ondes-spe") || modId.includes("ondes-spe")) {
+      return /\b(acoustique|ultra sons|ultrasons|coaxial|modes propres|sonore|d'alembert|dalembert|dispersion-absorption|haut parleur|système élastique|poutre|millenium bridge|ondes sismiques)\b/i.test(t);
+    }
+    // 6. Optique Ondulatoire Spé
+    if (chapterId.includes("optique-spe") || modId.includes("optique-spe")) {
+      return /\b(michelson|diffraction|réseau|reseau|cohérence|coherence|doublet du sodium|télémétrie|telemetrie|biréfringence|birefringence|polarisation|malus|laser|gladstone)\b/i.test(t);
+    }
+    // 7. Électronique Spé
+    if (chapterId.includes("elec-spe") || modId.includes("elec-spe")) {
+      if (chapNum === 2) return /\b(modulation|démodulation|demodulation|porteuse|échantillonnage|echantillonnage|shannon|bloqueur|repliement)\b/i.test(t);
+      if (chapNum === 1) return /\b(séries de fourier|series de fourier|analyse de fourier|spectre|harmonique)\b/i.test(t);
+    }
+    // 8. Électromagnétisme Spé
+    if (chapterId.includes("em-spe") || modId.includes("em-spe")) {
+      if (chapNum === 2) return /\b(induction|effet de peau|plaque à induction|plaque a induction|maxwell|rayonnement|poynting|laplace|actionneur|oem|onde électromagnétique|plasma)\b/i.test(t);
+      if (chapNum === 1) return /\b(conductivité|conductivite|memristor|loi d'ohm|drude|continuité)\b/i.test(t);
+    }
+    // 9. Électromagnétisme Sup
+    if (chapterId.includes("em-sup") || modId.includes("em-sup")) {
+      if (chapNum === 2) return /\b(rmn|résonance magnétique|resonance magnetique|meissner|supraconducteur|magnétique terrestre|magnetique terrestre|pôles géographiques|poles geographiques|champ magnétique|particule chargée)\b/i.test(t);
+      if (chapNum === 1) return /\b(électrostatique|electrostatique|théorème de gauss|coulomb|potentiel électrostatique)\b/i.test(t);
+    }
+    // 10. Mécanique Sup
+    if (chapterId.includes("meca-sup") || modId.includes("meca-sup")) {
+      if (chapNum === 5) return /\b(gravitation|orbite|satellite|rosetta|mars|rutherford|kepler|gravimètre|gravimetre|fléau)\b/i.test(t);
+      if (chapNum === 6) return /\b(coriolis|non galiléen|non galileen|géophysique|geophysique|déviation vers l'est|deviation vers l'est)\b/i.test(t);
+      if ([2, 3, 4].includes(chapNum)) return /\b(pendule|richter|ressort|traîneau|traineau|cartouche|fusée|fusee|chute|énergétique|energetique|newton|pfd|frottement)\b/i.test(t);
+    }
+    // 11. Électronique Sup
+    if (chapterId.includes("elec-sup") || modId.includes("elec-sup")) {
+      if (chapNum === 6) return /\b(ali|aop|amplificateur|comparateur|wien|intégrateur|integrateur|générateur de signaux)\b/i.test(t);
+      if (chapNum === 5) return /\b(filtrage|passe bas|passe haut|fréquence de coupure|bode|lissajous)\b/i.test(t);
+      if ([3, 4].includes(chapNum)) return /\b(rlc|transitoire|transitoires|oscillo|oscilloscope|tension moitié|tension moitie|impédance|impedance|circuits couplés)\b/i.test(t);
+      if ([1, 2].includes(chapNum)) return /\b(redressement|diode|kirchhoff|thévenin|thevenin|norton|millman)\b/i.test(t);
+    }
+    // 12. Optique Géométrique Sup
+    if (chapterId.includes("optique-sup") || modId.includes("optique-sup")) {
+      return /\b(goniomètre|goniometre|prisme|faisceau laser|appareil photo|descartes|lentille|miroir)\b/i.test(t);
+    }
+
+    return false;
+  });
+
+  const existingUrls = new Set<string>();
+  for (const ev of matchingConcoursVideos) {
+    if (!existingUrls.has(ev.youtubeUrl)) {
+      existingUrls.add(ev.youtubeUrl);
+      const tag = ev.concoursTag || "Concours CPGE";
+      result.push({
+        id: ev.id,
+        titre: ev.title,
+        sous: `${ev.domaine} · ${ev.chapitre}`,
+        video: ev.youtubeUrl,
+        thumbnail: ev.thumbnailUrl,
+        durationFormatted: ev.durationFormatted,
+        badge: tag,
         isCustom: false,
       });
     }
@@ -341,21 +432,11 @@ function ChapterOfficialPdfBanner({
           <button
             type="button"
             onClick={() => onOpenPdf(pdf.url, `${pdf.titre} — ${chapterTitre}`)}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-600/25 transition-all hover:scale-[1.02] cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-600/25 transition-all hover:scale-[1.02] cursor-pointer"
           >
             <FileText className="w-4 h-4" />
             <span>Consulter le Polycopié (PDF)</span>
           </button>
-
-          <a
-            href={pdf.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 hover:underline flex items-center gap-1"
-          >
-            <span>Ouvrir dans Google Drive</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
         </div>
       </div>
     </div>
@@ -562,6 +643,166 @@ function UnifiedChapterVideoCard({
               <Lock className="w-2.5 h-2.5 ml-0.5 opacity-80" />
             </button>
           )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ── CARTE EXTRAIT DE CONCOURS & PROBLÈME TYPE (SPÉCIFIQUE AUX ANNALES CPGE) ──
+function ConcoursExtractCard({
+  vid,
+  chapTitre,
+  onOpenVideo,
+}: {
+  vid: ChapterVideoItem;
+  chapTitre: string;
+  onOpenVideo: (url: string, title: string) => void;
+}) {
+  const titre = vid.titre;
+  const sous = vid.sous || "Extrait de Concours CPGE";
+  const videoUrl = vid.video || "";
+  const hasVideo = Boolean(videoUrl && videoUrl.trim() !== "");
+
+  const thumbnailCandidates = useMemo(() => {
+    const list: string[] = [];
+    if (vid.thumbnail && vid.thumbnail.trim()) {
+      list.push(vid.thumbnail.trim());
+    }
+    if (videoUrl) {
+      const ytCandidates = getYoutubeThumbnailCandidates(videoUrl);
+      list.push(...ytCandidates);
+    }
+    return list;
+  }, [vid.thumbnail, videoUrl]);
+
+  const [thumbIdx, setThumbIdx] = useState(0);
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const [thumbLoaded, setThumbLoaded] = useState(false);
+
+  const handleThumbError = () => {
+    if (thumbIdx + 1 < thumbnailCandidates.length) {
+      setThumbIdx((prev) => prev + 1);
+    } else {
+      setThumbFailed(true);
+    }
+  };
+
+  const hasValidThumb = thumbnailCandidates.length > 0 && !thumbFailed;
+
+  // Style de badge selon le concours
+  const badgeStyle = useMemo(() => {
+    const b = (vid.badge || "").toLowerCase();
+    if (b.includes("x-ens") || b.includes("polytechnique")) {
+      return "bg-rose-950/90 text-rose-200 border-rose-500/40";
+    }
+    if (b.includes("mines")) {
+      return "bg-sky-950/90 text-sky-200 border-sky-500/40";
+    }
+    if (b.includes("centrale")) {
+      return "bg-amber-950/90 text-amber-200 border-amber-500/40";
+    }
+    if (b.includes("ccp") || b.includes("ccinp")) {
+      return "bg-emerald-950/90 text-emerald-200 border-emerald-500/40";
+    }
+    if (b.includes("tp")) {
+      return "bg-indigo-950/90 text-indigo-200 border-indigo-500/40";
+    }
+    return "bg-purple-950/90 text-purple-200 border-purple-500/40";
+  }, [vid.badge]);
+
+  return (
+    <article className="group relative bg-white dark:bg-[#0c1222] border-2 border-amber-200/70 dark:border-amber-500/30 rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-amber-400 dark:hover:border-amber-400/70 transition-all flex flex-col justify-between">
+      {/* Vignette Vidéo avec badge concours et bouton Play */}
+      {hasVideo && (
+        <div
+          className="relative w-full aspect-video bg-gradient-to-br from-slate-900 via-amber-950/40 to-slate-900 overflow-hidden cursor-pointer select-none"
+          onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+          title={`Résolution Concours : ${titre}`}
+        >
+          {hasValidThumb ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              key={thumbnailCandidates[thumbIdx]}
+              className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${
+                thumbLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              src={thumbnailCandidates[thumbIdx]}
+              alt={titre}
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+              loading="lazy"
+              onLoad={() => setThumbLoaded(true)}
+              onError={handleThumbError}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-[#120a1c] via-[#221330] to-[#0d1424] flex flex-col items-center justify-center p-4 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300 mb-2 shadow-inner">
+                <Sparkles className="w-6 h-6 text-amber-400" />
+              </div>
+              <span className="text-xs font-bold text-white line-clamp-1 max-w-[85%]">
+                {titre}
+              </span>
+              <span className="text-[10px] text-amber-300/90 font-mono mt-0.5">
+                Extrait Concours · CPGE
+              </span>
+            </div>
+          )}
+
+          {/* Calque Sombre & Badge Concours */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-transparent flex flex-col justify-between p-2.5 sm:p-3 pointer-events-none">
+            <div className="flex items-center justify-between gap-1 w-full">
+              <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border shadow-xs ${badgeStyle}`}>
+                🏆 {vid.badge || "Concours CPGE"}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 shadow-xs ml-auto">
+                <Lock className="w-2.5 h-2.5" />
+                MEMBRE
+              </span>
+            </div>
+
+            <div className="self-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-amber-600 to-red-600 group-hover:from-amber-500 group-hover:to-red-500 group-hover:scale-110 flex items-center justify-center text-white shadow-xl shadow-amber-950/60 transition-all pointer-events-auto">
+              <PlayCircle className="w-7 h-7" />
+            </div>
+
+            <div className="flex items-center justify-between text-[10px] text-white/90 font-medium">
+              <span className="truncate max-w-[70%] text-amber-200/90 drop-shadow-xs font-semibold">{chapTitre}</span>
+              {vid.durationFormatted && (
+                <span className="bg-black/80 px-1.5 py-0.5 rounded font-mono text-[9px] text-amber-300 border border-amber-500/30">
+                  {vid.durationFormatted}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Titre & Description */}
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-3 bg-gradient-to-b from-amber-500/[0.02] to-transparent">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+            {titre}
+          </h4>
+          {sous && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+              {sous}
+            </p>
+          )}
+        </div>
+
+        {/* Bouton d'action */}
+        <div className="flex items-center justify-between pt-2 border-t border-amber-100 dark:border-slate-800/80">
+          <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
+            Résolution guidée
+          </span>
+          <button
+            type="button"
+            onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white transition-colors cursor-pointer shadow-xs"
+          >
+            <PlayCircle className="w-3.5 h-3.5" />
+            <span>Voir le Corrigé</span>
+          </button>
         </div>
       </div>
     </article>
@@ -1065,9 +1306,19 @@ export function CoursesWidget({
   const [selectedFiliere, setSelectedFiliere] = useState<FiliereCPGE | "ALL">("PSI");
   const [courseViewMode, setCourseViewMode] = useState<"chapitres" | "videotheque">("chapitres");
   const [expandedVideoChapters, setExpandedVideoChapters] = useState<Set<string>>(new Set());
+  const [expandedConcoursChapters, setExpandedConcoursChapters] = useState<Set<string>>(new Set());
 
   const toggleExpandVideos = (chapId: string) => {
     setExpandedVideoChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(chapId)) next.delete(chapId);
+      else next.add(chapId);
+      return next;
+    });
+  };
+
+  const toggleExpandConcours = (chapId: string) => {
+    setExpandedConcoursChapters((prev) => {
       const next = new Set(prev);
       if (next.has(chapId)) next.delete(chapId);
       else next.add(chapId);
@@ -2102,12 +2353,15 @@ export function CoursesWidget({
                 </div>
               </div>
 
-              {/* Contenu Déplié : Polycopié officiel en haut, vidéos juste en bas, puis Fiches et TDs */}
+              {/* Contenu Déplié : Polycopié officiel en haut, Séances de cours, Extraits de concours en parallèle, puis Fiches et TDs */}
               {isOpen && (() => {
                 const chapterPdf = getChapterOfficialPdf(chapter);
-                const chapterVideos = getChapterUnifiedVideos(chapter, selectedFiliere);
-                const isExpanded = expandedVideoChapters.has(chapter.id);
-                const displayedVideos = isExpanded ? chapterVideos : chapterVideos.slice(0, 6);
+                const courseVideos = getChapterCourseVideos(chapter, selectedFiliere);
+                const concoursVideos = getChapterConcoursVideos(chapter, selectedFiliere);
+                const isVideosExpanded = expandedVideoChapters.has(chapter.id);
+                const displayedCourseVideos = isVideosExpanded ? courseVideos : courseVideos.slice(0, 6);
+                const isConcoursExpanded = expandedConcoursChapters.has(chapter.id);
+                const displayedConcoursVideos = isConcoursExpanded ? concoursVideos : concoursVideos.slice(0, 6);
 
                 return (
                   <div className="border-t border-slate-100 dark:border-slate-800/80 bg-[#f8faff] dark:bg-[#090d18]/60 p-5 sm:p-7 space-y-7">
@@ -2119,15 +2373,12 @@ export function CoursesWidget({
                       onOpenPdf={onOpenPdf}
                     />
 
-                    {/* ── 2. JUSTE EN BAS : SÉANCES & REPLAYS VIDÉO FILTRÉS PAR FILIÈRE ── */}
+                    {/* ── 2. JUSTE EN BAS : SÉANCES & REPLAYS VIDÉO DU COURS ── */}
                     <div className="space-y-3.5">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
                             🎬 SÉANCES DE COURS & REPLAYS VIDÉO
-                          </span>
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
-                            {chapterVideos.length}
                           </span>
                           {selectedFiliere !== "ALL" && (
                             <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
@@ -2149,9 +2400,9 @@ export function CoursesWidget({
                         )}
                       </div>
 
-                      {chapterVideos.length > 0 ? (
+                      {courseVideos.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {displayedVideos.map((vid, vIdx) => (
+                          {displayedCourseVideos.map((vid, vIdx) => (
                             <UnifiedChapterVideoCard
                               key={vid.id || vIdx}
                               vid={vid}
@@ -2174,18 +2425,18 @@ export function CoursesWidget({
                           ))}
                         </div>
                       ) : (
-                        <div className="p-5 text-center rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200/70 dark:border-purple-500/20 text-xs text-purple-900 dark:text-purple-300">
+                        <div className="p-4 text-center rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200/70 dark:border-purple-500/20 text-xs text-purple-900 dark:text-purple-300">
                           {selectedFiliere === "PSI" && chapter.id.includes("quantique") ? (
                             <span>
-                              ℹ️ La Physique Quantique est spécifique aux filières MP et PC (hors programme pour la filière PSI). Basculez sur <strong>MP</strong> ou <strong>Toutes filières</strong> pour visualiser les replays de ce cours.
+                              ℹ️ La Physique Quantique est spécifique aux filières MP et PC (hors programme pour la filière PSI).
                             </span>
                           ) : (
-                            <span>Aucune séance vidéo pour ce chapitre avec le filtre de filière actuel.</span>
+                            <span>Aucune séance vidéo théorique enregistrée pour ce filtre de filière.</span>
                           )}
                         </div>
                       )}
 
-                      {chapterVideos.length > 6 && (
+                      {courseVideos.length > 6 && (
                         <div className="text-center pt-2">
                           <button
                             type="button"
@@ -2193,26 +2444,67 @@ export function CoursesWidget({
                             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30 transition-all cursor-pointer shadow-2xs"
                           >
                             <span>
-                              {isExpanded
-                                ? "Afficher moins de vidéos"
-                                : `Afficher l'intégralité des vidéos (${chapterVideos.length} disponibles)`}
+                              {isVideosExpanded
+                                ? "Afficher moins"
+                                : "Afficher l'intégralité des séances de cours"}
                             </span>
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isVideosExpanded ? "rotate-180" : ""}`} />
                           </button>
                         </div>
                       )}
                     </div>
 
-                    {/* ── 3. FICHES DE SYNTHÈSE DANS BOÎTIER ÉLÉGANT ── */}
+                    {/* ── 3. NOUVELLE RUBRIQUE : EXTRAITS DE CONCOURS & PROBLÈMES TYPES (TRAVAIL EN PARALLÈLE DU COURS) ── */}
+                    {concoursVideos.length > 0 && (
+                      <div className="space-y-3.5 pt-2">
+                        <div className="flex items-center justify-between pb-2 border-b border-amber-200/80 dark:border-amber-500/30">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                              🎯 EXTRAITS DE CONCOURS & PROBLÈMES TYPES
+                            </span>
+                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                              · Annales écrites & Oraux X-ENS · Mines-Ponts · Centrale-Supélec · CCINP
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {displayedConcoursVideos.map((cVid, cIdx) => (
+                            <ConcoursExtractCard
+                              key={cVid.id || cIdx}
+                              vid={cVid}
+                              chapTitre={chapter.titre}
+                              onOpenVideo={onOpenVideo}
+                            />
+                          ))}
+                        </div>
+
+                        {concoursVideos.length > 6 && (
+                          <div className="text-center pt-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleExpandConcours(chapter.id)}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-500/30 transition-all cursor-pointer shadow-2xs"
+                            >
+                              <span>
+                                {isConcoursExpanded
+                                  ? "Afficher moins"
+                                  : "Afficher tous les extraits de concours de ce chapitre"}
+                              </span>
+                              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isConcoursExpanded ? "rotate-180" : ""}`} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── 4. FICHES DE SYNTHÈSE DANS BOÎTIER ÉLÉGANT ── */}
                     {fiches.length > 0 && (
                       <div className="bg-[#fdfaf5] dark:bg-[#111827] border border-[#f2e7d7] dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
                         <div className="flex items-center justify-between pb-2 border-b border-[#ebdccd] dark:border-slate-800">
                           <div className="flex items-center gap-2">
                             <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
                               📑 FICHES DE SYNTHÈSE
-                            </span>
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-slate-700">
-                              {fiches.length}
                             </span>
                           </div>
 
