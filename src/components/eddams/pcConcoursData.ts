@@ -1,9 +1,17 @@
+export interface CorrigePartieItem {
+  id: string;
+  titre: string;
+  url: string;
+}
+
 export interface EpreuveItem {
+  id?: string;
   annee: number | string;
   filiere: "MP" | "PC" | "MP / PC" | "Toutes" | string;
   label: string;
   enonce: string;
   correction: string;
+  corriges?: CorrigePartieItem[];
   video: string | null;
 }
 
@@ -12,7 +20,7 @@ export interface ConcoursBlock {
   titre: string;
   meta: string;
   icon: string;
-  badgeClass: string;
+  badgeClass?: string;
   sujets: EpreuveItem[];
 }
 

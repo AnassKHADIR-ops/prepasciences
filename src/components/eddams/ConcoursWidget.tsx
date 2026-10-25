@@ -1,9 +1,33 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { PC_CONCOURS_DATA, ConcoursBlock, EpreuveItem } from "./pcConcoursData";
-import { Search, X, ChevronDown, FileText, CheckCircle2, Play, Trophy, Video, Sparkles } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { ConcoursBlock, EpreuveItem, CorrigePartieItem } from "./pcConcoursData";
+import {
+  Search,
+  X,
+  ChevronDown,
+  FileText,
+  CheckCircle2,
+  Play,
+  Trophy,
+  Video,
+  Sparkles,
+  Edit2,
+  Trash2,
+  PlusCircle,
+  Eye,
+} from "lucide-react";
 import { ELEARNING_PHYSICS_VIDEOS, ElearningVideoItem } from "@/data/elearningPhysiqueData";
+import { useAuth } from "@/context/AuthContext";
+import {
+  getConcoursDB,
+  addConcoursBlock,
+  editConcoursBlock,
+  deleteConcoursBlock,
+  addEpreuveToConcours,
+  editEpreuveInConcours,
+  deleteEpreuveFromConcours,
+} from "@/lib/concoursStore";
 
 interface ConcoursWidgetProps {
   onOpenPdf: (url: string, title: string) => void;
@@ -11,6 +35,10 @@ interface ConcoursWidgetProps {
 }
 
 export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) {
+  const { isTeacher, isAdmin, teacherViewMode, toggleTeacherViewMode } = useAuth();
+  const isTeacherView = (isTeacher || isAdmin) && teacherViewMode === "teacher";
+
+  const [concoursData, setConcoursData] = useState<ConcoursBlock[]>(() => getConcoursDB());
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [openBlocks, setOpenBlocks] = useState<Record<string, boolean>>({
@@ -20,8 +48,171 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
     elearning: true,
   });
 
+  const refreshConcours = () => {
+    setConcoursData(getConcoursDB());
+  };
+
+  useEffect(() => {
+    refreshConcours();
+  }, []);
+
   const toggleBlock = (id: string) => {
     setOpenBlocks((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ÉTATS ET GESTIONNAIRES MODALS D'ADMINISTRATION
+  // ══════════════════════════════════════════════════════════════════════════
+  const [activeModal, setActiveModal] = useState<
+    "create_concours" | "edit_concours" | "create_epreuve" | "edit_epreuve" | null
+  >(null);
+
+  // Formulaire Concours
+  const [editingConcoursId, setEditingConcoursId] = useState<string | null>(null);
+  const [concoursFormTitre, setConcoursFormTitre] = useState("");
+  const [concoursFormMeta, setConcoursFormMeta] = useState("");
+  const [concoursFormIcon, setConcoursFormIcon] = useState("🏆");
+
+  // Formulaire Épreuve
+  const [targetConcoursId, setTargetConcoursId] = useState<string | null>(null);
+  const [editingEpreuveId, setEditingEpreuveId] = useState<string | null>(null);
+  const [epreuveFormAnnee, setEpreuveFormAnnee] = useState("");
+  const [epreuveFormFiliere, setEpreuveFormFiliere] = useState("MP / PC");
+  const [epreuveFormLabel, setEpreuveFormLabel] = useState("");
+  const [epreuveFormEnonce, setEpreuveFormEnonce] = useState("");
+  const [epreuveFormCorriges, setEpreuveFormCorriges] = useState<CorrigePartieItem[]>([]);
+  const [epreuveFormVideo, setEpreuveFormVideo] = useState("");
+
+  const openAddConcours = () => {
+    setEditingConcoursId(null);
+    setConcoursFormTitre("");
+    setConcoursFormMeta("Épreuves officielles & Corrigés détaillés");
+    setConcoursFormIcon("🏆");
+    setActiveModal("create_concours");
+  };
+
+  const openEditConcours = (block: ConcoursBlock) => {
+    setEditingConcoursId(block.id);
+    setConcoursFormTitre(block.titre);
+    setConcoursFormMeta(block.meta || "");
+    setConcoursFormIcon(block.icon || "🏆");
+    setActiveModal("edit_concours");
+  };
+
+  const handleSaveConcours = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!concoursFormTitre.trim()) return;
+
+    if (activeModal === "create_concours") {
+      addConcoursBlock({
+        titre: concoursFormTitre.trim(),
+        meta: concoursFormMeta.trim(),
+        icon: concoursFormIcon.trim() || "🏆",
+      });
+    } else if (activeModal === "edit_concours" && editingConcoursId) {
+      editConcoursBlock(editingConcoursId, {
+        titre: concoursFormTitre.trim(),
+        meta: concoursFormMeta.trim(),
+        icon: concoursFormIcon.trim() || "🏆",
+      });
+    }
+
+    refreshConcours();
+    setActiveModal(null);
+    setEditingConcoursId(null);
+  };
+
+  const handleDeleteConcours = (blockId: string) => {
+    deleteConcoursBlock(blockId);
+    refreshConcours();
+  };
+
+  const openAddEpreuve = (blockId: string) => {
+    setTargetConcoursId(blockId);
+    setEditingEpreuveId(null);
+    setEpreuveFormAnnee(new Date().getFullYear().toString());
+    setEpreuveFormFiliere("MP / PC");
+    setEpreuveFormLabel("");
+    setEpreuveFormEnonce("");
+    setEpreuveFormCorriges([
+      {
+        id: `corr-${Date.now()}`,
+        titre: "Corrigé Détaillé Officiel",
+        url: "",
+      },
+    ]);
+    setEpreuveFormVideo("");
+    setActiveModal("create_epreuve");
+  };
+
+  const openEditEpreuve = (blockId: string, epreuve: EpreuveItem) => {
+    setTargetConcoursId(blockId);
+    setEditingEpreuveId(epreuve.id || epreuve.label);
+    setEpreuveFormAnnee(String(epreuve.annee));
+    setEpreuveFormFiliere(epreuve.filiere || "MP / PC");
+    setEpreuveFormLabel(epreuve.label || "");
+    setEpreuveFormEnonce(epreuve.enonce || "");
+
+    const parts: CorrigePartieItem[] = [];
+    if (epreuve.corriges && Array.isArray(epreuve.corriges)) {
+      epreuve.corriges.forEach((c) => {
+        parts.push({
+          id: c.id || `corr-${Math.random()}`,
+          titre: c.titre || "Corrigé",
+          url: c.url || "",
+        });
+      });
+    }
+    if (parts.length === 0 && epreuve.correction) {
+      parts.push({
+        id: `corr-${Date.now()}`,
+        titre: "Corrigé Détaillé Officiel",
+        url: epreuve.correction,
+      });
+    }
+
+    setEpreuveFormCorriges(parts);
+    setEpreuveFormVideo(epreuve.video || "");
+    setActiveModal("edit_epreuve");
+  };
+
+  const handleSaveEpreuve = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetConcoursId || !epreuveFormLabel.trim()) return;
+
+    const cleanCorriges = epreuveFormCorriges
+      .map((c) => ({ ...c, titre: c.titre.trim(), url: c.url.trim() }))
+      .filter((c) => c.url !== "");
+
+    if (activeModal === "create_epreuve") {
+      addEpreuveToConcours(targetConcoursId, {
+        annee: epreuveFormAnnee.trim() || new Date().getFullYear().toString(),
+        filiere: epreuveFormFiliere.trim(),
+        label: epreuveFormLabel.trim(),
+        enonce: epreuveFormEnonce.trim(),
+        corriges: cleanCorriges,
+        video: epreuveFormVideo.trim() || null,
+      });
+    } else if (activeModal === "edit_epreuve" && editingEpreuveId) {
+      editEpreuveInConcours(targetConcoursId, editingEpreuveId, {
+        annee: epreuveFormAnnee.trim(),
+        filiere: epreuveFormFiliere.trim(),
+        label: epreuveFormLabel.trim(),
+        enonce: epreuveFormEnonce.trim(),
+        corriges: cleanCorriges,
+        video: epreuveFormVideo.trim() || null,
+      });
+    }
+
+    refreshConcours();
+    setActiveModal(null);
+    setTargetConcoursId(null);
+    setEditingEpreuveId(null);
+  };
+
+  const handleDeleteEpreuve = (blockId: string, epreuveId: string | number) => {
+    deleteEpreuveFromConcours(blockId, epreuveId);
+    refreshConcours();
   };
 
   // Calcul des statistiques
@@ -30,28 +221,41 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
     let corrigesCount = 0;
     let videosCount = 0;
 
-    PC_CONCOURS_DATA.forEach((b) => {
+    concoursData.forEach((b) => {
       b.sujets.forEach((s) => {
-        if (s.enonce) sujetsCount++;
-        if (s.correction) corrigesCount++;
-        if (s.video) videosCount++;
+        if (s.enonce && s.enonce.trim() !== "") sujetsCount++;
+        const hasCorriges = (s.corriges && s.corriges.length > 0) || Boolean(s.correction && s.correction.trim() !== "");
+        if (hasCorriges) corrigesCount++;
+        if (s.video && s.video.trim() !== "") videosCount++;
       });
     });
 
     const elearningCount = ELEARNING_PHYSICS_VIDEOS.filter((v) => v.moduleId === "concours").length;
 
     return {
-      concours: PC_CONCOURS_DATA.length + 5,
+      concours: concoursData.length,
       sujets: sujetsCount,
       corriges: corrigesCount,
       videos: videosCount + elearningCount,
       elearningVideos: elearningCount,
     };
-  }, []);
+  }, [concoursData]);
+
+  // Options dynamiques des filtres
+  const filterOptions = useMemo(() => {
+    const list = [{ id: "all", label: "Tous les concours" }];
+    concoursData.forEach((b) => {
+      list.push({
+        id: b.id,
+        label: `${b.icon || "🏆"} ${b.titre}`,
+      });
+    });
+    return list;
+  }, [concoursData]);
 
   // Filtrage
   const filteredBlocks = useMemo(() => {
-    return PC_CONCOURS_DATA.map((block) => {
+    return concoursData.map((block) => {
       if (activeFilter !== "all" && block.id !== activeFilter) {
         return null;
       }
@@ -73,7 +277,7 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
         sujets: filteredSujets,
       };
     }).filter(Boolean) as ConcoursBlock[];
-  }, [activeFilter, searchQuery]);
+  }, [concoursData, activeFilter, searchQuery]);
 
   const elearningConcoursVideos = useMemo(() => {
     return ELEARNING_PHYSICS_VIDEOS.filter((v) => {
@@ -99,20 +303,17 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
 
   return (
     <div className="w-full max-w-5xl mx-auto my-4 font-sans">
-      {/* 1. En-tête Prestigieux Lumineux — Décor comme des verres (Frosted Crystal Glassmorphism) */}
+      {/* 1. En-tête Prestigieux Lumineux — Décor comme des verres */}
       <div className="relative rounded-3xl bg-white/70 dark:bg-[#0d1322]/80 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_20px_50px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-8 sm:p-12 mb-6 text-center overflow-hidden">
-        {/* Halos lumineux iridescents sous le verre */}
         <div className="pointer-events-none absolute -top-16 -left-16 w-72 h-72 rounded-full bg-purple-300/30 dark:bg-purple-900/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-indigo-300/25 dark:bg-indigo-900/20 blur-3xl" />
         <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-white/60 dark:bg-purple-950/20 blur-2xl" />
-
-        {/* Ligne spéculaire de réfraction du verre en haut */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
 
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-4 py-1.5 rounded-full mb-4 shadow-2xs">
             <Trophy className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            Excellence Concours CPGE · MP / MP*
+            Excellence Concours CPGE · MP / MP* & PC
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
@@ -120,10 +321,9 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
           </h2>
 
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed font-medium">
-            Sujets officiels, corrigés rédigés détaillés et résolutions vidéo — filière MP / MP*, organisés par concours et session.
+            Sujets officiels, énoncés PDF, corrigés rédigés détaillés et résolutions vidéo — organisés par concours et session.
           </p>
 
-          {/* Facettes en verre */}
           <div className="flex items-center justify-center gap-3 mt-5 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
               CNC Maroc
@@ -137,6 +337,58 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
           </div>
         </div>
       </div>
+
+      {/* ── BARRE D'ADMINISTRATION ENSEIGNANT / ADMIN ── */}
+      {(isTeacher || isAdmin) && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-950/90 text-white border border-purple-500/30 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-200">
+              <Sparkles className="w-5 h-5 text-purple-300 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-extrabold text-white">
+                  Administration des Concours CPGE
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-500 text-white shadow-2xs">
+                  {isAdmin ? "Admin" : "Professeur"}
+                </span>
+              </div>
+              <p className="text-xs text-purple-200/80 mt-0.5">
+                {isTeacherView
+                  ? "Mode édition actif : vous pouvez modifier les énoncés, ajouter des parties de corrigés et créer de nouveaux concours"
+                  : "Aperçu étudiant actif : cliquez sur « Activer Mode Éditeur » pour modifier les épreuves"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={toggleTeacherViewMode}
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                isTeacherView
+                  ? "bg-slate-800 hover:bg-slate-700 text-purple-200 border-purple-500/40"
+                  : "bg-purple-600 hover:bg-purple-500 text-white border-purple-400 shadow-purple-600/30"
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>{isTeacherView ? "Aperçu Étudiant" : "Activer Mode Éditeur"}</span>
+            </button>
+
+            {isTeacherView && (
+              <button
+                type="button"
+                onClick={openAddConcours}
+                className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white border border-purple-400 flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>+ Nouveau Concours</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 2. Barre de Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200 dark:border-slate-800 divide-x divide-slate-100 dark:divide-slate-800 shadow-xs mb-6">
@@ -182,15 +434,7 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
 
         {/* Boutons de filtres */}
         <div className="flex flex-wrap items-center gap-2">
-          {[
-            { id: "all", label: "Tous les concours" },
-            { id: "cnc", label: "🇲🇦 CNC Maroc" },
-            { id: "xens", label: "🔬 X-ENS" },
-            { id: "methodo", label: "📐 Méthodologie & Problèmes" },
-            { id: "mp", label: "⛏️ Mines-Ponts" },
-            { id: "ccinp", label: "🎯 CCINP" },
-            { id: "cs", label: "⚡ Centrale-Supélec" },
-          ].map((f) => (
+          {filterOptions.map((f) => (
             <button
               key={f.id}
               onClick={() => setActiveFilter(f.id)}
@@ -260,6 +504,41 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
                       {block.sujets.length} Épreuves
                     </span>
 
+                    {/* Actions Administrateur / Enseignant sur le Concours */}
+                    {isTeacherView && (
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => openAddEpreuve(block.id)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors shadow-2xs cursor-pointer"
+                          title="Ajouter une nouvelle épreuve à ce concours"
+                        >
+                          <PlusCircle className="w-3.5 h-3.5" />
+                          <span className="hidden md:inline">+ Épreuve</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openEditConcours(block)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-purple-50 dark:text-slate-400 dark:hover:text-purple-300 dark:hover:bg-purple-950/60 transition-colors cursor-pointer"
+                          title="Modifier le nom et la description de ce concours"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Confirmez-vous la suppression du concours « ${block.titre} » et de ses épreuves ?`)) {
+                              handleDeleteConcours(block.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/60 transition-colors cursor-pointer"
+                          title="Supprimer ce concours"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+
                     <div
                       className={`w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-transform duration-300 ${
                         isOpen ? "rotate-180 bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300" : ""
@@ -280,15 +559,15 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
                             {annee}
                           </span>
                           <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                            {isNaN(Number(annee)) ? annee : `Session ${annee}`} · Filière MP / MP* & PC
+                            {isNaN(Number(annee)) ? annee : `Session ${annee}`} · Filière {yearsMap[annee][0]?.filiere || "MP / MP* & PC"}
                           </span>
                         </div>
 
                         <div className="space-y-2 pt-1 pl-0 sm:pl-2">
                           {yearsMap[annee].map((epreuve, idx) => (
                             <div
-                              key={idx}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-[#0d1322] border border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40 transition-all shadow-2xs"
+                              key={epreuve.id || idx}
+                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-[#0d1322] border border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40 transition-all shadow-2xs group"
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
@@ -297,8 +576,8 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-2 shrink-0">
-                                {epreuve.enonce ? (
+                              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                {epreuve.enonce && epreuve.enonce.trim() !== "" ? (
                                   <button
                                     onClick={() =>
                                       onOpenPdf(
@@ -315,7 +594,25 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
                                   <span className="text-[11px] text-slate-400 dark:text-slate-500 italic px-2">Énoncé bientôt</span>
                                 )}
 
-                                {epreuve.correction ? (
+                                {/* Corrigés multiples ou corrigé unique */}
+                                {epreuve.corriges && epreuve.corriges.length > 0 ? (
+                                  epreuve.corriges.map((corr, cIdx) => (
+                                    <button
+                                      key={corr.id || cIdx}
+                                      onClick={() =>
+                                        onOpenPdf(
+                                          corr.url,
+                                          `${block.titre} ${annee} — ${epreuve.label} (${corr.titre})`
+                                        )
+                                      }
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all cursor-pointer"
+                                      title={corr.titre}
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      <span className="truncate max-w-[130px]">{corr.titre || `Corrigé P.${cIdx + 1}`}</span>
+                                    </button>
+                                  ))
+                                ) : epreuve.correction && epreuve.correction.trim() !== "" ? (
                                   <button
                                     onClick={() =>
                                       onOpenPdf(
@@ -345,6 +642,32 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
                                     <Play className="w-3.5 h-3.5 fill-red-600 text-red-600" />
                                     <span>Vidéo</span>
                                   </button>
+                                )}
+
+                                {/* Boutons Enseignant / Admin pour l'épreuve */}
+                                {isTeacherView && (
+                                  <div className="flex items-center gap-1 pl-2 border-l border-slate-200 dark:border-slate-800">
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditEpreuve(block.id, epreuve)}
+                                      className="p-1.5 rounded-lg text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+                                      title="Modifier cette épreuve (énoncé, parties de corrigés, nom)"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (confirm(`Confirmez-vous la suppression de l'épreuve « ${epreuve.label} » ?`)) {
+                                          handleDeleteEpreuve(block.id, epreuve.id || idx);
+                                        }
+                                      }}
+                                      className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors cursor-pointer"
+                                      title="Supprimer cette épreuve"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -427,6 +750,322 @@ export function ConcoursWidget({ onOpenPdf, onOpenVideo }: ConcoursWidgetProps) 
           </div>
         )}
       </div>
+
+      {/* ── MODAL CONCOURS : CRÉER / MODIFIER UN CONCOURS ── */}
+      {(activeModal === "create_concours" || activeModal === "edit_concours") && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0d1322] border border-purple-300 dark:border-purple-500/40 rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <span>
+                    {activeModal === "create_concours" ? "Ajouter une Banque de Concours" : "Modifier la Banque de Concours"}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Organisez les épreuves et sujets de concours CPGE
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModal(null);
+                  setEditingConcoursId(null);
+                }}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveConcours} className="space-y-3.5">
+              <div className="grid grid-cols-4 gap-3">
+                <div className="col-span-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Icône / Emoji
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={concoursFormIcon}
+                    onChange={(e) => setConcoursFormIcon(e.target.value)}
+                    className="w-full px-3 py-2 text-center text-lg rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500"
+                    placeholder="🏆"
+                  />
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Nom du Concours *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ex: e3a-Polytech ou CNC TSI"
+                    value={concoursFormTitre}
+                    onChange={(e) => setConcoursFormTitre(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500 font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Description / Sous-titre / Filières
+                </label>
+                <input
+                  type="text"
+                  placeholder="ex: France · Filière MP / PC / PSI · Épreuves officielles & Corrigés détaillés"
+                  value={concoursFormMeta}
+                  onChange={(e) => setConcoursFormMeta(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveModal(null);
+                    setEditingConcoursId(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-xs transition-colors cursor-pointer"
+                >
+                  {activeModal === "create_concours" ? "Créer le concours" : "Enregistrer les modifications"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL ÉPREUVE : CRÉER / MODIFIER UNE ÉPREUVE & MULTI-CORRIGÉS ── */}
+      {(activeModal === "create_epreuve" || activeModal === "edit_epreuve") && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0d1322] border border-purple-300 dark:border-purple-500/40 rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <span>
+                    {activeModal === "create_epreuve" ? "Ajouter une Épreuve" : "Modifier l'Épreuve & Corrigés"}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Dans : {concoursData.find((b) => b.id === targetConcoursId)?.titre || "Concours"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModal(null);
+                  setEditingEpreuveId(null);
+                  setTargetConcoursId(null);
+                }}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEpreuve} className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Année / Session *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ex: 2024, 2025 ou CNC Book"
+                    value={epreuveFormAnnee}
+                    onChange={(e) => setEpreuveFormAnnee(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Filière
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ex: MP / PC, TSI, MP*"
+                    value={epreuveFormFiliere}
+                    onChange={(e) => setEpreuveFormFiliere(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Titre / Libellé de l'épreuve *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ex: CNC 2024 · Physique-Chimie (Électrodynamique et Ondes)"
+                  value={epreuveFormLabel}
+                  onChange={(e) => setEpreuveFormLabel(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Lien PDF Énoncé (Google Drive)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/file/d/.../view"
+                  value={epreuveFormEnonce}
+                  onChange={(e) => setEpreuveFormEnonce(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500 font-mono"
+                />
+              </div>
+
+              {/* Parties de Corrigés (Multi-parties de corrections) */}
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Parties de Corrigés (PDF Google Drive)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEpreuveFormCorriges((prev) => [
+                        ...prev,
+                        {
+                          id: `corr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                          titre: prev.length === 0 ? "Corrigé Détaillé Officiel" : `Corrigé Partie ${prev.length + 1}`,
+                          url: "",
+                        },
+                      ]);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 cursor-pointer"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>+ Ajouter une partie de corrigé</span>
+                  </button>
+                </div>
+
+                {epreuveFormCorriges.length === 0 ? (
+                  <div className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center bg-slate-50/50 dark:bg-slate-900/50">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+                      Aucun fichier de corrigé rattaché.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEpreuveFormCorriges([
+                          {
+                            id: `corr-${Date.now()}`,
+                            titre: "Corrigé Détaillé Officiel",
+                            url: "",
+                          },
+                        ]);
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 cursor-pointer"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>Ajouter un corrigé PDF</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                    {epreuveFormCorriges.map((corr, cIdx) => (
+                      <div
+                        key={corr.id || cIdx}
+                        className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 space-y-2 relative group"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            placeholder="Nom du corrigé (ex: Partie 1 : Mécanique, Corrigé Complet)"
+                            value={corr.titre}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEpreuveFormCorriges((prev) => {
+                                const next = [...prev];
+                                next[cIdx] = { ...next[cIdx], titre: val };
+                                return next;
+                              });
+                            }}
+                            className="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:outline-hidden focus:border-purple-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEpreuveFormCorriges((prev) => prev.filter((_, idx) => idx !== cIdx));
+                            }}
+                            className="p-1 rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors cursor-pointer"
+                            title="Supprimer cette partie"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input
+                          type="url"
+                          placeholder="https://drive.google.com/file/d/.../view"
+                          value={corr.url}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEpreuveFormCorriges((prev) => {
+                              const next = [...prev];
+                              next[cIdx] = { ...next[cIdx], url: val };
+                              return next;
+                            });
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-hidden focus:border-purple-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Lien Vidéo Résolution (YouTube ou Google Drive - Optionnel)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://www.youtube.com/watch?v=... ou Drive"
+                  value={epreuveFormVideo}
+                  onChange={(e) => setEpreuveFormVideo(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500 font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveModal(null);
+                    setEditingEpreuveId(null);
+                    setTargetConcoursId(null);
+                  }}
+                  className="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-xs transition-colors cursor-pointer"
+                >
+                  {activeModal === "create_epreuve" ? "Ajouter l'épreuve" : "Enregistrer les modifications"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
