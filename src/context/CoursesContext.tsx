@@ -16,6 +16,7 @@ import {
   removeVideoFromChapter,
   reorderChapterVideos,
   restoreChapterVideos,
+  transferVideoBetweenChapters,
   addModule,
   updateModule,
   deleteModule,
@@ -43,6 +44,25 @@ interface CoursesContextType {
   removeVideo: (moduleId: string, chapterId: string, videoId: string, isConcours?: boolean) => boolean;
   reorderVideos: (moduleId: string, chapterId: string, newOrder: string[], isConcours?: boolean) => boolean;
   restoreVideos: (moduleId: string, chapterId: string, isConcours?: boolean) => boolean;
+  transferVideo: (
+    sourceModuleId: string,
+    sourceChapterId: string,
+    targetModuleId: string,
+    targetChapterId: string,
+    videoData: {
+      id: string;
+      titre: string;
+      sous?: string;
+      video: string;
+      support?: string;
+      thumbnail?: string;
+      isCustom?: boolean;
+      badge?: string;
+    },
+    insertAt?: "start" | "end" | number,
+    targetIsConcours?: boolean,
+    sourceIsConcours?: boolean
+  ) => boolean;
   createExercise: (
     moduleId: string,
     chapterId: string,
@@ -140,6 +160,39 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
 
   const restoreVideos = (moduleId: string, chapterId: string, isConcours?: boolean) => {
     const res = restoreChapterVideos(moduleId, chapterId, isConcours);
+    if (res) refreshCourses();
+    return res;
+  };
+
+  const transferVideo = (
+    sourceModuleId: string,
+    sourceChapterId: string,
+    targetModuleId: string,
+    targetChapterId: string,
+    videoData: {
+      id: string;
+      titre: string;
+      sous?: string;
+      video: string;
+      support?: string;
+      thumbnail?: string;
+      isCustom?: boolean;
+      badge?: string;
+    },
+    insertAt?: "start" | "end" | number,
+    targetIsConcours?: boolean,
+    sourceIsConcours?: boolean
+  ) => {
+    const res = transferVideoBetweenChapters(
+      sourceModuleId,
+      sourceChapterId,
+      targetModuleId,
+      targetChapterId,
+      videoData,
+      insertAt,
+      targetIsConcours,
+      sourceIsConcours
+    );
     if (res) refreshCourses();
     return res;
   };
@@ -257,6 +310,7 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
         removeVideo,
         reorderVideos,
         restoreVideos,
+        transferVideo,
         createExercise,
         deleteExercise,
         createFiche,

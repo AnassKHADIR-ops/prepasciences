@@ -598,6 +598,165 @@ export function restoreChapterVideos(
   return true;
 }
 
+// ── 6a quinquies. Transfert d'une vidéo vers un autre module ou chapitre ──
+export function transferVideoBetweenChapters(
+  sourceModuleId: string,
+  sourceChapterId: string,
+  targetModuleId: string,
+  targetChapterId: string,
+  videoData: {
+    id: string;
+    titre: string;
+    sous?: string;
+    video: string;
+    support?: string;
+    thumbnail?: string;
+    isCustom?: boolean;
+    badge?: string;
+  },
+  insertAt: "start" | "end" | number = "end",
+  targetIsConcours: boolean = false,
+  sourceIsConcours: boolean = false
+): boolean {
+  const data = getCoursesDB();
+
+  // 1. Recherche du module et chapitre source
+  let sourceMod = data.find((m) => m.id === sourceModuleId);
+  let sourceChap = sourceMod?.chapitres.find((c) => c.id === sourceChapterId);
+  if (!sourceChap) {
+    for (const m of data) {
+      const c = m.chapitres.find((ch) => ch.id === sourceChapterId);
+      if (c) {
+        sourceMod = m;
+        sourceChap = c;
+        break;
+      }
+    }
+  }
+
+  // 2. Recherche du module et chapitre cible
+  let targetMod = data.find((m) => m.id === targetModuleId);
+  let targetChap = targetMod?.chapitres.find((c) => c.id === targetChapterId);
+  if (!targetChap) {
+    for (const m of data) {
+      const c = m.chapitres.find((ch) => ch.id === targetChapterId);
+      if (c) {
+        targetMod = m;
+        targetChap = c;
+        break;
+      }
+    }
+  }
+
+  if (!targetChap) return false;
+
+  // 3. Retrait de la vidéo dans le chapitre source
+  if (sourceChap) {
+    if (sourceIsConcours) {
+      if (!sourceChap.hiddenConcoursVideoIds) sourceChap.hiddenConcoursVideoIds = [];
+      if (!sourceChap.hiddenConcoursVideoIds.includes(videoData.id)) {
+        sourceChap.hiddenConcoursVideoIds.push(videoData.id);
+      }
+      if (sourceChap.concoursVideoOrder) {
+        sourceChap.concoursVideoOrder = sourceChap.concoursVideoOrder.filter((id) => id !== videoData.id);
+      }
+    } else {
+      if (!sourceChap.hiddenVideoIds) sourceChap.hiddenVideoIds = [];
+      if (!sourceChap.hiddenVideoIds.includes(videoData.id)) {
+        sourceChap.hiddenVideoIds.push(videoData.id);
+      }
+      if (sourceChap.videoOrder) {
+        sourceChap.videoOrder = sourceChap.videoOrder.filter((id) => id !== videoData.id);
+      }
+    }
+
+    if (sourceChap.cours) {
+      sourceChap.cours = sourceChap.cours.filter((s) => s.id !== videoData.id);
+    }
+  }
+
+  // 4. Préparation de la nouvelle séance dans targetChap
+  const newSessionId = `transferred-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const newSession: CourseSession = {
+    id: newSessionId,
+    titre: videoData.titre.trim(),
+    sous: videoData.sous?.trim() || (targetIsConcours ? "Extrait de Concours CPGE" : "Séance de cours transférée"),
+    video: videoData.video.trim(),
+    support: videoData.support?.trim(),
+    thumbnail: videoData.thumbnail || (videoData.video ? getYoutubeThumbnail(videoData.video) || undefined : undefined),
+    isConcours: targetIsConcours,
+    badge: videoData.badge || (targetIsConcours ? "Concours CPGE" : "Séance transférée"),
+  };
+
+  // 5. Ajout dans targetChap
+  if (!targetChap.cours) targetChap.cours = [];
+
+  // Supprimer des listes masquées du chapitre cible au cas où la vidéo était masquée auparavant
+  if (targetChap.hiddenVideoIds) {
+    targetChap.hiddenVideoIds = targetChap.hiddenVideoIds.filter((id) => id !== videoData.id && id !== newSessionId);
+  }
+  if (targetChap.hiddenConcoursVideoIds) {
+    targetChap.hiddenConcoursVideoIds = targetChap.hiddenConcoursVideoIds.filter((id) => id !== videoData.id && id !== newSessionId);
+  }
+
+  if (insertAt === "start" || insertAt === 0) {
+    targetChap.cours = [newSession, ...targetChap.cours];
+  } else if (typeof insertAt === "number" && insertAt > 0 && insertAt < targetChap.cours.length) {
+    targetChap.cours.splice(insertAt, 0, newSession);
+  } else {
+    targetChap.cours.push(newSession);
+  }
+
+  // Mettre à jour l'ordre personnalisé si présent
+  if (targetIsConcours) {
+    if (targetChap.concoursVideoOrder) {
+      if (insertAt === "start" || insertAt === 0) {
+        targetChap.concoursVideoOrder.unshift(newSessionId);
+      } else if (typeof insertAt === "number") {
+        targetChap.concoursVideoOrder.splice(insertAt, 0, newSessionId);
+      } else {
+        targetChap.concoursVideoOrder.push(newSessionId);
+      }
+    }
+  } else {
+    if (targetChap.videoOrder) {
+      if (insertAt === "start" || insertAt === 0) {
+        targetChap.videoOrder.unshift(newSessionId);
+      } else if (typeof insertAt === "number") {
+        targetChap.videoOrder.splice(insertAt, 0, newSessionId);
+      } else {
+        targetChap.videoOrder.push(newSessionId);
+      }
+    }
+  }
+
+  saveCoursesDB(data);
+
+  // Synchronisation Cloud Supabase
+  if (supabase) {
+    if (videoData.isCustom) {
+      supabase.from("sessions").delete().eq("id", videoData.id).then();
+    }
+    supabase
+      .from("sessions")
+      .insert([
+        {
+          id: newSession.id,
+          chapter_id: targetChapterId,
+          titre: newSession.titre,
+          sous: newSession.sous,
+          support_url: newSession.support || null,
+          video_url: newSession.video || null,
+        },
+      ])
+      .then(({ error }) => {
+        if (error) console.error("Supabase insert transferred session error:", error);
+      });
+  }
+
+  return true;
+}
+
 // ── 6b. Modification d'une séance (titre, sous-titre, lien vidéo, support PDF) ──
 export function updateSessionInChapter(
   moduleId: string,

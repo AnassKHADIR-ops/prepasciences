@@ -12,6 +12,8 @@ export interface CourseSession {
   video?: string;
   support?: string;
   thumbnail?: string;
+  isConcours?: boolean;
+  badge?: string;
 }
 
 export interface CourseExercise {

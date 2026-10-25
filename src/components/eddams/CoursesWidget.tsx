@@ -28,6 +28,7 @@ import {
   GripVertical,
   RotateCcw,
   Eye,
+  ArrowRightLeft,
 } from "lucide-react";
 import { getDriveImageUrls, extractDriveFileId, getYoutubeThumbnailCandidates, getYoutubeThumbnail } from "@/lib/driveUtils";
 import { useCourses } from "@/context/CoursesContext";
@@ -135,7 +136,7 @@ export function getChapterCourseVideos(
   // 1. Séances créées par l'enseignant (Direct ou Custom)
   if (chapter.cours) {
     chapter.cours.forEach((s, idx) => {
-      if (s.video && s.video.trim() !== "") {
+      if (s.video && s.video.trim() !== "" && !s.isConcours) {
         result.push({
           id: s.id || `custom-sess-${idx}`,
           titre: s.titre,
@@ -143,7 +144,7 @@ export function getChapterCourseVideos(
           video: s.video,
           support: s.support,
           thumbnail: s.thumbnail,
-          badge: "Séance du Professeur",
+          badge: s.badge || "Séance du Professeur",
           isCustom: true,
           rawSession: s,
         });
@@ -297,6 +298,25 @@ export function getChapterConcoursVideos(
   const modId = (chapter.moduleId || "").toLowerCase();
   const chapNum = chapter.num;
   const chapterId = (chapter.id || "").toLowerCase();
+
+  // 1. Extraits de concours personnalisés ou transférés vers ce chapitre
+  if (chapter.cours) {
+    chapter.cours.forEach((s, idx) => {
+      if (s.video && s.video.trim() !== "" && s.isConcours) {
+        result.push({
+          id: s.id || `custom-concours-${idx}`,
+          titre: s.titre,
+          sous: s.sous || "Extrait de Concours CPGE",
+          video: s.video,
+          support: s.support,
+          thumbnail: s.thumbnail,
+          badge: s.badge || "Concours CPGE",
+          isCustom: true,
+          rawSession: s,
+        });
+      }
+    });
+  }
 
   const matchingConcoursVideos = ELEARNING_PHYSICS_VIDEOS.filter((v) => {
     if (!isConcoursVideo(v)) return false;
@@ -486,6 +506,7 @@ function UnifiedChapterVideoCard({
   isTeacherView,
   onEdit,
   onDelete,
+  onTransfer,
   onMoveUp,
   onMoveDown,
   onDragStart,
@@ -504,6 +525,7 @@ function UnifiedChapterVideoCard({
   isTeacherView?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  onTransfer?: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
@@ -613,6 +635,21 @@ function UnifiedChapterVideoCard({
               title="Modifier les liens de cette séance"
             >
               <Edit2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Bouton Transférer vers un autre module / chapitre */}
+          {onTransfer && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTransfer();
+              }}
+              className="p-1 rounded-lg text-emerald-400 hover:text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+              title="Transférer cette vidéo vers un autre module ou chapitre"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
             </button>
           )}
 
@@ -768,6 +805,7 @@ function ConcoursExtractCard({
   onOpenVideo,
   isTeacherView,
   onDelete,
+  onTransfer,
   onMoveUp,
   onMoveDown,
   onDragStart,
@@ -784,6 +822,7 @@ function ConcoursExtractCard({
   onOpenVideo: (url: string, title: string) => void;
   isTeacherView?: boolean;
   onDelete?: () => void;
+  onTransfer?: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
@@ -897,6 +936,21 @@ function ConcoursExtractCard({
               title="Déplacer vers la droite (suivant)"
             >
               <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Bouton Transférer vers un autre module / chapitre */}
+          {onTransfer && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTransfer();
+              }}
+              className="p-1 rounded-lg text-emerald-400 hover:text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+              title="Transférer cet extrait de concours vers un autre module ou chapitre"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
             </button>
           )}
 
@@ -1464,6 +1518,7 @@ export function CoursesWidget({
     removeVideo,
     reorderVideos,
     restoreVideos,
+    transferVideo,
     createExercise,
     deleteExercise,
     createFiche,
@@ -1480,20 +1535,131 @@ export function CoursesWidget({
   const isTeacherView = (isTeacher || isAdmin) && teacherViewMode === "teacher";
 
   // État et gestionnaires pour le Drag & Drop et réordonnancement des vidéos
-  const [draggedVideo, setDraggedVideo] = useState<{ chapterId: string; videoId: string; isConcours: boolean } | null>(null);
-  const [dragOverVideo, setDragOverVideo] = useState<{ chapterId: string; videoId: string; isConcours: boolean } | null>(null);
+  const [draggedVideo, setDraggedVideo] = useState<{
+    moduleId: string;
+    chapterId: string;
+    videoId: string;
+    isConcours: boolean;
+    videoItem: ChapterVideoItem;
+  } | null>(null);
 
-  const handleDragStart = (chapterId: string, videoId: string, isConcours: boolean, e: React.DragEvent) => {
-    e.dataTransfer.setData("text/plain", videoId);
-    e.dataTransfer.effectAllowed = "move";
-    setDraggedVideo({ chapterId, videoId, isConcours });
+  const [dragOverVideo, setDragOverVideo] = useState<{
+    chapterId: string;
+    videoId?: string;
+    isConcours: boolean;
+    isChapterDropZone?: boolean;
+  } | null>(null);
+
+  // Toast de confirmation et notifications
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  // Modal interactif de transfert de vidéo vers un autre module / chapitre
+  const [transferModalData, setTransferModalData] = useState<{
+    video: ChapterVideoItem;
+    sourceChapter: ChapitreItem & { moduleId?: string; moduleTitre?: string };
+    isConcours: boolean;
+  } | null>(null);
+
+  const [transferTargetModuleId, setTransferTargetModuleId] = useState<string>("");
+  const [transferTargetChapterId, setTransferTargetChapterId] = useState<string>("");
+  const [transferTargetSection, setTransferTargetSection] = useState<"cours" | "concours">("cours");
+  const [transferPosition, setTransferPosition] = useState<"start" | "end">("end");
+
+  const openTransferModal = (
+    video: ChapterVideoItem,
+    sourceChapter: ChapitreItem & { moduleId?: string; moduleTitre?: string },
+    isConcours: boolean
+  ) => {
+    const allMods = courses && courses.length > 0 ? courses : PC_COURSES_DATA;
+    const srcModId = sourceChapter.moduleId || allMods[0]?.id || "";
+    setTransferModalData({ video, sourceChapter, isConcours });
+    setTransferTargetModuleId(srcModId);
+    const targetMod = allMods.find((m) => m.id === srcModId) || allMods[0];
+    const otherChap = targetMod?.chapitres.find((c) => c.id !== sourceChapter.id) || targetMod?.chapitres[0];
+    setTransferTargetChapterId(otherChap?.id || "");
+    setTransferTargetSection(isConcours ? "concours" : "cours");
+    setTransferPosition("end");
   };
 
-  const handleDragOver = (chapterId: string, videoId: string, isConcours: boolean, e: React.DragEvent) => {
+  const handleTransferModuleChange = (modId: string) => {
+    setTransferTargetModuleId(modId);
+    const allMods = courses && courses.length > 0 ? courses : PC_COURSES_DATA;
+    const mod = allMods.find((m) => m.id === modId);
+    if (mod && mod.chapitres.length > 0) {
+      const otherChap = mod.chapitres.find((c) => c.id !== transferModalData?.sourceChapter.id) || mod.chapitres[0];
+      setTransferTargetChapterId(otherChap.id);
+    } else {
+      setTransferTargetChapterId("");
+    }
+  };
+
+  const handleConfirmTransfer = () => {
+    if (!transferModalData || !transferTargetChapterId) return;
+    const { video, sourceChapter, isConcours } = transferModalData;
+    const allMods = courses && courses.length > 0 ? courses : PC_COURSES_DATA;
+    const success = transferVideo(
+      sourceChapter.moduleId || activeModule,
+      sourceChapter.id,
+      transferTargetModuleId,
+      transferTargetChapterId,
+      {
+        id: video.id,
+        titre: video.titre,
+        sous: video.sous,
+        video: video.video,
+        support: video.support,
+        thumbnail: video.thumbnail,
+        isCustom: video.isCustom,
+        badge: video.badge,
+      },
+      transferPosition,
+      transferTargetSection === "concours",
+      isConcours
+    );
+    if (success) {
+      const targetMod = allMods.find((m) => m.id === transferTargetModuleId);
+      const targetChap = targetMod?.chapitres.find((c) => c.id === transferTargetChapterId);
+      setToastMessage(`✓ Vidéo transférée vers « ${targetChap?.titre || "le chapitre cible"} » avec succès !`);
+      setOpenChapterIds((prev) => new Set([...Array.from(prev), transferTargetChapterId]));
+    }
+    setTransferModalData(null);
+  };
+
+  const handleDragStart = (
+    moduleId: string,
+    chapterId: string,
+    videoId: string,
+    isConcours: boolean,
+    videoItem: ChapterVideoItem,
+    e: React.DragEvent
+  ) => {
+    e.dataTransfer.setData("text/plain", videoId);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedVideo({ moduleId, chapterId, videoId, isConcours, videoItem });
+  };
+
+  const handleDragOver = (
+    chapterId: string,
+    videoId: string | undefined,
+    isConcours: boolean,
+    e: React.DragEvent,
+    isChapterDropZone: boolean = false
+  ) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    if (dragOverVideo?.videoId !== videoId || dragOverVideo?.isConcours !== isConcours) {
-      setDragOverVideo({ chapterId, videoId, isConcours });
+    if (
+      dragOverVideo?.chapterId !== chapterId ||
+      dragOverVideo?.videoId !== videoId ||
+      dragOverVideo?.isConcours !== isConcours ||
+      dragOverVideo?.isChapterDropZone !== isChapterDropZone
+    ) {
+      setDragOverVideo({ chapterId, videoId, isConcours, isChapterDropZone });
     }
   };
 
@@ -1503,28 +1669,92 @@ export function CoursesWidget({
   };
 
   const handleDrop = (chapter: ChapitreItem, targetVideoId: string, isConcours: boolean) => {
-    if (
-      !draggedVideo ||
-      draggedVideo.chapterId !== chapter.id ||
-      draggedVideo.isConcours !== isConcours ||
-      draggedVideo.videoId === targetVideoId
-    ) {
+    if (!draggedVideo) {
       setDraggedVideo(null);
       setDragOverVideo(null);
       return;
     }
-    const currentVideos = isConcours
-      ? getChapterConcoursVideos(chapter, selectedFiliere)
-      : getChapterCourseVideos(chapter, selectedFiliere);
-    const ids = currentVideos.map((v) => v.id);
-    const fromIndex = ids.indexOf(draggedVideo.videoId);
-    const toIndex = ids.indexOf(targetVideoId);
-    if (fromIndex !== -1 && toIndex !== -1) {
-      const newOrder = [...ids];
-      const [moved] = newOrder.splice(fromIndex, 1);
-      newOrder.splice(toIndex, 0, moved);
-      reorderVideos(chapter.moduleId || activeModule, chapter.id, newOrder, isConcours);
+
+    if (draggedVideo.chapterId === chapter.id && draggedVideo.isConcours === isConcours) {
+      if (draggedVideo.videoId === targetVideoId) {
+        setDraggedVideo(null);
+        setDragOverVideo(null);
+        return;
+      }
+      const currentVideos = isConcours
+        ? getChapterConcoursVideos(chapter, selectedFiliere)
+        : getChapterCourseVideos(chapter, selectedFiliere);
+      const ids = currentVideos.map((v) => v.id);
+      const fromIndex = ids.indexOf(draggedVideo.videoId);
+      const toIndex = ids.indexOf(targetVideoId);
+      if (fromIndex !== -1 && toIndex !== -1) {
+        const newOrder = [...ids];
+        const [moved] = newOrder.splice(fromIndex, 1);
+        newOrder.splice(toIndex, 0, moved);
+        reorderVideos(chapter.moduleId || activeModule, chapter.id, newOrder, isConcours);
+      }
+    } else {
+      // Transfert cross-chapitre ou cross-section par Drag & Drop
+      const currentVideos = isConcours
+        ? getChapterConcoursVideos(chapter, selectedFiliere)
+        : getChapterCourseVideos(chapter, selectedFiliere);
+      const toIndex = targetVideoId ? currentVideos.findIndex((v) => v.id === targetVideoId) : -1;
+      const insertPosition = toIndex !== -1 ? toIndex : "end";
+
+      transferVideo(
+        draggedVideo.moduleId,
+        draggedVideo.chapterId,
+        chapter.moduleId || activeModule,
+        chapter.id,
+        {
+          id: draggedVideo.videoId,
+          titre: draggedVideo.videoItem.titre,
+          sous: draggedVideo.videoItem.sous,
+          video: draggedVideo.videoItem.video,
+          support: draggedVideo.videoItem.support,
+          thumbnail: draggedVideo.videoItem.thumbnail,
+          isCustom: draggedVideo.videoItem.isCustom,
+          badge: draggedVideo.videoItem.badge,
+        },
+        insertPosition,
+        isConcours,
+        draggedVideo.isConcours
+      );
+      setOpenChapterIds((prev) => new Set([...Array.from(prev), chapter.id]));
+      setToastMessage(`✓ Vidéo « ${draggedVideo.videoItem.titre} » transférée vers « ${chapter.titre} » avec succès !`);
     }
+    setDraggedVideo(null);
+    setDragOverVideo(null);
+  };
+
+  const handleDropOnChapter = (chapter: ChapitreItem, targetIsConcours: boolean = false) => {
+    if (!draggedVideo) return;
+    if (draggedVideo.chapterId === chapter.id && draggedVideo.isConcours === targetIsConcours) {
+      setDraggedVideo(null);
+      setDragOverVideo(null);
+      return;
+    }
+    transferVideo(
+      draggedVideo.moduleId,
+      draggedVideo.chapterId,
+      chapter.moduleId || activeModule,
+      chapter.id,
+      {
+        id: draggedVideo.videoId,
+        titre: draggedVideo.videoItem.titre,
+        sous: draggedVideo.videoItem.sous,
+        video: draggedVideo.videoItem.video,
+        support: draggedVideo.videoItem.support,
+        thumbnail: draggedVideo.videoItem.thumbnail,
+        isCustom: draggedVideo.videoItem.isCustom,
+        badge: draggedVideo.videoItem.badge,
+      },
+      "end",
+      targetIsConcours,
+      draggedVideo.isConcours
+    );
+    setOpenChapterIds((prev) => new Set([...Array.from(prev), chapter.id]));
+    setToastMessage(`✓ Vidéo « ${draggedVideo.videoItem.titre} » transférée vers « ${chapter.titre} » avec succès !`);
     setDraggedVideo(null);
     setDragOverVideo(null);
   };
@@ -2570,8 +2800,21 @@ export function CoursesWidget({
           return (
             <div
               key={chapter.id}
+              onDragOver={(e) => {
+                if (draggedVideo && draggedVideo.chapterId !== chapter.id) {
+                  handleDragOver(chapter.id, undefined, false, e, true);
+                }
+              }}
+              onDrop={(e) => {
+                if (draggedVideo && draggedVideo.chapterId !== chapter.id) {
+                  e.preventDefault();
+                  handleDropOnChapter(chapter, draggedVideo.isConcours);
+                }
+              }}
               className={`bg-white dark:bg-[#0d1322] rounded-2xl border transition-all duration-200 overflow-hidden ${
-                isOpen
+                dragOverVideo?.chapterId === chapter.id && dragOverVideo.isChapterDropZone
+                  ? "border-emerald-500 ring-4 ring-emerald-400/40 shadow-xl scale-[1.005]"
+                  : isOpen
                   ? "border-purple-300 dark:border-purple-500/50 shadow-md dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
                   : "border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700"
               }`}
@@ -2655,6 +2898,28 @@ export function CoursesWidget({
                 </div>
               </div>
 
+              {/* Zone d'indication de drop pour transfert inter-chapitres */}
+              {draggedVideo && draggedVideo.chapterId !== chapter.id && (
+                <div
+                  onDragOver={(e) => handleDragOver(chapter.id, undefined, false, e, true)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDropOnChapter(chapter, draggedVideo.isConcours);
+                  }}
+                  className={`mx-5 mb-4 p-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-copy select-none ${
+                    dragOverVideo?.chapterId === chapter.id && dragOverVideo.isChapterDropZone
+                      ? "bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-300 scale-[1.01]"
+                      : "bg-purple-500/10 border-purple-400/50 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20"
+                  }`}
+                >
+                  <ArrowRightLeft className="w-4 h-4 animate-pulse text-emerald-500" />
+                  <span>
+                    Déposer ici pour transférer « {draggedVideo.videoItem.titre} » dans ce chapitre ({chapter.titre})
+                  </span>
+                </div>
+              )}
+
               {/* Contenu Déplié : Polycopié officiel en haut, Séances de cours, Extraits de concours en parallèle, puis Fiches et TDs */}
               {isOpen && (() => {
                 const chapterPdf = getChapterOfficialPdf(chapter);
@@ -2737,6 +3002,11 @@ export function CoursesWidget({
                                   ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, vid.id, false)
                                   : undefined
                               }
+                              onTransfer={
+                                isTeacherView
+                                  ? () => openTransferModal(vid, chapter, false)
+                                  : undefined
+                              }
                               onMoveUp={
                                 isTeacherView && vIdx > 0
                                   ? () => handleMoveVideo(chapter, vid.id, "prev", false)
@@ -2747,7 +3017,7 @@ export function CoursesWidget({
                                   ? () => handleMoveVideo(chapter, vid.id, "next", false)
                                   : undefined
                               }
-                              onDragStart={(e) => handleDragStart(chapter.id, vid.id, false, e)}
+                              onDragStart={(e) => handleDragStart(chapter.moduleId || activeModule, chapter.id, vid.id, false, vid, e)}
                               onDragOver={(e) => handleDragOver(chapter.id, vid.id, false, e)}
                               onDragEnd={handleDragEnd}
                               onDrop={() => handleDrop(chapter, vid.id, false)}
@@ -2835,6 +3105,11 @@ export function CoursesWidget({
                                   ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, cVid.id, true)
                                   : undefined
                               }
+                              onTransfer={
+                                isTeacherView
+                                  ? () => openTransferModal(cVid, chapter, true)
+                                  : undefined
+                              }
                               onMoveUp={
                                 isTeacherView && cIdx > 0
                                   ? () => handleMoveVideo(chapter, cVid.id, "prev", true)
@@ -2845,7 +3120,7 @@ export function CoursesWidget({
                                   ? () => handleMoveVideo(chapter, cVid.id, "next", true)
                                   : undefined
                               }
-                              onDragStart={(e) => handleDragStart(chapter.id, cVid.id, true, e)}
+                              onDragStart={(e) => handleDragStart(chapter.moduleId || activeModule, chapter.id, cVid.id, true, cVid, e)}
                               onDragOver={(e) => handleDragOver(chapter.id, cVid.id, true, e)}
                               onDragEnd={handleDragEnd}
                               onDrop={() => handleDrop(chapter, cVid.id, true)}
@@ -3828,6 +4103,225 @@ export function CoursesWidget({
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* MODAL : TRANSFÉRER UNE VIDÉO VERS UN AUTRE MODULE OU CHAPITRE     */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {transferModalData && (
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0d1322] border-2 border-emerald-500/40 rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <ArrowRightLeft className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Transférer la vidéo
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Déplacer vers un autre module ou un autre chapitre
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTransferModalData(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Aperçu de la vidéo à transférer */}
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+              <div className="w-14 h-10 rounded-lg bg-slate-900 overflow-hidden shrink-0 flex items-center justify-center">
+                {transferModalData.video.thumbnail ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={transferModalData.video.thumbnail}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <PlayCircle className="w-5 h-5 text-purple-400" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                  {transferModalData.video.titre}
+                </h4>
+                <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                  <span>Source : {transferModalData.sourceChapter.moduleTitre || transferModalData.sourceChapter.badge}</span>
+                  <span>·</span>
+                  <span className="truncate">{transferModalData.sourceChapter.titre}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Formulaire de sélection de destination */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleConfirmTransfer();
+              }}
+              className="space-y-4 pt-1"
+            >
+              {/* 1. Sélection du Module */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  1. Module de destination *
+                </label>
+                <select
+                  value={transferTargetModuleId}
+                  onChange={(e) => handleTransferModuleChange(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-emerald-500 cursor-pointer"
+                >
+                  {(courses && courses.length > 0 ? courses : PC_COURSES_DATA).map((mod) => (
+                    <option key={mod.id} value={mod.id}>
+                      {mod.icon || "📚"} {mod.titre} ({mod.chapitres?.length || 0} chapitres)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 2. Sélection du Chapitre */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  2. Chapitre de destination *
+                </label>
+                {(() => {
+                  const allMods = courses && courses.length > 0 ? courses : PC_COURSES_DATA;
+                  const currentMod = allMods.find((m) => m.id === transferTargetModuleId);
+                  const chaps = currentMod?.chapitres || [];
+
+                  if (chaps.length === 0) {
+                    return (
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700 dark:text-amber-300">
+                        Aucun chapitre disponible dans ce module.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <select
+                      value={transferTargetChapterId}
+                      onChange={(e) => setTransferTargetChapterId(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-emerald-500 cursor-pointer"
+                    >
+                      {chaps.map((ch) => (
+                        <option key={ch.id} value={ch.id}>
+                          Ch {ch.num} : {ch.titre} {ch.id === transferModalData.sourceChapter.id ? "(Chapitre actuel)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  );
+                })()}
+              </div>
+
+              {/* 3. Section de destination (Cours ou Concours) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  3. Rubrique de destination
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTransferTargetSection("cours")}
+                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all text-left flex items-center gap-2 cursor-pointer ${
+                      transferTargetSection === "cours"
+                        ? "bg-purple-600/15 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/30"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <span>🎬</span>
+                    <span>Séances de Cours</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTransferTargetSection("concours")}
+                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all text-left flex items-center gap-2 cursor-pointer ${
+                      transferTargetSection === "concours"
+                        ? "bg-amber-600/15 border-amber-500 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/30"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <span>🎯</span>
+                    <span>Extraits Concours</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4. Position dans le chapitre cible */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  4. Position dans la liste
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTransferPosition("end")}
+                    className={`p-2 rounded-xl border text-xs font-medium transition-all text-center cursor-pointer ${
+                      transferPosition === "end"
+                        ? "bg-emerald-600/15 border-emerald-500 text-emerald-700 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/30"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    En fin de liste (recommandé)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTransferPosition("start")}
+                    className={`p-2 rounded-xl border text-xs font-medium transition-all text-center cursor-pointer ${
+                      transferPosition === "start"
+                        ? "bg-emerald-600/15 border-emerald-500 text-emerald-700 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/30"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    En début de liste (prioritaire)
+                  </button>
+                </div>
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setTransferModalData(null)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={!transferTargetChapterId}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  <span>Confirmer le transfert</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification Flottante */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-950 text-white px-4 py-3 rounded-2xl shadow-2xl border border-emerald-500/40 flex items-center gap-3 max-w-md">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <span className="text-xs font-medium leading-relaxed">{toastMessage}</span>
+          <button
+            type="button"
+            onClick={() => setToastMessage(null)}
+            className="p-1 text-slate-400 hover:text-white ml-auto cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
     </div>
