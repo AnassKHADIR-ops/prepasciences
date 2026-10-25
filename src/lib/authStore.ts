@@ -20,7 +20,7 @@ export function generateUUID(): string {
 }
 
 export const INITIAL_USERS: UserProfile[] = [
-  // ── Administrateur Principal Unique ──
+  // ── Administrateurs & Professeurs CPGE (Pleins Droits de Modification) ──
   {
     id: "00000000-0000-0000-0000-000000000000",
     email: "anass.khadir@usmba.ac.ma",
@@ -34,14 +34,13 @@ export const INITIAL_USERS: UserProfile[] = [
     status: "active",
     createdAt: "2026-09-01T08:00:00Z",
   },
-  // ── Professeurs ──
   {
     id: "00000000-0000-0000-0000-000000000001",
     email: "eddams@prepasciences.ma",
     fullName: "Pr. Hassan EDDAMS",
     password: "eddams",
     phone: "+212721729799",
-    role: "teacher",
+    role: "admin",
     filiere: "MP*",
     center: "CPGE Lycée Moulay Abdellah- Safi",
     offer: "pc",
@@ -139,15 +138,29 @@ export function getUsersDB(): UserProfile[] {
     const raw = localStorage.getItem(USERS_KEY);
     let users: UserProfile[] = raw ? JSON.parse(raw) : INITIAL_USERS;
 
-    // Enforce unique admin account anass.khadir@usmba.ac.ma
-    const adminEmail = "anass.khadir@usmba.ac.ma";
-    const adminIdx = users.findIndex((u) => u.email.toLowerCase() === adminEmail);
-    if (adminIdx === -1) {
-      users = [INITIAL_USERS[0], ...users];
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    } else if (users[adminIdx].role !== "admin") {
-      users[adminIdx].role = "admin";
-      users[adminIdx].status = "active";
+    // Garantir le rôle administrateur et le statut actif pour tous les comptes administrateurs
+    const adminEmails = [
+      "anass.khadir@usmba.ac.ma",
+      "eddams@prepasciences.ma",
+      "khadir@prepasciences.ma",
+    ];
+    let changed = false;
+    adminEmails.forEach((email) => {
+      const idx = users.findIndex((u) => u.email.toLowerCase() === email);
+      if (idx === -1) {
+        const initUser = INITIAL_USERS.find((u) => u.email.toLowerCase() === email);
+        if (initUser) {
+          users.unshift(initUser);
+          changed = true;
+        }
+      } else if (users[idx].role !== "admin" || users[idx].status !== "active") {
+        users[idx].role = "admin";
+        users[idx].status = "active";
+        changed = true;
+      }
+    });
+
+    if (changed) {
       localStorage.setItem(USERS_KEY, JSON.stringify(users));
     }
 
@@ -170,7 +183,18 @@ export function getCurrentSession(): UserProfile | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const user: UserProfile = JSON.parse(raw);
+    const adminEmails = [
+      "anass.khadir@usmba.ac.ma",
+      "eddams@prepasciences.ma",
+      "khadir@prepasciences.ma",
+    ];
+    if (adminEmails.includes(user.email?.toLowerCase())) {
+      user.role = "admin";
+      user.status = "active";
+    }
+    return user;
   } catch {
     return null;
   }
@@ -254,8 +278,9 @@ export function loginUser(
     };
   }
 
-  // Garantir le rôle admin pour anass.khadir@usmba.ac.ma
-  if (user.email.toLowerCase() === "anass.khadir@usmba.ac.ma") {
+  // Garantir le rôle admin avec pleins droits pour tous les administrateurs et professeurs CPGE
+  const adminEmails = ["anass.khadir@usmba.ac.ma", "eddams@prepasciences.ma", "khadir@prepasciences.ma"];
+  if (adminEmails.includes(user.email.toLowerCase()) || user.role === "admin") {
     user.role = "admin";
     user.status = "active";
   }
@@ -335,10 +360,10 @@ export function registerUser(data: {
     };
   }
 
-  // Attribution automatique du rôle : anass.khadir@usmba.ac.ma est Administrateur Unique
-  const isAdmin = cleanEmail === "anass.khadir@usmba.ac.ma";
-  const isTeacher = cleanEmail === "eddams@prepasciences.ma" || cleanEmail === "khadir@prepasciences.ma";
-  const role: UserRole = isAdmin ? "admin" : isTeacher ? "teacher" : "student";
+  // Attribution automatique du rôle : Administrateurs avec pleins pouvoirs
+  const adminEmails = ["anass.khadir@usmba.ac.ma", "eddams@prepasciences.ma", "khadir@prepasciences.ma"];
+  const isAdmin = adminEmails.includes(cleanEmail);
+  const role: UserRole = isAdmin ? "admin" : "student";
 
   const newUser: UserProfile = {
     id: generateUUID(),
@@ -410,7 +435,8 @@ export function registerStudent(data: {
     };
   }
 
-  const isAdmin = cleanEmail === "anass.khadir@usmba.ac.ma";
+  const adminEmails = ["anass.khadir@usmba.ac.ma", "eddams@prepasciences.ma", "khadir@prepasciences.ma"];
+  const isAdmin = adminEmails.includes(cleanEmail);
   const role: UserRole = isAdmin ? "admin" : "student";
 
   const newUser: UserProfile = {

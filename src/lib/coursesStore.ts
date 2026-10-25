@@ -448,7 +448,7 @@ export function deleteExerciseFromChapter(
   return true;
 }
 
-// ── 6. Suppression d'une séance vidéo / replay ──
+// ── 6. Suppression d'une séance vidéo / replay (Personnalisée ou Catalogue Prépasciences) ──
 export function deleteSessionFromChapter(
   moduleId: string,
   chapterId: string,
@@ -458,9 +458,22 @@ export function deleteSessionFromChapter(
   const moduleItem = data.find((m) => m.id === moduleId);
   if (!moduleItem) return false;
   const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
-  if (!chapter || !chapter.cours) return false;
+  if (!chapter) return false;
 
-  chapter.cours = chapter.cours.filter((s) => s.id !== sessionId);
+  // 1. Suppression dans chapter.cours si c'est une séance personnalisée
+  if (chapter.cours) {
+    chapter.cours = chapter.cours.filter((s) => s.id !== sessionId);
+  }
+
+  // 2. Enregistrement dans les vidéos masquées/retirées (notamment pour les vidéos du catalogue Prépasciences)
+  if (!chapter.hiddenVideoIds) chapter.hiddenVideoIds = [];
+  if (!chapter.hiddenVideoIds.includes(sessionId)) {
+    chapter.hiddenVideoIds.push(sessionId);
+  }
+  if (chapter.videoOrder) {
+    chapter.videoOrder = chapter.videoOrder.filter((id) => id !== sessionId);
+  }
+
   saveCoursesDB(data);
 
   if (supabase) {
@@ -473,6 +486,115 @@ export function deleteSessionFromChapter(
       });
   }
 
+  return true;
+}
+
+// ── 6a bis. Retrait d'une vidéo (Prépasciences catalogue ou personnalisée, cours ou concours) ──
+export function removeVideoFromChapter(
+  moduleId: string,
+  chapterId: string,
+  videoId: string,
+  isConcours: boolean = false
+): boolean {
+  const data = getCoursesDB();
+  const moduleItem = data.find((m) => m.id === moduleId);
+  if (!moduleItem) return false;
+  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  if (!chapter) return false;
+
+  if (isConcours) {
+    if (!chapter.hiddenConcoursVideoIds) chapter.hiddenConcoursVideoIds = [];
+    if (!chapter.hiddenConcoursVideoIds.includes(videoId)) {
+      chapter.hiddenConcoursVideoIds.push(videoId);
+    }
+    if (chapter.concoursVideoOrder) {
+      chapter.concoursVideoOrder = chapter.concoursVideoOrder.filter((id) => id !== videoId);
+    }
+  } else {
+    if (chapter.cours) {
+      chapter.cours = chapter.cours.filter((s) => s.id !== videoId);
+    }
+    if (!chapter.hiddenVideoIds) chapter.hiddenVideoIds = [];
+    if (!chapter.hiddenVideoIds.includes(videoId)) {
+      chapter.hiddenVideoIds.push(videoId);
+    }
+    if (chapter.videoOrder) {
+      chapter.videoOrder = chapter.videoOrder.filter((id) => id !== videoId);
+    }
+
+    if (supabase) {
+      supabase
+        .from("sessions")
+        .delete()
+        .eq("id", videoId)
+        .then(({ error }) => {
+          if (error) console.error("Supabase delete session error:", error);
+        });
+    }
+  }
+
+  saveCoursesDB(data);
+  return true;
+}
+
+// ── 6a ter. Réordonnancement Drag & Drop des vidéos d'un chapitre ──
+export function reorderChapterVideos(
+  moduleId: string,
+  chapterId: string,
+  newOrder: string[],
+  isConcours: boolean = false
+): boolean {
+  const data = getCoursesDB();
+  const moduleItem = data.find((m) => m.id === moduleId);
+  if (!moduleItem) return false;
+  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  if (!chapter) return false;
+
+  if (isConcours) {
+    chapter.concoursVideoOrder = newOrder;
+  } else {
+    chapter.videoOrder = newOrder;
+    if (chapter.cours && chapter.cours.length > 0) {
+      const coursMap = new Map(chapter.cours.map((s) => [s.id || "", s]));
+      const sortedCours: CourseSession[] = [];
+      newOrder.forEach((id) => {
+        const item = coursMap.get(id);
+        if (item) sortedCours.push(item);
+      });
+      chapter.cours.forEach((s) => {
+        if (!sortedCours.some((sc) => sc.id === s.id)) {
+          sortedCours.push(s);
+        }
+      });
+      chapter.cours = sortedCours;
+    }
+  }
+
+  saveCoursesDB(data);
+  return true;
+}
+
+// ── 6a quater. Restauration des vidéos retirées du catalogue pour un chapitre ──
+export function restoreChapterVideos(
+  moduleId: string,
+  chapterId: string,
+  isConcours: boolean = false
+): boolean {
+  const data = getCoursesDB();
+  const moduleItem = data.find((m) => m.id === moduleId);
+  if (!moduleItem) return false;
+  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  if (!chapter) return false;
+
+  if (isConcours) {
+    chapter.hiddenConcoursVideoIds = [];
+    chapter.concoursVideoOrder = undefined;
+  } else {
+    chapter.hiddenVideoIds = [];
+    chapter.videoOrder = undefined;
+  }
+
+  saveCoursesDB(data);
   return true;
 }
 

@@ -15,7 +15,7 @@ interface EddamsNavbarProps {
 
 export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: EddamsNavbarProps) {
   const router = useRouter();
-  const { currentUser, isTeacher, logout } = useAuth();
+  const { currentUser, isTeacher, isAdmin, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMounted = React.useSyncExternalStore(
     () => () => {},
@@ -23,7 +23,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
     () => false
   );
 
-  const activeTeacher = isMounted && isTeacher;
+  const activeTeacher = isMounted && (isTeacher || isAdmin);
   const activeUser = isMounted ? currentUser : null;
 
   // Nom d'affichage et initiales
@@ -219,10 +219,15 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
                 )}
               </div>
 
-              {/* Prénom */}
+              {/* Prénom & Badge Admin */}
               <span className="truncate max-w-[100px] sm:max-w-[140px]">
                 {firstName}
               </span>
+              {activeUser?.role === "admin" && (
+                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-600 text-white shadow-2xs">
+                  Admin
+                </span>
+              )}
             </div>
           ) : (
             <Link

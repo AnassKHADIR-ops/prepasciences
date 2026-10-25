@@ -13,6 +13,9 @@ import {
   updateFicheInChapter,
   deleteFicheFromChapter,
   addBatchChapter,
+  removeVideoFromChapter,
+  reorderChapterVideos,
+  restoreChapterVideos,
   addModule,
   updateModule,
   deleteModule,
@@ -37,6 +40,9 @@ interface CoursesContextType {
     updates: { titre?: string; sous?: string; videoUrl?: string; supportUrl?: string }
   ) => boolean;
   deleteSession: (moduleId: string, chapterId: string, sessionId: string) => boolean;
+  removeVideo: (moduleId: string, chapterId: string, videoId: string, isConcours?: boolean) => boolean;
+  reorderVideos: (moduleId: string, chapterId: string, newOrder: string[], isConcours?: boolean) => boolean;
+  restoreVideos: (moduleId: string, chapterId: string, isConcours?: boolean) => boolean;
   createExercise: (
     moduleId: string,
     chapterId: string,
@@ -116,6 +122,24 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
 
   const deleteSession = (moduleId: string, chapterId: string, sessionId: string) => {
     const res = deleteSessionFromChapter(moduleId, chapterId, sessionId);
+    if (res) refreshCourses();
+    return res;
+  };
+
+  const removeVideo = (moduleId: string, chapterId: string, videoId: string, isConcours?: boolean) => {
+    const res = removeVideoFromChapter(moduleId, chapterId, videoId, isConcours);
+    if (res) refreshCourses();
+    return res;
+  };
+
+  const reorderVideos = (moduleId: string, chapterId: string, newOrder: string[], isConcours?: boolean) => {
+    const res = reorderChapterVideos(moduleId, chapterId, newOrder, isConcours);
+    if (res) refreshCourses();
+    return res;
+  };
+
+  const restoreVideos = (moduleId: string, chapterId: string, isConcours?: boolean) => {
+    const res = restoreChapterVideos(moduleId, chapterId, isConcours);
     if (res) refreshCourses();
     return res;
   };
@@ -230,6 +254,9 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
         createSession,
         updateSession,
         deleteSession,
+        removeVideo,
+        reorderVideos,
+        restoreVideos,
         createExercise,
         deleteExercise,
         createFiche,

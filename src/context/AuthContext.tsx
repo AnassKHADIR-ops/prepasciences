@@ -19,6 +19,7 @@ import {
 interface AuthContextType {
   currentUser: UserProfile | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   isTeacher: boolean;
   teacherViewMode: "teacher" | "preview-student";
   students: UserProfile[];
@@ -145,6 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUsers();
   };
 
+  const isAdmin = currentUser?.role === "admin";
   const isTeacher =
     currentUser?.role === "teacher" || currentUser?.role === "admin";
 
@@ -153,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         currentUser,
         isAuthenticated: currentUser !== null,
+        isAdmin,
         isTeacher,
         teacherViewMode,
         students,

@@ -34,6 +34,7 @@ export interface CourseFiche {
 
 export interface ChapitreItem {
   id: string;
+  moduleId?: string;
   num: number;
   titre: string;
   badge: string;
@@ -43,6 +44,10 @@ export interface ChapitreItem {
   cours: CourseSession[];
   tds: CourseExercise[];
   fiches: CourseFiche[];
+  hiddenVideoIds?: string[]; // IDs des vidéos retirées/masquées de ce chapitre
+  videoOrder?: string[]; // Ordre personnalisé des IDs des vidéos (Drag & Drop)
+  hiddenConcoursVideoIds?: string[]; // IDs des vidéos concours retirées
+  concoursVideoOrder?: string[]; // Ordre personnalisé des IDs des vidéos concours (Drag & Drop)
   // Rétrocompatibilité
   ficheUrl?: string | null;
   enonceTdUrl?: string | null;

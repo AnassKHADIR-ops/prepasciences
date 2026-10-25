@@ -21,9 +21,13 @@ import {
   Check,
   Filter,
   ChevronLeft,
+  ChevronRight,
   ArrowRight,
   ExternalLink,
   Sparkles,
+  GripVertical,
+  RotateCcw,
+  Eye,
 } from "lucide-react";
 import { getDriveImageUrls, extractDriveFileId, getYoutubeThumbnailCandidates, getYoutubeThumbnail } from "@/lib/driveUtils";
 import { useCourses } from "@/context/CoursesContext";
@@ -267,7 +271,21 @@ export function getChapterCourseVideos(
     }
   }
 
-  return result;
+  // Filtrer les vidéos masquées/retirées (notamment celles de Prépasciences)
+  const hiddenIds = new Set(chapter.hiddenVideoIds || []);
+  let finalResult = result.filter((r) => !hiddenIds.has(r.id) && !hiddenIds.has(r.video));
+
+  // Réordonner selon chapter.videoOrder (Drag & Drop)
+  if (chapter.videoOrder && chapter.videoOrder.length > 0) {
+    const orderMap = new Map(chapter.videoOrder.map((id, index) => [id, index]));
+    finalResult.sort((a, b) => {
+      const idxA = orderMap.has(a.id) ? orderMap.get(a.id)! : 9999;
+      const idxB = orderMap.has(b.id) ? orderMap.get(b.id)! : 9999;
+      return idxA - idxB;
+    });
+  }
+
+  return finalResult;
 }
 
 // ── Extraction Spécifique des Extraits de Concours & Problèmes Types pour le Chapitre ──
@@ -370,7 +388,21 @@ export function getChapterConcoursVideos(
     }
   }
 
-  return result;
+  // Filtrer les vidéos de concours masquées/retirées
+  const hiddenConcoursIds = new Set(chapter.hiddenConcoursVideoIds || []);
+  let finalResult = result.filter((r) => !hiddenConcoursIds.has(r.id) && !hiddenConcoursIds.has(r.video));
+
+  // Réordonner selon chapter.concoursVideoOrder (Drag & Drop)
+  if (chapter.concoursVideoOrder && chapter.concoursVideoOrder.length > 0) {
+    const orderMap = new Map(chapter.concoursVideoOrder.map((id, index) => [id, index]));
+    finalResult.sort((a, b) => {
+      const idxA = orderMap.has(a.id) ? orderMap.get(a.id)! : 9999;
+      const idxB = orderMap.has(b.id) ? orderMap.get(b.id)! : 9999;
+      return idxA - idxB;
+    });
+  }
+
+  return finalResult;
 }
 
 // ── BANDEAU MAJESTUEUX : POLYCOPIÉ DE COURS OFFICIEL (EN HAUT DU CHAPITRE) ──
@@ -447,21 +479,39 @@ function ChapterOfficialPdfBanner({
 function UnifiedChapterVideoCard({
   vid,
   index,
+  totalCount,
   chapTitre,
   onOpenPdf,
   onOpenVideo,
   isTeacherView,
   onEdit,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+  onDrop,
+  isDragging,
+  isDragOver,
 }: {
   vid: ChapterVideoItem;
   index: number;
+  totalCount?: number;
   chapTitre: string;
   onOpenPdf: (url: string, title: string) => void;
   onOpenVideo: (url: string, title: string) => void;
   isTeacherView?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
+  onDrop?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
 }) {
   const titre = vid.titre || `Vidéo ${index + 1}`;
   const sous = vid.sous || "Replay de cours & Résolution méthodique";
@@ -497,10 +547,61 @@ function UnifiedChapterVideoCard({
   const hasValidThumb = thumbnailCandidates.length > 0 && !thumbFailed;
 
   return (
-    <article className="group relative bg-white dark:bg-[#0d1322] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs hover:shadow-md hover:border-purple-300 dark:hover:border-purple-500/40 transition-all flex flex-col justify-between">
-      {/* Boutons d'édition & suppression enseignant si séance personnalisée */}
+    <article
+      draggable={isTeacherView}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+      onDrop={onDrop}
+      className={`group relative bg-white dark:bg-[#0d1322] border rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between ${
+        isDragging
+          ? "opacity-40 scale-95 border-purple-500 ring-2 ring-purple-500 shadow-xl"
+          : isDragOver
+          ? "border-purple-500 ring-4 ring-purple-400/50 scale-[1.02] shadow-xl"
+          : "border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40"
+      }`}
+    >
+      {/* Barre d'actions & Drag and Drop Enseignant/Admin */}
       {isTeacherView && (
-        <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5">
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-1 bg-slate-950/90 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-lg">
+          {/* Poignée Drag & Drop avec numéro d'ordre */}
+          <div
+            className="cursor-grab active:cursor-grabbing p-1 rounded-lg text-purple-300 hover:text-white flex items-center gap-0.5 select-none"
+            title="Glisser-déposer (Drag & Drop) pour réordonner cette vidéo"
+          >
+            <GripVertical className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-mono font-bold">#{index + 1}</span>
+          </div>
+
+          {/* Boutons flèches rapides pour réordonner */}
+          {onMoveUp && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveUp();
+              }}
+              className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Déplacer vers la gauche (précédent)"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onMoveDown && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveDown();
+              }}
+              className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Déplacer vers la droite (suivant)"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Bouton Édition (si séance personnalisée) */}
           {onEdit && (
             <button
               type="button"
@@ -508,21 +609,25 @@ function UnifiedChapterVideoCard({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-1.5 rounded-lg bg-purple-700/90 hover:bg-purple-800 text-white shadow-xs transition-all cursor-pointer"
-              title="Modifier cette séance"
+              className="p-1 rounded-lg text-purple-300 hover:text-white hover:bg-purple-600/50 transition-colors cursor-pointer"
+              title="Modifier les liens de cette séance"
             >
               <Edit2 className="w-3.5 h-3.5" />
             </button>
           )}
+
+          {/* Bouton Retrait / Suppression (pour TOUTES les vidéos : catalogue Prépasciences ou perso) */}
           {onDelete && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (confirm(`Supprimer la séance "${titre}" ?`)) onDelete();
+                if (confirm(`Confirmez-vous le retrait de la vidéo "${titre}" de ce chapitre ?`)) {
+                  onDelete();
+                }
               }}
-              className="p-1.5 rounded-lg bg-red-600/90 hover:bg-red-700 text-white shadow-xs transition-all cursor-pointer"
-              title="Supprimer cette séance"
+              className="p-1 rounded-lg text-red-400 hover:text-white hover:bg-red-600 transition-colors cursor-pointer"
+              title="Retirer cette vidéo du chapitre"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -567,11 +672,16 @@ function UnifiedChapterVideoCard({
           )}
 
           {/* Calque Sombre & Badge Filière & Bouton Play */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex flex-col justify-between p-2.5 sm:p-3 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/20 to-transparent flex flex-col justify-between p-2.5 sm:p-3 pointer-events-none">
             <div className="flex items-center justify-between gap-1 w-full">
               {vid.badge && (
                 <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-900/90 text-purple-200 border border-purple-400/30 shadow-xs">
                   {vid.badge}
+                </span>
+              )}
+              {!vid.isCustom && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-indigo-900/80 text-indigo-200 border border-indigo-400/30 shadow-xs">
+                  Prépasciences
                 </span>
               )}
               <span className="inline-flex items-center gap-1 text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 shadow-xs ml-auto">
@@ -652,12 +762,36 @@ function UnifiedChapterVideoCard({
 // ── CARTE EXTRAIT DE CONCOURS & PROBLÈME TYPE (SPÉCIFIQUE AUX ANNALES CPGE) ──
 function ConcoursExtractCard({
   vid,
+  index,
+  totalCount,
   chapTitre,
   onOpenVideo,
+  isTeacherView,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+  onDrop,
+  isDragging,
+  isDragOver,
 }: {
   vid: ChapterVideoItem;
+  index: number;
+  totalCount?: number;
   chapTitre: string;
   onOpenVideo: (url: string, title: string) => void;
+  isTeacherView?: boolean;
+  onDelete?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
+  onDrop?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
 }) {
   const titre = vid.titre;
   const sous = vid.sous || "Extrait de Concours CPGE";
@@ -712,7 +846,79 @@ function ConcoursExtractCard({
   }, [vid.badge]);
 
   return (
-    <article className="group relative bg-white dark:bg-[#0c1222] border-2 border-amber-200/70 dark:border-amber-500/30 rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:border-amber-400 dark:hover:border-amber-400/70 transition-all flex flex-col justify-between">
+    <article
+      draggable={isTeacherView}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+      onDrop={onDrop}
+      className={`group relative bg-white dark:bg-[#0c1222] border-2 rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between ${
+        isDragging
+          ? "opacity-40 scale-95 border-amber-500 ring-2 ring-amber-500 shadow-xl"
+          : isDragOver
+          ? "border-amber-500 ring-4 ring-amber-400/50 scale-[1.02] shadow-xl"
+          : "border-amber-200/70 dark:border-amber-500/30 hover:border-amber-400 dark:hover:border-amber-400/70"
+      }`}
+    >
+      {/* Barre d'actions & Drag and Drop Enseignant/Admin */}
+      {isTeacherView && (
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-1 bg-slate-950/90 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-lg">
+          {/* Poignée Drag & Drop avec numéro d'ordre */}
+          <div
+            className="cursor-grab active:cursor-grabbing p-1 rounded-lg text-amber-300 hover:text-white flex items-center gap-0.5 select-none"
+            title="Glisser-déposer (Drag & Drop) pour réordonner cet extrait de concours"
+          >
+            <GripVertical className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-mono font-bold">#{index + 1}</span>
+          </div>
+
+          {/* Boutons flèches rapides pour réordonner */}
+          {onMoveUp && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveUp();
+              }}
+              className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Déplacer vers la gauche (précédent)"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onMoveDown && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveDown();
+              }}
+              className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Déplacer vers la droite (suivant)"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Bouton Retrait / Suppression de concours */}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`Confirmez-vous le retrait de cet extrait de concours "${titre}" de ce chapitre ?`)) {
+                  onDelete();
+                }
+              }}
+              className="p-1 rounded-lg text-red-400 hover:text-white hover:bg-red-600 transition-colors cursor-pointer"
+              title="Retirer cet extrait de concours du chapitre"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Vignette Vidéo avec badge concours et bouton Play */}
       {hasVideo && (
         <div
@@ -1255,6 +1461,9 @@ export function CoursesWidget({
     createSession,
     updateSession,
     deleteSession,
+    removeVideo,
+    reorderVideos,
+    restoreVideos,
     createExercise,
     deleteExercise,
     createFiche,
@@ -1267,8 +1476,73 @@ export function CoursesWidget({
     removeModule,
   } = useCourses();
 
-  const { isTeacher, teacherViewMode } = useAuth();
-  const isTeacherView = isTeacher && teacherViewMode === "teacher";
+  const { isTeacher, isAdmin, teacherViewMode, toggleTeacherViewMode } = useAuth();
+  const isTeacherView = (isTeacher || isAdmin) && teacherViewMode === "teacher";
+
+  // État et gestionnaires pour le Drag & Drop et réordonnancement des vidéos
+  const [draggedVideo, setDraggedVideo] = useState<{ chapterId: string; videoId: string; isConcours: boolean } | null>(null);
+  const [dragOverVideo, setDragOverVideo] = useState<{ chapterId: string; videoId: string; isConcours: boolean } | null>(null);
+
+  const handleDragStart = (chapterId: string, videoId: string, isConcours: boolean, e: React.DragEvent) => {
+    e.dataTransfer.setData("text/plain", videoId);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedVideo({ chapterId, videoId, isConcours });
+  };
+
+  const handleDragOver = (chapterId: string, videoId: string, isConcours: boolean, e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverVideo?.videoId !== videoId || dragOverVideo?.isConcours !== isConcours) {
+      setDragOverVideo({ chapterId, videoId, isConcours });
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedVideo(null);
+    setDragOverVideo(null);
+  };
+
+  const handleDrop = (chapter: ChapitreItem, targetVideoId: string, isConcours: boolean) => {
+    if (
+      !draggedVideo ||
+      draggedVideo.chapterId !== chapter.id ||
+      draggedVideo.isConcours !== isConcours ||
+      draggedVideo.videoId === targetVideoId
+    ) {
+      setDraggedVideo(null);
+      setDragOverVideo(null);
+      return;
+    }
+    const currentVideos = isConcours
+      ? getChapterConcoursVideos(chapter, selectedFiliere)
+      : getChapterCourseVideos(chapter, selectedFiliere);
+    const ids = currentVideos.map((v) => v.id);
+    const fromIndex = ids.indexOf(draggedVideo.videoId);
+    const toIndex = ids.indexOf(targetVideoId);
+    if (fromIndex !== -1 && toIndex !== -1) {
+      const newOrder = [...ids];
+      const [moved] = newOrder.splice(fromIndex, 1);
+      newOrder.splice(toIndex, 0, moved);
+      reorderVideos(chapter.moduleId || activeModule, chapter.id, newOrder, isConcours);
+    }
+    setDraggedVideo(null);
+    setDragOverVideo(null);
+  };
+
+  const handleMoveVideo = (chapter: ChapitreItem, videoId: string, direction: "prev" | "next", isConcours: boolean) => {
+    const currentVideos = isConcours
+      ? getChapterConcoursVideos(chapter, selectedFiliere)
+      : getChapterCourseVideos(chapter, selectedFiliere);
+    const ids = currentVideos.map((v) => v.id);
+    const index = ids.indexOf(videoId);
+    if (index === -1) return;
+    const targetIndex = direction === "prev" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= ids.length) return;
+    const newOrder = [...ids];
+    const [moved] = newOrder.splice(index, 1);
+    newOrder.splice(targetIndex, 0, moved);
+    reorderVideos(chapter.moduleId || activeModule, chapter.id, newOrder, isConcours);
+  };
 
   const [selectedNiveau, setSelectedNiveau] = useState<"sup" | "spe" | null>(() => {
     if (initialNiveau) return initialNiveau;
@@ -1674,65 +1948,93 @@ export function CoursesWidget({
 
   return (
     <div className="w-full max-w-6xl mx-auto my-4 font-sans">
-      {/* Bandeau Mode Enseignant */}
-      {isTeacherView && (
+      {/* Bandeau Mode Édition Enseignant & Administrateur */}
+      {(isTeacher || isAdmin) && (
         <div className="mb-6 p-4 rounded-2xl bg-purple-950/60 border border-purple-500/40 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
-            <span className="text-xs font-black text-purple-200 uppercase tracking-wider">
-              Mode Édition Enseignant Actif
-            </span>
-            <span className="text-[11px] text-purple-300/80 hidden sm:inline">
-              · Vous pouvez ajouter ou supprimer des séances, TD et fiches directement sur chaque chapitre
-            </span>
+            <span className={`w-2.5 h-2.5 rounded-full ${isTeacherView ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-purple-200 uppercase tracking-wider">
+                  {isTeacherView ? "Mode Édition Administrateur Actif" : "Aperçu : Vue Étudiant"}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-900/80 text-purple-200 border border-purple-400/30">
+                  Pleins Droits de Modification
+                </span>
+              </div>
+              <p className="text-[11px] text-purple-300/80">
+                {isTeacherView
+                  ? "Drag & Drop actif pour réordonner les vidéos · Retrait et modification autorisés sur toutes les vidéos"
+                  : "Vous visualisez l'espace exactement tel que le voient vos étudiants"}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
-              onClick={() => {
-                setNewModTitle("");
-                setNewModIcon("⚡");
-                setNewModDesc("");
-                setActiveModal("create_module");
-              }}
-              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-700 hover:bg-purple-600 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              onClick={toggleTeacherViewMode}
+              className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                isTeacherView
+                  ? "bg-slate-800 hover:bg-slate-700 text-purple-200 border-purple-500/40"
+                  : "bg-purple-600 hover:bg-purple-500 text-white border-purple-400 shadow-purple-600/30"
+              }`}
+              title={isTeacherView ? "Passer en vue étudiant" : "Activer les outils de modification"}
             >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>+ Nouveau Module</span>
+              <Eye className="w-3.5 h-3.5" />
+              <span>{isTeacherView ? "Aperçu Étudiant" : "Activer Mode Éditeur"}</span>
             </button>
 
-            {activeModule !== "all" && (
-              <button
-                type="button"
-                onClick={() => {
-                  const currentMod = activeCoursesData.find((m) => m.id === activeModule);
-                  if (currentMod) {
-                    setEditingModData({
-                      id: currentMod.id,
-                      titre: currentMod.titre,
-                      icon: currentMod.icon || "📚",
-                      description: currentMod.description || "",
-                    });
-                    setActiveModal("edit_module");
-                  }
-                }}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/40 flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                title="Modifier le titre et l'émoticône de ce module"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-                <span>✏️ Modifier ce Module</span>
-              </button>
+            {isTeacherView && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewModTitle("");
+                    setNewModIcon("⚡");
+                    setNewModDesc("");
+                    setActiveModal("create_module");
+                  }}
+                  className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-700 hover:bg-purple-600 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>+ Nouveau Module</span>
+                </button>
+
+                {activeModule !== "all" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentMod = activeCoursesData.find((m) => m.id === activeModule);
+                      if (currentMod) {
+                        setEditingModData({
+                          id: currentMod.id,
+                          titre: currentMod.titre,
+                          icon: currentMod.icon || "📚",
+                          description: currentMod.description || "",
+                        });
+                        setActiveModal("edit_module");
+                      }
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/40 flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                    title="Modifier le titre et l'émoticône de ce module"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>✏️ Modifier ce Module</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setActiveModal("chapter")}
+                  className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>+ Chapitre</span>
+                </button>
+              </>
             )}
 
-            <button
-              type="button"
-              onClick={() => setActiveModal("chapter")}
-              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>+ Chapitre</span>
-            </button>
             <Link
               href="/dashboard-prof"
               className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors shadow-xs"
@@ -2387,16 +2689,29 @@ export function CoursesWidget({
                           )}
                         </div>
 
-                        {/* Bouton Enseignant pour ajouter directement une vidéo/séance */}
+                        {/* Boutons Enseignant/Admin pour ajouter directement une vidéo ou restaurer les vidéos masquées */}
                         {isTeacherView && (
-                          <button
-                            type="button"
-                            onClick={() => openAddSession(chapter)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors cursor-pointer shadow-xs"
-                          >
-                            <PlusCircle className="w-3.5 h-3.5" />
-                            <span>+ Séance / Vidéo</span>
-                          </button>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {chapter.hiddenVideoIds && chapter.hiddenVideoIds.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => restoreVideos(chapter.moduleId || activeModule, chapter.id, false)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 transition-colors cursor-pointer shadow-xs"
+                                title="Rétablir les vidéos du catalogue Prépasciences masquées"
+                              >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                <span>Restaurer ({chapter.hiddenVideoIds.length})</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => openAddSession(chapter)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors cursor-pointer shadow-xs"
+                            >
+                              <PlusCircle className="w-3.5 h-3.5" />
+                              <span>+ Séance / Vidéo</span>
+                            </button>
+                          </div>
                         )}
                       </div>
 
@@ -2407,19 +2722,44 @@ export function CoursesWidget({
                               key={vid.id || vIdx}
                               vid={vid}
                               index={vIdx}
+                              totalCount={displayedCourseVideos.length}
                               chapTitre={chapter.titre}
                               onOpenPdf={onOpenPdf}
                               onOpenVideo={onOpenVideo}
-                              isTeacherView={isTeacherView && vid.isCustom}
+                              isTeacherView={isTeacherView}
                               onEdit={
                                 isTeacherView && vid.isCustom && vid.rawSession
                                   ? () => openEditSession(chapter, vid.rawSession!)
                                   : undefined
                               }
                               onDelete={
-                                isTeacherView && vid.isCustom && vid.id
-                                  ? () => deleteSession(chapter.moduleId, chapter.id, vid.id)
+                                isTeacherView
+                                  ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, vid.id, false)
                                   : undefined
+                              }
+                              onMoveUp={
+                                isTeacherView && vIdx > 0
+                                  ? () => handleMoveVideo(chapter, vid.id, "prev", false)
+                                  : undefined
+                              }
+                              onMoveDown={
+                                isTeacherView && vIdx < displayedCourseVideos.length - 1
+                                  ? () => handleMoveVideo(chapter, vid.id, "next", false)
+                                  : undefined
+                              }
+                              onDragStart={(e) => handleDragStart(chapter.id, vid.id, false, e)}
+                              onDragOver={(e) => handleDragOver(chapter.id, vid.id, false, e)}
+                              onDragEnd={handleDragEnd}
+                              onDrop={() => handleDrop(chapter, vid.id, false)}
+                              isDragging={
+                                draggedVideo?.chapterId === chapter.id &&
+                                draggedVideo?.videoId === vid.id &&
+                                !draggedVideo?.isConcours
+                              }
+                              isDragOver={
+                                dragOverVideo?.chapterId === chapter.id &&
+                                dragOverVideo?.videoId === vid.id &&
+                                !dragOverVideo?.isConcours
                               }
                             />
                           ))}
@@ -2466,6 +2806,18 @@ export function CoursesWidget({
                               · Annales écrites & Oraux X-ENS · Mines-Ponts · Centrale-Supélec · CCINP
                             </span>
                           </div>
+
+                          {isTeacherView && chapter.hiddenConcoursVideoIds && chapter.hiddenConcoursVideoIds.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => restoreVideos(chapter.moduleId || activeModule, chapter.id, true)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition-colors cursor-pointer shadow-xs"
+                              title="Rétablir les extraits de concours masqués"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Restaurer concours ({chapter.hiddenConcoursVideoIds.length})</span>
+                            </button>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2473,8 +2825,40 @@ export function CoursesWidget({
                             <ConcoursExtractCard
                               key={cVid.id || cIdx}
                               vid={cVid}
+                              index={cIdx}
+                              totalCount={displayedConcoursVideos.length}
                               chapTitre={chapter.titre}
                               onOpenVideo={onOpenVideo}
+                              isTeacherView={isTeacherView}
+                              onDelete={
+                                isTeacherView
+                                  ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, cVid.id, true)
+                                  : undefined
+                              }
+                              onMoveUp={
+                                isTeacherView && cIdx > 0
+                                  ? () => handleMoveVideo(chapter, cVid.id, "prev", true)
+                                  : undefined
+                              }
+                              onMoveDown={
+                                isTeacherView && cIdx < displayedConcoursVideos.length - 1
+                                  ? () => handleMoveVideo(chapter, cVid.id, "next", true)
+                                  : undefined
+                              }
+                              onDragStart={(e) => handleDragStart(chapter.id, cVid.id, true, e)}
+                              onDragOver={(e) => handleDragOver(chapter.id, cVid.id, true, e)}
+                              onDragEnd={handleDragEnd}
+                              onDrop={() => handleDrop(chapter, cVid.id, true)}
+                              isDragging={
+                                draggedVideo?.chapterId === chapter.id &&
+                                draggedVideo?.videoId === cVid.id &&
+                                draggedVideo?.isConcours
+                              }
+                              isDragOver={
+                                dragOverVideo?.chapterId === chapter.id &&
+                                dragOverVideo?.videoId === cVid.id &&
+                                dragOverVideo?.isConcours
+                              }
                             />
                           ))}
                         </div>
