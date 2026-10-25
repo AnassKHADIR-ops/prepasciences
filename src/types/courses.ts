@@ -5,12 +5,19 @@ export interface CorrigeItem {
   type?: "pdf" | "video";
 }
 
+export interface SessionSupportItem {
+  id: string;
+  titre: string;
+  url: string;
+}
+
 export interface CourseSession {
   id?: string;
   titre: string;
   sous?: string;
   video?: string;
-  support?: string;
+  support?: string; // Support principal (Drive PDF)
+  supports?: SessionSupportItem[]; // Multiples fichiers PDF / Drive associés à la vidéo
   thumbnail?: string;
   isConcours?: boolean;
   badge?: string;

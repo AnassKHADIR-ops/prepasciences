@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { ModuleCoursBlock, BatchDocumentEntry } from "@/types/courses";
+import { ModuleCoursBlock, BatchDocumentEntry, SessionSupportItem } from "@/types/courses";
 import {
   getCoursesDB,
   addSessionToChapter,
@@ -32,13 +32,27 @@ interface CoursesContextType {
   createSession: (
     moduleId: string,
     chapterId: string,
-    session: { titre: string; sous?: string; videoUrl?: string; supportUrl?: string }
+    session: {
+      titre: string;
+      sous?: string;
+      videoUrl?: string;
+      supportUrl?: string;
+      supports?: SessionSupportItem[];
+      isConcours?: boolean;
+    }
   ) => boolean;
   updateSession: (
     moduleId: string,
     chapterId: string,
     sessionId: string,
-    updates: { titre?: string; sous?: string; videoUrl?: string; supportUrl?: string }
+    updates: {
+      titre?: string;
+      sous?: string;
+      videoUrl?: string;
+      supportUrl?: string;
+      supports?: SessionSupportItem[];
+      isConcours?: boolean;
+    }
   ) => boolean;
   deleteSession: (moduleId: string, chapterId: string, sessionId: string) => boolean;
   removeVideo: (moduleId: string, chapterId: string, videoId: string, isConcours?: boolean) => boolean;
@@ -55,6 +69,7 @@ interface CoursesContextType {
       sous?: string;
       video: string;
       support?: string;
+      supports?: SessionSupportItem[];
       thumbnail?: string;
       isCustom?: boolean;
       badge?: string;
@@ -122,7 +137,14 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
   const createSession = (
     moduleId: string,
     chapterId: string,
-    session: { titre: string; sous?: string; videoUrl?: string; supportUrl?: string }
+    session: {
+      titre: string;
+      sous?: string;
+      videoUrl?: string;
+      supportUrl?: string;
+      supports?: SessionSupportItem[];
+      isConcours?: boolean;
+    }
   ) => {
     const res = addSessionToChapter(moduleId, chapterId, session);
     if (res) refreshCourses();
@@ -133,7 +155,14 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
     moduleId: string,
     chapterId: string,
     sessionId: string,
-    updates: { titre?: string; sous?: string; videoUrl?: string; supportUrl?: string }
+    updates: {
+      titre?: string;
+      sous?: string;
+      videoUrl?: string;
+      supportUrl?: string;
+      supports?: SessionSupportItem[];
+      isConcours?: boolean;
+    }
   ) => {
     const res = updateSessionInChapter(moduleId, chapterId, sessionId, updates);
     if (res) refreshCourses();
@@ -175,6 +204,7 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
       sous?: string;
       video: string;
       support?: string;
+      supports?: SessionSupportItem[];
       thumbnail?: string;
       isCustom?: boolean;
       badge?: string;

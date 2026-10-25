@@ -8,6 +8,7 @@ import {
   CourseFiche,
   CorrigeItem,
   BatchDocumentEntry,
+  SessionSupportItem,
 } from "@/types/courses";
 import { PC_COURSES_DATA } from "@/components/eddams/pcCoursesData";
 import { getDriveImageUrls, getYoutubeThumbnail } from "./driveUtils";
@@ -47,6 +48,8 @@ export function addSessionToChapter(
     sous?: string;
     videoUrl?: string;
     supportUrl?: string;
+    supports?: SessionSupportItem[];
+    isConcours?: boolean;
   }
 ): boolean {
   const data = getCoursesDB();
@@ -56,15 +59,29 @@ export function addSessionToChapter(
   const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
   if (!chapter) return false;
 
+  const cleanSupports: SessionSupportItem[] = (session.supports || [])
+    .filter((s) => s.url && s.url.trim() !== "")
+    .map((s, idx) => ({
+      id: s.id || `supp-${Date.now()}-${idx}`,
+      titre: s.titre?.trim() || `Support PDF ${idx + 1}`,
+      url: s.url.trim(),
+    }));
+
+  const primarySupport = cleanSupports.length > 0
+    ? cleanSupports[0].url
+    : session.supportUrl?.trim();
+
   const newSession: CourseSession = {
     id: "sess-" + Date.now(),
     titre: session.titre.trim(),
-    sous: session.sous?.trim() || "Séance de cours & Replay",
+    sous: session.sous?.trim() || (session.isConcours ? "Extrait de Concours CPGE" : "Séance de cours & Replay"),
     video: session.videoUrl?.trim(),
-    support: session.supportUrl?.trim(),
+    support: primarySupport,
+    supports: cleanSupports,
     thumbnail:
       (session.videoUrl ? getYoutubeThumbnail(session.videoUrl) || undefined : undefined) ||
-      (session.supportUrl ? getDriveImageUrls(session.supportUrl)[0] : undefined),
+      (primarySupport ? getDriveImageUrls(primarySupport)[0] : undefined),
+    isConcours: session.isConcours,
   };
 
   chapter.cours = [newSession, ...(chapter.cours || [])];
@@ -610,6 +627,7 @@ export function transferVideoBetweenChapters(
     sous?: string;
     video: string;
     support?: string;
+    supports?: SessionSupportItem[];
     thumbnail?: string;
     isCustom?: boolean;
     badge?: string;
@@ -683,6 +701,7 @@ export function transferVideoBetweenChapters(
     sous: videoData.sous?.trim() || (targetIsConcours ? "Extrait de Concours CPGE" : "Séance de cours transférée"),
     video: videoData.video.trim(),
     support: videoData.support?.trim(),
+    supports: videoData.supports,
     thumbnail: videoData.thumbnail || (videoData.video ? getYoutubeThumbnail(videoData.video) || undefined : undefined),
     isConcours: targetIsConcours,
     badge: videoData.badge || (targetIsConcours ? "Concours CPGE" : "Séance transférée"),
@@ -757,7 +776,7 @@ export function transferVideoBetweenChapters(
   return true;
 }
 
-// ── 6b. Modification d'une séance (titre, sous-titre, lien vidéo, support PDF) ──
+// ── 6b. Modification d'une vidéo / séance (titre, sous-titre, lien vidéo, fichiers Drive PDF) ──
 export function updateSessionInChapter(
   moduleId: string,
   chapterId: string,
@@ -767,47 +786,138 @@ export function updateSessionInChapter(
     sous?: string;
     videoUrl?: string;
     supportUrl?: string;
+    supports?: SessionSupportItem[];
+    isConcours?: boolean;
   }
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
-  if (!chapter || !chapter.cours) return false;
+  let moduleItem = data.find((m) => m.id === moduleId);
+  let chapter = moduleItem?.chapitres.find((c) => c.id === chapterId);
+  if (!chapter) {
+    for (const m of data) {
+      const c = m.chapitres.find((ch) => ch.id === chapterId);
+      if (c) {
+        moduleItem = m;
+        chapter = c;
+        break;
+      }
+    }
+  }
+  if (!chapter) return false;
+  if (!chapter.cours) chapter.cours = [];
+
+  const cleanSupports: SessionSupportItem[] = (updates.supports || [])
+    .filter((s) => s.url && s.url.trim() !== "")
+    .map((s, idx) => ({
+      id: s.id || `supp-${Date.now()}-${idx}`,
+      titre: s.titre?.trim() || `Support PDF ${idx + 1}`,
+      url: s.url.trim(),
+    }));
+
+  const primarySupport = cleanSupports.length > 0
+    ? cleanSupports[0].url
+    : updates.supportUrl?.trim() || undefined;
 
   const session = chapter.cours.find((s) => s.id === sessionId);
-  if (!session) return false;
 
-  if (updates.titre !== undefined) session.titre = updates.titre.trim();
-  if (updates.sous !== undefined) session.sous = updates.sous.trim();
-  if (updates.videoUrl !== undefined) {
-    session.video = updates.videoUrl.trim() || undefined;
-    if (session.video) {
-      session.thumbnail = getYoutubeThumbnail(session.video) || session.thumbnail;
+  if (session) {
+    // 1. Séance personnalisée déjà présente dans chapter.cours
+    if (updates.titre !== undefined) session.titre = updates.titre.trim();
+    if (updates.sous !== undefined) session.sous = updates.sous.trim();
+    if (updates.videoUrl !== undefined) {
+      session.video = updates.videoUrl.trim() || undefined;
+      if (session.video) {
+        session.thumbnail = getYoutubeThumbnail(session.video) || session.thumbnail;
+      }
     }
-  }
-  if (updates.supportUrl !== undefined) {
-    session.support = updates.supportUrl.trim() || undefined;
-    if (!session.video && session.support) {
-      session.thumbnail = getDriveImageUrls(session.support)[0] || session.thumbnail;
+    if (primarySupport !== undefined) {
+      session.support = primarySupport;
     }
-  }
+    if (updates.supports !== undefined) {
+      session.supports = cleanSupports;
+    }
+    if (updates.isConcours !== undefined) {
+      session.isConcours = updates.isConcours;
+    }
 
-  saveCoursesDB(data);
+    saveCoursesDB(data);
 
-  if (supabase) {
-    supabase
-      .from("sessions")
-      .update({
-        titre: session.titre,
-        sous: session.sous,
-        video_url: session.video || null,
-        support_url: session.support || null,
-      })
-      .eq("id", sessionId)
-      .then(({ error }) => {
-        if (error) console.error("Supabase update session error:", error);
-      });
+    if (supabase) {
+      supabase
+        .from("sessions")
+        .update({
+          titre: session.titre,
+          sous: session.sous,
+          video_url: session.video || null,
+          support_url: session.support || null,
+        })
+        .eq("id", sessionId)
+        .then(({ error }) => {
+          if (error) console.error("Supabase update session error:", error);
+        });
+    }
+  } else {
+    // 2. Vidéo issue du catalogue Prépasciences personnalisée pour la 1ère fois :
+    // a. Masquer l'ID du catalogue pour ce chapitre pour éviter tout doublon
+    const isConcours = Boolean(updates.isConcours);
+    if (isConcours) {
+      if (!chapter.hiddenConcoursVideoIds) chapter.hiddenConcoursVideoIds = [];
+      if (!chapter.hiddenConcoursVideoIds.includes(sessionId)) {
+        chapter.hiddenConcoursVideoIds.push(sessionId);
+      }
+    } else {
+      if (!chapter.hiddenVideoIds) chapter.hiddenVideoIds = [];
+      if (!chapter.hiddenVideoIds.includes(sessionId)) {
+        chapter.hiddenVideoIds.push(sessionId);
+      }
+    }
+
+    // b. Créer une nouvelle séance personnalisée dans chapter.cours avec les données éditées
+    const newSessionId = `custom-vid-${Date.now()}`;
+    const videoVal = updates.videoUrl?.trim() || undefined;
+    const thumbnailVal = videoVal
+      ? getYoutubeThumbnail(videoVal) || undefined
+      : (primarySupport ? getDriveImageUrls(primarySupport)[0] : undefined);
+
+    const newSession: CourseSession = {
+      id: newSessionId,
+      titre: updates.titre?.trim() || "Vidéo sans titre",
+      sous: updates.sous?.trim() || "",
+      video: videoVal,
+      support: primarySupport,
+      supports: cleanSupports,
+      thumbnail: thumbnailVal,
+      isConcours,
+    };
+
+    chapter.cours = [newSession, ...chapter.cours];
+
+    // c. Remplacer l'ancien ID par le nouveau dans l'ordre personnalisé
+    if (isConcours && chapter.concoursVideoOrder) {
+      chapter.concoursVideoOrder = chapter.concoursVideoOrder.map((id) => (id === sessionId ? newSessionId : id));
+    } else if (chapter.videoOrder) {
+      chapter.videoOrder = chapter.videoOrder.map((id) => (id === sessionId ? newSessionId : id));
+    }
+
+    saveCoursesDB(data);
+
+    if (supabase) {
+      supabase
+        .from("sessions")
+        .insert([
+          {
+            id: newSession.id,
+            chapter_id: chapterId,
+            titre: newSession.titre,
+            sous: newSession.sous,
+            video_url: newSession.video || null,
+            support_url: newSession.support || null,
+          },
+        ])
+        .then(({ error }) => {
+          if (error) console.error("Supabase insert modified session error:", error);
+        });
+    }
   }
 
   return true;

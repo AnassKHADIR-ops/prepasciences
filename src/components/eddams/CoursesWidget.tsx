@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { PC_COURSES_DATA } from "./pcCoursesData";
-import { ChapitreItem, CourseSession, CourseExercise, CourseFiche, CorrigeItem } from "@/types/courses";
+import { ChapitreItem, CourseSession, CourseExercise, CourseFiche, CorrigeItem, SessionSupportItem } from "@/types/courses";
 import {
   Search,
   X,
@@ -53,6 +53,7 @@ export interface ChapterVideoItem {
   sous?: string;
   video: string;
   support?: string;
+  supports?: SessionSupportItem[];
   thumbnail?: string;
   durationFormatted?: string;
   badge?: string;
@@ -143,6 +144,7 @@ export function getChapterCourseVideos(
           sous: s.sous || "Séance de cours & Replay interactif",
           video: s.video,
           support: s.support,
+          supports: s.supports,
           thumbnail: s.thumbnail,
           badge: s.badge || "Séance du Professeur",
           isCustom: true,
@@ -309,6 +311,7 @@ export function getChapterConcoursVideos(
           sous: s.sous || "Extrait de Concours CPGE",
           video: s.video,
           support: s.support,
+          supports: s.supports,
           thumbnail: s.thumbnail,
           badge: s.badge || "Concours CPGE",
           isCustom: true,
@@ -538,9 +541,31 @@ function UnifiedChapterVideoCard({
   const titre = vid.titre || `Vidéo ${index + 1}`;
   const sous = vid.sous || "Replay de cours & Résolution méthodique";
   const videoUrl = vid.video || "";
-  const supportUrl = vid.support || "";
+  const attachedPdfs: SessionSupportItem[] = useMemo(() => {
+    const list: SessionSupportItem[] = [];
+    if (vid.supports && Array.isArray(vid.supports)) {
+      vid.supports.forEach((s) => {
+        if (s && s.url && s.url.trim()) {
+          list.push(s);
+        }
+      });
+    }
+    if (vid.support && vid.support.trim()) {
+      const already = list.some((s) => s.url.trim() === vid.support!.trim());
+      if (!already) {
+        list.unshift({
+          id: "support-legacy",
+          titre: "Support PDF",
+          url: vid.support.trim(),
+        });
+      }
+    }
+    return list;
+  }, [vid.supports, vid.support]);
+
   const hasVideo = Boolean(videoUrl && videoUrl.trim() !== "");
-  const hasSupport = Boolean(supportUrl && supportUrl.trim() !== "");
+  const hasSupport = attachedPdfs.length > 0;
+  const firstSupportUrl = hasSupport ? attachedPdfs[0].url : "";
 
   const thumbnailCandidates = useMemo(() => {
     const list: string[] = [];
@@ -744,11 +769,11 @@ function UnifiedChapterVideoCard({
       ) : hasSupport ? (
         <div
           className="relative w-full aspect-video bg-gradient-to-br from-indigo-900 to-purple-950 flex flex-col items-center justify-center p-3 cursor-pointer text-indigo-100"
-          onClick={() => onOpenPdf(supportUrl, `Support : ${titre} — ${chapTitre}`)}
+          onClick={() => onOpenPdf(firstSupportUrl, `Support : ${titre} — ${chapTitre}`)}
         >
           <FileText className="w-7 h-7 mb-1 opacity-90 text-indigo-300" />
           <span className="text-[10px] font-bold tracking-wider uppercase text-indigo-100">
-            Support de Cours PDF
+            {attachedPdfs[0]?.titre || "Support de Cours PDF"}
           </span>
         </div>
       ) : null}
@@ -767,17 +792,19 @@ function UnifiedChapterVideoCard({
         </div>
 
         {/* Boutons d'action */}
-        <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-          {hasSupport && (
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+          {attachedPdfs.map((pdf, pIdx) => (
             <button
+              key={pdf.id || pIdx}
               type="button"
-              onClick={() => onOpenPdf(supportUrl, `Support : ${titre} — ${chapTitre}`)}
+              onClick={() => onOpenPdf(pdf.url, `${pdf.titre || "Support PDF"} : ${titre} — ${chapTitre}`)}
               className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-500/30 transition-colors cursor-pointer"
+              title={pdf.titre || "Support PDF (Google Drive)"}
             >
-              <FileText className="w-3 h-3" />
-              <span>Support PDF</span>
+              <FileText className="w-3 h-3 text-blue-500" />
+              <span className="truncate max-w-[130px]">{pdf.titre || `Support PDF ${attachedPdfs.length > 1 ? pIdx + 1 : ""}`.trim()}</span>
             </button>
-          )}
+          ))}
 
           {hasVideo && (
             <button
@@ -802,8 +829,10 @@ function ConcoursExtractCard({
   index,
   totalCount,
   chapTitre,
+  onOpenPdf,
   onOpenVideo,
   isTeacherView,
+  onEdit,
   onDelete,
   onTransfer,
   onMoveUp,
@@ -819,8 +848,10 @@ function ConcoursExtractCard({
   index: number;
   totalCount?: number;
   chapTitre: string;
+  onOpenPdf?: (url: string, title: string) => void;
   onOpenVideo: (url: string, title: string) => void;
   isTeacherView?: boolean;
+  onEdit?: () => void;
   onDelete?: () => void;
   onTransfer?: () => void;
   onMoveUp?: () => void;
@@ -836,6 +867,28 @@ function ConcoursExtractCard({
   const sous = vid.sous || "Extrait de Concours CPGE";
   const videoUrl = vid.video || "";
   const hasVideo = Boolean(videoUrl && videoUrl.trim() !== "");
+
+  const attachedPdfs: SessionSupportItem[] = useMemo(() => {
+    const list: SessionSupportItem[] = [];
+    if (vid.supports && Array.isArray(vid.supports)) {
+      vid.supports.forEach((s) => {
+        if (s && s.url && s.url.trim()) {
+          list.push(s);
+        }
+      });
+    }
+    if (vid.support && vid.support.trim()) {
+      const already = list.some((s) => s.url.trim() === vid.support!.trim());
+      if (!already) {
+        list.unshift({
+          id: "support-concours-legacy",
+          titre: "Support PDF",
+          url: vid.support.trim(),
+        });
+      }
+    }
+    return list;
+  }, [vid.supports, vid.support]);
 
   const thumbnailCandidates = useMemo(() => {
     const list: string[] = [];
@@ -936,6 +989,21 @@ function ConcoursExtractCard({
               title="Déplacer vers la droite (suivant)"
             >
               <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Bouton Édition (si admin ou enseignant) */}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="p-1 rounded-lg text-amber-300 hover:text-white hover:bg-amber-600/50 transition-colors cursor-pointer"
+              title="Modifier les liens et supports de cet extrait"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
             </button>
           )}
 
@@ -1050,19 +1118,37 @@ function ConcoursExtractCard({
           )}
         </div>
 
-        {/* Bouton d'action */}
-        <div className="flex items-center justify-between pt-2 border-t border-amber-100 dark:border-slate-800/80">
-          <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
-            Résolution guidée
-          </span>
-          <button
-            type="button"
-            onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white transition-colors cursor-pointer shadow-xs"
-          >
-            <PlayCircle className="w-3.5 h-3.5" />
-            <span>Voir le Corrigé</span>
-          </button>
+        {/* Boutons d'action & Supports Drive PDF */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-amber-100 dark:border-slate-800/80">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {attachedPdfs.map((pdf, pIdx) => (
+              <button
+                key={pdf.id || pIdx}
+                type="button"
+                onClick={() => onOpenPdf && onOpenPdf(pdf.url, `${pdf.titre || "Support Concours"} : ${titre} — ${chapTitre}`)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-500/30 transition-colors cursor-pointer"
+                title={pdf.titre || "Support PDF (Google Drive)"}
+              >
+                <FileText className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                <span className="truncate max-w-[130px]">{pdf.titre || `Sujet/Corrigé PDF ${attachedPdfs.length > 1 ? pIdx + 1 : ""}`.trim()}</span>
+              </button>
+            ))}
+            {attachedPdfs.length === 0 && (
+              <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                Résolution guidée
+              </span>
+            )}
+          </div>
+          {hasVideo && (
+            <button
+              type="button"
+              onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white transition-colors cursor-pointer shadow-xs ml-auto"
+            >
+              <PlayCircle className="w-3.5 h-3.5" />
+              <span>Voir le Corrigé</span>
+            </button>
+          )}
         </div>
       </div>
     </article>
@@ -1977,17 +2063,20 @@ export function CoursesWidget({
   const [newSessSous, setNewSessSous] = useState("Séance théorique & Replay interactif");
   const [newSessVideo, setNewSessVideo] = useState("");
   const [newSessSupport, setNewSessSupport] = useState("");
+  const [newSessSupports, setNewSessSupports] = useState<SessionSupportItem[]>([]);
 
   // État Édition Séance Enseignant
   const [editingSession, setEditingSession] = useState<{
     moduleId: string;
     chapterId: string;
     chapterTitle: string;
-    sessionId: string;
+    videoId: string;
     titre: string;
     sous: string;
     video: string;
     support: string;
+    supports: SessionSupportItem[];
+    isConcours?: boolean;
   } | null>(null);
 
   // État Édition Fiche Enseignant
@@ -2021,24 +2110,55 @@ export function CoursesWidget({
   const [newChBadge, setNewChBadge] = useState("Spé MP / PSI / TSI");
   const [newChModuleId, setNewChModuleId] = useState(activeCoursesData[0]?.id || "em");
 
-  const openAddSession = (ch: { moduleId: string; id: string; titre: string }) => {
-    setTargetChapter({ moduleId: ch.moduleId, chapterId: ch.id, chapterTitle: ch.titre });
+  const openAddSession = (ch: { moduleId?: string; id: string; titre: string }, isConcours?: boolean) => {
+    setTargetChapter({ moduleId: ch.moduleId || activeCoursesData[0]?.id || "em", chapterId: ch.id, chapterTitle: ch.titre });
     setNewSessTitle("");
+    setNewSessSous(isConcours ? "Extrait de Concours CPGE" : "Séance théorique & Replay interactif");
     setNewSessVideo("");
     setNewSessSupport("");
+    setNewSessSupports([]);
     setActiveModal("session");
   };
 
-  const openEditSession = (ch: { moduleId: string; id: string; titre: string }, se: CourseSession) => {
+  const openEditSession = (
+    ch: { moduleId?: string; id: string; titre: string },
+    vid: ChapterVideoItem,
+    isConcours?: boolean
+  ) => {
+    const initialSupports: SessionSupportItem[] = [];
+    if (vid.supports && Array.isArray(vid.supports)) {
+      vid.supports.forEach((s) => {
+        if (s && s.url && s.url.trim()) {
+          initialSupports.push({
+            id: s.id || `sup-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            titre: s.titre || "Support PDF",
+            url: s.url.trim(),
+          });
+        }
+      });
+    }
+    if (vid.support && vid.support.trim()) {
+      const already = initialSupports.some((s) => s.url === vid.support!.trim());
+      if (!already) {
+        initialSupports.unshift({
+          id: `sup-${Date.now()}-legacy`,
+          titre: "Support PDF",
+          url: vid.support.trim(),
+        });
+      }
+    }
+
     setEditingSession({
-      moduleId: ch.moduleId,
+      moduleId: ch.moduleId || activeCoursesData[0]?.id || "em",
       chapterId: ch.id,
       chapterTitle: ch.titre,
-      sessionId: se.id || "",
-      titre: se.titre || "",
-      sous: se.sous || "",
-      video: se.video || "",
-      support: se.support || "",
+      videoId: vid.id,
+      titre: vid.titre || "",
+      sous: vid.sous || "",
+      video: vid.video || "",
+      support: vid.support || "",
+      supports: initialSupports,
+      isConcours: isConcours ?? Boolean(vid.rawSession?.isConcours),
     });
     setActiveModal("edit_session");
   };
@@ -2046,11 +2166,18 @@ export function CoursesWidget({
   const handleSaveEditSession = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSession || !editingSession.titre.trim()) return;
-    updateSession(editingSession.moduleId, editingSession.chapterId, editingSession.sessionId, {
+    const cleanSupports = editingSession.supports
+      .map((s) => ({ ...s, titre: s.titre.trim(), url: s.url.trim() }))
+      .filter((s) => s.url !== "");
+    const primarySupport = cleanSupports.length > 0 ? cleanSupports[0].url : (editingSession.support.trim() || undefined);
+
+    updateSession(editingSession.moduleId, editingSession.chapterId, editingSession.videoId, {
       titre: editingSession.titre.trim(),
       sous: editingSession.sous.trim(),
-      videoUrl: editingSession.video.trim(),
-      supportUrl: editingSession.support.trim(),
+      videoUrl: editingSession.video.trim() || undefined,
+      supportUrl: primarySupport,
+      supports: cleanSupports,
+      isConcours: editingSession.isConcours,
     });
     setActiveModal(null);
     setEditingSession(null);
@@ -2100,11 +2227,17 @@ export function CoursesWidget({
   const handleSaveSession = (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetChapter || !newSessTitle.trim()) return;
+    const cleanSupports = newSessSupports
+      .map((s) => ({ ...s, titre: s.titre.trim(), url: s.url.trim() }))
+      .filter((s) => s.url !== "");
+    const primarySupport = cleanSupports.length > 0 ? cleanSupports[0].url : (newSessSupport.trim() || undefined);
+
     createSession(targetChapter.moduleId, targetChapter.chapterId, {
       titre: newSessTitle.trim(),
       sous: newSessSous.trim(),
       videoUrl: newSessVideo.trim() || undefined,
-      supportUrl: newSessSupport.trim() || undefined,
+      supportUrl: primarySupport,
+      supports: cleanSupports.length > 0 ? cleanSupports : undefined,
     });
     setActiveModal(null);
   };
@@ -2993,8 +3126,8 @@ export function CoursesWidget({
                               onOpenVideo={onOpenVideo}
                               isTeacherView={isTeacherView}
                               onEdit={
-                                isTeacherView && vid.isCustom && vid.rawSession
-                                  ? () => openEditSession(chapter, vid.rawSession!)
+                                isTeacherView
+                                  ? () => openEditSession(chapter, vid, false)
                                   : undefined
                               }
                               onDelete={
@@ -3098,8 +3231,14 @@ export function CoursesWidget({
                               index={cIdx}
                               totalCount={displayedConcoursVideos.length}
                               chapTitre={chapter.titre}
+                              onOpenPdf={onOpenPdf}
                               onOpenVideo={onOpenVideo}
                               isTeacherView={isTeacherView}
+                              onEdit={
+                                isTeacherView
+                                  ? () => openEditSession(chapter, cVid, true)
+                                  : undefined
+                              }
                               onDelete={
                                 isTeacherView
                                   ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, cVid.id, true)
@@ -3331,17 +3470,95 @@ export function CoursesWidget({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Lien Support de Cours (Google Drive PDF)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://drive.google.com/file/d/.../view"
-                  value={newSessSupport}
-                  onChange={(e) => setNewSessSupport(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white"
-                />
+              {/* Supports de cours / Fichiers Drive (PDF) */}
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Fichiers Google Drive (PDF / Polycopiés / Corrigés)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewSessSupports((prev) => [
+                        ...prev,
+                        {
+                          id: `sup-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                          titre: `Support PDF ${prev.length + 1}`,
+                          url: "",
+                        },
+                      ]);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 cursor-pointer"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>+ Ajouter un fichier Drive</span>
+                  </button>
+                </div>
+
+                {newSessSupports.length === 0 ? (
+                  <div>
+                    <input
+                      type="url"
+                      placeholder="https://drive.google.com/file/d/.../view"
+                      value={newSessSupport}
+                      onChange={(e) => setNewSessSupport(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    />
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                      Ou cliquez sur « + Ajouter un fichier Drive » ci-dessus pour associer plusieurs PDFs.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                    {newSessSupports.map((sup, sIdx) => (
+                      <div
+                        key={sup.id || sIdx}
+                        className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 space-y-2 relative group"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            placeholder="Nom du fichier (ex: Support de cours, Corrigé)"
+                            value={sup.titre}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNewSessSupports((prev) => {
+                                const updated = [...prev];
+                                updated[sIdx] = { ...updated[sIdx], titre: val };
+                                return updated;
+                              });
+                            }}
+                            className="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:outline-hidden focus:border-purple-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewSessSupports((prev) => prev.filter((_, idx) => idx !== sIdx));
+                            }}
+                            className="p-1 rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors cursor-pointer"
+                            title="Supprimer ce fichier"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input
+                          type="url"
+                          placeholder="https://drive.google.com/file/d/.../view"
+                          value={sup.url}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setNewSessSupports((prev) => {
+                              const updated = [...prev];
+                              updated[sIdx] = { ...updated[sIdx], url: val };
+                              return updated;
+                            });
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-hidden focus:border-purple-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -3369,12 +3586,12 @@ export function CoursesWidget({
       {/* ════════════════════════════════════════════════════════════════════ */}
       {activeModal === "edit_session" && editingSession && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0d1322] border border-purple-300 dark:border-purple-500/40 rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-[#0d1322] border border-purple-300 dark:border-purple-500/40 rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Edit2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  <span>Modifier la Séance & Supports</span>
+                  <span>Modifier la Vidéo & Supports</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Dans : {editingSession.chapterTitle}
@@ -3395,7 +3612,7 @@ export function CoursesWidget({
             <form onSubmit={handleSaveEditSession} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Titre de la séance *
+                  Titre de la vidéo / séance *
                 </label>
                 <input
                   type="text"
@@ -3411,11 +3628,11 @@ export function CoursesWidget({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Sous-titre / Description
+                  Sous-titre / Description / Référence
                 </label>
                 <input
                   type="text"
-                  placeholder="ex: Théorie et replay interactif"
+                  placeholder="ex: Théorie et replay interactif ou Extrait Concours"
                   value={editingSession.sous}
                   onChange={(e) =>
                     setEditingSession((prev) => (prev ? { ...prev, sous: e.target.value } : null))
@@ -3440,26 +3657,130 @@ export function CoursesWidget({
                   onChange={(e) =>
                     setEditingSession((prev) => (prev ? { ...prev, video: e.target.value } : null))
                   }
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500"
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500 font-mono"
                 />
                 <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                   Modifier ce lien met automatiquement à jour la miniature YouTube en haute résolution.
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Lien Support de Cours (Google Drive PDF)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://drive.google.com/file/d/.../view"
-                  value={editingSession.support}
-                  onChange={(e) =>
-                    setEditingSession((prev) => (prev ? { ...prev, support: e.target.value } : null))
-                  }
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:border-purple-500"
-                />
+              {/* Supports de cours / Fichiers Drive (PDF) */}
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Fichiers Google Drive (PDF / Supports / Corrigés)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingSession((prev) => {
+                        if (!prev) return null;
+                        const newId = `sup-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+                        return {
+                          ...prev,
+                          supports: [
+                            ...prev.supports,
+                            {
+                              id: newId,
+                              titre: `Support PDF ${prev.supports.length + 1}`,
+                              url: "",
+                            },
+                          ],
+                        };
+                      });
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 cursor-pointer"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>+ Ajouter un fichier Drive</span>
+                  </button>
+                </div>
+
+                {editingSession.supports.length === 0 ? (
+                  <div className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center bg-slate-50/50 dark:bg-slate-900/50">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+                      Aucun fichier Google Drive (PDF) rattaché à cette vidéo.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingSession((prev) => {
+                          if (!prev) return null;
+                          return {
+                            ...prev,
+                            supports: [
+                              {
+                                id: `sup-${Date.now()}`,
+                                titre: "Support de Cours PDF",
+                                url: prev.support || "",
+                              },
+                            ],
+                          };
+                        });
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 hover:bg-purple-100 cursor-pointer"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>Ajouter un fichier Drive (PDF)</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                    {editingSession.supports.map((sup, sIdx) => (
+                      <div
+                        key={sup.id || sIdx}
+                        className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 space-y-2 relative group"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            placeholder="Nom du fichier (ex: Support de cours, Corrigé détaillé)"
+                            value={sup.titre}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingSession((prev) => {
+                                if (!prev) return null;
+                                const updated = [...prev.supports];
+                                updated[sIdx] = { ...updated[sIdx], titre: val };
+                                return { ...prev, supports: updated };
+                              });
+                            }}
+                            className="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:outline-hidden focus:border-purple-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingSession((prev) => {
+                                if (!prev) return null;
+                                const updated = prev.supports.filter((_, idx) => idx !== sIdx);
+                                return { ...prev, supports: updated };
+                              });
+                            }}
+                            className="p-1 rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors cursor-pointer"
+                            title="Supprimer ce fichier"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input
+                          type="url"
+                          placeholder="https://drive.google.com/file/d/.../view"
+                          value={sup.url}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEditingSession((prev) => {
+                              if (!prev) return null;
+                              const updated = [...prev.supports];
+                              updated[sIdx] = { ...updated[sIdx], url: val };
+                              return { ...prev, supports: updated };
+                            });
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-hidden focus:border-purple-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
