@@ -2,7 +2,7 @@
  * CATALOGUE OFFICIEL E-LEARNING PHYSIQUE CPGE
  * Chaîne : E-Learning Physique (@e-learningphysique4910)
  * Structuré selon les programmes officiels CPGE (MPSI, PCSI, MP, PSI, PC, TSI)
- * Total : 387 Vidéos vérifiées sans liens manquants
+ * Total : 386 Vidéos vérifiées sans liens manquants
  */
 
 export type FiliereCPGE = "MP" | "PSI" | "PC" | "TSI";

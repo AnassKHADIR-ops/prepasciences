@@ -549,7 +549,7 @@ export const PC_COURSES_DATA_SUP: ModuleCoursBlock[] = [
     niveau: "sup",
     titre: "Mécanique du Point Matériel",
     icon: "🎯",
-    description: "Cinématique en coordonnées cartésiennes, cylindriques et sphériques, dynamique newtonienne, théorèmes énergétiques, moment cinétique et forces centrales.",
+    description: "Cinématique en coordonnées cartésiennes, cylindriques et sphériques, dynamique newtonienne, théorèmes énergétiques, oscillateurs harmoniques, moment cinétique et forces centrales.",
     chapitres: [
       {
         id: "meca-sup-ch1",
@@ -654,6 +654,53 @@ export const PC_COURSES_DATA_SUP: ModuleCoursBlock[] = [
         id: "meca-sup-ch4",
         num: 4,
         niveau: "sup",
+        titre: "Oscillateurs harmoniques",
+        badge: "Sup MPSI/PCSI/TSI",
+        moduleName: "Mécanique Sup",
+        description: "Oscillateur harmonique libre, amorti par frottement fluide, résonance en régime sinusoïdal forcé, portrait de phase et bilans d'énergie.",
+        cours: [
+          {
+            id: "sess-meca-osc-poly",
+            titre: "Polycopié de Cours Complet : Mécanique Sup (Oscillateurs)",
+            sous: "Support rédigé officiel par Pr. Hassan EDDAMS",
+            support: "https://drive.google.com/file/d/1zYe4Rhy3vnx8af57zkroLgGflWFCn0L4/preview",
+          },
+          {
+            id: "sess-meca-osc-ressort",
+            titre: "Séance 1 : Mise en équation des oscillateurs & ressorts",
+            sous: "Ressort horizontal, vertical, plan incliné et conditions initiales (E-Learning Physique)",
+            video: "https://www.youtube.com/watch?v=t-6ZjOihEiY",
+            support: "https://drive.google.com/file/d/1zYe4Rhy3vnx8af57zkroLgGflWFCn0L4/preview",
+          },
+          {
+            id: "sess-meca-osc-equadiff",
+            titre: "Séance 2 : Résolution mathématique de l'oscillateur harmonique",
+            sous: "Équation caractéristique, pulsation propre, amplitude et phase (E-Learning Physique)",
+            video: "https://www.youtube.com/watch?v=xJq9VrOg26A",
+            support: "https://drive.google.com/file/d/1zYe4Rhy3vnx8af57zkroLgGflWFCn0L4/preview",
+          },
+        ],
+        fiches: [
+          {
+            id: "fiche-meca-osc",
+            titre: "Formulaire : Oscillateur Harmonique Libre & Amorti",
+            sous: "Pulsation propre, facteur de qualité Q, régime pseudo-périodique et résonance",
+            url: "https://drive.google.com/file/d/1zYe4Rhy3vnx8af57zkroLgGflWFCn0L4/preview",
+          },
+        ],
+        tds: [
+          {
+            id: "td-meca-osc",
+            titre: "TD 4 · Oscillateurs Harmoniques & Petits Mouvements",
+            sous: "Pendule simple, oscillateurs élastiques, résonance et amortissement",
+            enonce: "https://drive.google.com/file/d/16V7hrpr3n7yRmvzc8wI9lD7UKF9hh1Ft/preview",
+          },
+        ],
+      },
+      {
+        id: "meca-sup-ch5",
+        num: 5,
+        niveau: "sup",
         titre: "Théorème du moment cinétique",
         badge: "Sup MPSI/PCSI/TSI",
         moduleName: "Mécanique Sup",
@@ -677,15 +724,15 @@ export const PC_COURSES_DATA_SUP: ModuleCoursBlock[] = [
         tds: [
           {
             id: "td-meca-moment",
-            titre: "TD 4 · Théorème du Moment Cinétique",
+            titre: "TD 5 · Théorème du Moment Cinétique",
             sous: "Mouvements plans, pendules et applications du TMC",
             enonce: "https://drive.google.com/file/d/1yxB_dYYZJu9RnCfVRWALIbAvG4JRFB3C/preview",
           },
         ],
       },
       {
-        id: "meca-sup-ch5",
-        num: 5,
+        id: "meca-sup-ch6",
+        num: 6,
         niveau: "sup",
         titre: "Mouvement dans un champ de forces centrales",
         badge: "Sup MPSI/PCSI/TSI",
@@ -710,15 +757,15 @@ export const PC_COURSES_DATA_SUP: ModuleCoursBlock[] = [
         tds: [
           {
             id: "td-meca-centrales",
-            titre: "TD 5 · Mouvement dans un Champ de Forces Centrales",
+            titre: "TD 6 · Mouvement dans un Champ de Forces Centrales",
             sous: "Loi de gravitation, satellites et orbites de transfert de Hohmann",
             enonce: "https://drive.google.com/file/d/1yOL0NVR3J_317ROACaQlqK3YR3ZY3PWj/preview",
           },
         ],
       },
       {
-        id: "meca-sup-ch6",
-        num: 6,
+        id: "meca-sup-ch7",
+        num: 7,
         niveau: "sup",
         titre: "Changement de référentiel & Forces d'inertie",
         badge: "Sup MPSI/PCSI/TSI",
@@ -743,7 +790,7 @@ export const PC_COURSES_DATA_SUP: ModuleCoursBlock[] = [
         tds: [
           {
             id: "td-meca-ref",
-            titre: "TD 6 · Changement de Référentiel",
+            titre: "TD 7 · Changement de Référentiel",
             sous: "Forces d'inertie en translation et rotation, équilibre relatif",
             enonce: "https://drive.google.com/file/d/1c7q1bi5OMAIay-f1_c_xqg4JCFNUw-mH/preview",
             correction: "https://drive.google.com/file/d/1iAGffnI1qbdxwGyTAi1JYuGFaKDLBsH4/preview",

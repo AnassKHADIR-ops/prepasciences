@@ -127,6 +127,13 @@ export function isConcoursVideo(v: ElearningVideoItem): boolean {
   return /\b(corrigé|corrigé|concours|centrale|mines-ponts|mines ponts|x-ens|x\/ens|ccp|ccinp|e3a|oral centrale|oral mines|planche|sujet)\b/i.test(title);
 }
 
+// ── Extraction de l'identifiant YouTube canonique pour dé-duplication garantie ──
+export function extractYoutubeId(url?: string | null): string {
+  if (!url) return "";
+  const match = url.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : url.trim();
+}
+
 // ── Extraction des Séances & Replays Théoriques de Cours du Chapitre ──
 export function getChapterCourseVideos(
   chapter: ChapitreItem & { moduleId?: string },
@@ -201,13 +208,19 @@ export function getChapterCourseVideos(
         matched = true;
       }
     } else if (modId.includes("meca-sup")) {
-      if (vMod === "meca") {
+      const cTit = (chapter.titre || "").toLowerCase();
+      const cId = (chapter.id || "").toLowerCase();
+      const isOscChapter = cId.includes("osc") || /oscillat|harmonique/.test(cTit) || chapNum === 4;
+
+      if (isOscChapter) {
+        if (/oscillat|harmonique|ressort|borda|équa diff|equa diff|amorti/.test(combined)) matched = true;
+      } else if (vMod === "meca") {
         if (chapNum === 1 && /cinématique|cinematique|polaire|cylindrique|sphérique|frenet|vitesse|accélération|coordonnées/.test(combined)) matched = true;
         else if (chapNum === 2 && /dynamique|newton|pfd|frottement|projection|coulomb|résume tout|important/.test(combined)) matched = true;
-        else if (chapNum === 3 && /potentielle|mécanique|mecanique|énergétique|energetique|travail|puissance|pendule/.test(combined)) matched = true;
-        else if (chapNum === 4 && /moment cinétique|moment cinetique|bras de levier|moment d/.test(combined)) matched = true;
-        else if (chapNum === 5 && /centrale|kepler|binet|potentielle effective|potentielle efficace|gravitation/.test(combined)) matched = true;
-        else if (chapNum === 6 && /non galiléen|non galileen|coriolis|inertie|marée|foucault|référentiel/.test(combined)) matched = true;
+        else if (chapNum === 3 && /potentielle|mécanique|mecanique|énergétique|energetique|travail|puissance/.test(combined) && !/oscillat|ressort|borda/.test(combined)) matched = true;
+        else if ((chapNum === 4 || chapNum === 5) && /moment cinétique|moment cinetique|bras de levier|moment d/.test(combined)) matched = true;
+        else if ((chapNum === 5 || chapNum === 6) && /centrale|kepler|binet|potentielle effective|potentielle efficace|gravitation/.test(combined)) matched = true;
+        else if ((chapNum === 6 || chapNum === 7) && /non galiléen|non galileen|coriolis|inertie|marée|foucault|référentiel/.test(combined)) matched = true;
       }
     } else if (modId.includes("optique-sup")) {
       if (vMod === "optique" && (vNiv === "sup" || /descartes|réfraction|lentille|miroir|instrument|gauss/.test(combined))) {
@@ -244,10 +257,20 @@ export function getChapterCourseVideos(
     return matched;
   });
 
-  const existingUrls = new Set(result.map((r) => r.video));
+  const existingKeys = new Set<string>();
+  for (const r of result) {
+    const yid = extractYoutubeId(r.video);
+    if (yid) existingKeys.add(yid);
+    if (r.video) existingKeys.add(r.video.trim());
+    if (r.id) existingKeys.add(r.id);
+  }
+
   for (const ev of matchingElearningVideos) {
-    if (!existingUrls.has(ev.youtubeUrl)) {
-      existingUrls.add(ev.youtubeUrl);
+    const yid = extractYoutubeId(ev.youtubeUrl) || ev.id;
+    if (!existingKeys.has(yid) && !existingKeys.has(ev.youtubeUrl) && !existingKeys.has(ev.id)) {
+      existingKeys.add(yid);
+      existingKeys.add(ev.youtubeUrl);
+      existingKeys.add(ev.id);
       let filiereBadge = "Tronc Commun CPGE";
       if (ev.moduleId === "methodes") {
         filiereBadge = "Méthode CPGE";
@@ -374,9 +397,15 @@ export function getChapterConcoursVideos(
     }
     // 10. Mécanique Sup
     if (chapterId.includes("meca-sup") || modId.includes("meca-sup")) {
-      if (chapNum === 5) return /\b(gravitation|orbite|satellite|rosetta|mars|rutherford|kepler|gravimètre|gravimetre|fléau)\b/i.test(t);
-      if (chapNum === 6) return /\b(coriolis|non galiléen|non galileen|géophysique|geophysique|déviation vers l'est|deviation vers l'est)\b/i.test(t);
-      if ([2, 3, 4].includes(chapNum)) return /\b(pendule|richter|ressort|traîneau|traineau|cartouche|fusée|fusee|chute|énergétique|energetique|newton|pfd|frottement)\b/i.test(t);
+      const cTit = (chapter.titre || "").toLowerCase();
+      const isOscChapter = chapterId.includes("osc") || /oscillat|harmonique/.test(cTit) || chapNum === 4;
+
+      if (isOscChapter) {
+        return /\b(pendule|richter|ressort|millenium|millennium|oscillat|harmonique|borda)\b/i.test(t);
+      }
+      if (chapNum === 5 || chapNum === 6) return /\b(gravitation|orbite|satellite|rosetta|mars|rutherford|kepler|gravimètre|gravimetre|fléau)\b/i.test(t);
+      if (chapNum === 6 || chapNum === 7) return /\b(coriolis|non galiléen|non galileen|géophysique|geophysique|déviation vers l'est|deviation vers l'est)\b/i.test(t);
+      if ([2, 3].includes(chapNum)) return /\b(traîneau|traineau|cartouche|fusée|fusee|chute|énergétique|energetique|newton|pfd|frottement)\b/i.test(t);
     }
     // 11. Électronique Sup
     if (chapterId.includes("elec-sup") || modId.includes("elec-sup")) {
@@ -393,10 +422,20 @@ export function getChapterConcoursVideos(
     return false;
   });
 
-  const existingUrls = new Set<string>();
+  const existingKeys = new Set<string>();
+  for (const r of result) {
+    const yid = extractYoutubeId(r.video);
+    if (yid) existingKeys.add(yid);
+    if (r.video) existingKeys.add(r.video.trim());
+    if (r.id) existingKeys.add(r.id);
+  }
+
   for (const ev of matchingConcoursVideos) {
-    if (!existingUrls.has(ev.youtubeUrl)) {
-      existingUrls.add(ev.youtubeUrl);
+    const yid = extractYoutubeId(ev.youtubeUrl) || ev.id;
+    if (!existingKeys.has(yid) && !existingKeys.has(ev.youtubeUrl) && !existingKeys.has(ev.id)) {
+      existingKeys.add(yid);
+      existingKeys.add(ev.youtubeUrl);
+      existingKeys.add(ev.id);
       const tag = ev.concoursTag || "Concours CPGE";
       result.push({
         id: ev.id,

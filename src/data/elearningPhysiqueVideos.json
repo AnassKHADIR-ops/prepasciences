@@ -3915,30 +3915,6 @@
     ]
   },
   {
-    "id": "hNZMB0vDB8s",
-    "title": "MP-PC-PSI Oscillations couplées- modes propres",
-    "duration": 231,
-    "durationFormatted": "03:51",
-    "youtubeUrl": "https://www.youtube.com/watch?v=hNZMB0vDB8s",
-    "embedUrl": "https://www.youtube.com/embed/hNZMB0vDB8s",
-    "thumbnailUrl": "https://i.ytimg.com/vi/hNZMB0vDB8s/hqdefault.jpg",
-    "domaine": "Physique des Ondes",
-    "moduleId": "ondes",
-    "chapitre": "Ondes Mécaniques & Cordes Vibrantes",
-    "niveau": "sup",
-    "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
-    ],
-    "isCommon": true,
-    "concoursTag": null,
-    "playlists": [
-      "Ondes mécaniques"
-    ]
-  },
-  {
     "id": "XPD4kE3TNMQ",
     "title": "MP-PC-PSI :Cours :  Oscillations couplées - Modes propres.",
     "duration": 1889,
@@ -5341,7 +5317,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/t-6ZjOihEiY/hqdefault.jpg",
     "domaine": "Mécanique & Solide",
     "moduleId": "meca",
-    "chapitre": "Cinématique & Dynamique du Point Matériel",
+    "chapitre": "Oscillateurs Harmoniques",
     "niveau": "sup",
     "filieres": [
       "MP",
@@ -5364,10 +5340,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=xJq9VrOg26A",
     "embedUrl": "https://www.youtube.com/embed/xJq9VrOg26A",
     "thumbnailUrl": "https://i.ytimg.com/vi/xJq9VrOg26A/hqdefault.jpg",
-    "domaine": "Électronique & Signal",
-    "moduleId": "elec",
-    "chapitre": "Électronique Numérique & Échantillonnage",
-    "niveau": "spe",
+    "domaine": "Mécanique & Solide",
+    "moduleId": "meca",
+    "chapitre": "Oscillateurs Harmoniques",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -6854,7 +6830,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/TkT_jHgDLNg/hqdefault.jpg",
     "domaine": "Mécanique & Solide",
     "moduleId": "meca",
-    "chapitre": "Cinématique & Dynamique du Point Matériel",
+    "chapitre": "Oscillateurs Harmoniques",
     "niveau": "sup",
     "filieres": [
       "MP",

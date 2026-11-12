@@ -2,7 +2,7 @@
 
 import { PC_CONCOURS_DATA, ConcoursBlock, EpreuveItem, CorrigePartieItem } from "@/components/eddams/pcConcoursData";
 
-const CONCOURS_STORAGE_KEY = "prepasciences_concours_db_v1";
+const CONCOURS_STORAGE_KEY = "prepasciences_concours_db_v3";
 
 /**
  * Assure que chaque bloc et épreuve possède un identifiant unique stable
@@ -32,6 +32,9 @@ function normalizeConcoursData(blocks: ConcoursBlock[]): ConcoursBlock[] {
       return {
         ...s,
         id: eId,
+        description: s.description || "",
+        themes: Array.isArray(s.themes) ? s.themes : [],
+        videos: Array.isArray(s.videos) ? s.videos : [],
         correction: s.correction || (corriges[0]?.url ?? ""),
         corriges,
       };
