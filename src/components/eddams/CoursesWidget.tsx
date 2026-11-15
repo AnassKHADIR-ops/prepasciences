@@ -1976,24 +1976,17 @@ export function CoursesWidget({
     return base.filter((m) => m.niveau === selectedNiveau);
   }, [courses, selectedNiveau]);
 
-  // Aplatir tous les chapitres avec le nom du module associé (retirer les chapitres vides sans document)
+  // Aplatir tous les chapitres avec le nom du module associé
   const allChapters = useMemo(() => {
     const list: (ChapitreItem & { moduleIcon: string; moduleTitre: string; moduleId: string })[] = [];
     activeCoursesData.forEach((module) => {
-      module.chapitres.forEach((ch) => {
-        const hasCours = ch.cours && ch.cours.some((c) => (c.support && c.support.trim() !== "") || (c.video && c.video.trim() !== ""));
-        const hasTds = ch.tds && ch.tds.some((t) => (t.enonce && t.enonce.trim() !== "") || (t.correction && t.correction.trim() !== "") || (t.corriges && t.corriges.length > 0));
-        const hasFiches = ch.fiches && ch.fiches.some((f) => f.url && f.url.trim() !== "");
-        const hasLegacy = Boolean(ch.ficheUrl || ch.enonceTdUrl || ch.corrigeTdUrl || ch.videoUrl);
-
-        if (hasCours || hasTds || hasFiches || hasLegacy) {
-          list.push({
-            ...ch,
-            moduleIcon: module.icon,
-            moduleTitre: module.titre,
-            moduleId: module.id,
-          });
-        }
+      (module.chapitres || []).forEach((ch) => {
+        list.push({
+          ...ch,
+          moduleIcon: module.icon,
+          moduleTitre: module.titre,
+          moduleId: module.id,
+        });
       });
     });
     return list;
@@ -2076,8 +2069,8 @@ export function CoursesWidget({
       const matchesSearch =
         !q ||
         ch.titre.toLowerCase().includes(q) ||
-        ch.description.toLowerCase().includes(q) ||
-        ch.moduleTitre.toLowerCase().includes(q) ||
+        (ch.description ? ch.description.toLowerCase().includes(q) : false) ||
+        (ch.moduleTitre ? ch.moduleTitre.toLowerCase().includes(q) : false) ||
         String(ch.num).includes(q);
       return matchesMod && matchesSearch;
     });
@@ -2310,11 +2303,22 @@ export function CoursesWidget({
   const handleSaveChapter = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newChTitle.trim()) return;
-    createChapter(newChModuleId, {
+    const targetModuleId =
+      newChModuleId || (activeCoursesData[0]?.id || "em-spe");
+    const created = createChapter(targetModuleId, {
       titre: newChTitle.trim(),
       description: newChDesc.trim(),
       badge: newChBadge.trim(),
     });
+    if (created && typeof created === "object" && "id" in created) {
+      setOpenChapterIds((prev) => new Set([...Array.from(prev), created.id]));
+      if (activeModule !== "all" && activeModule !== targetModuleId) {
+        setActiveModule(targetModuleId);
+      }
+      setToastMessage(`✓ Chapitre « ${created.titre} » créé avec succès et ajouté au syllabus !`);
+    } else {
+      setToastMessage(`✓ Chapitre « ${newChTitle.trim()} » créé avec succès !`);
+    }
     setActiveModal(null);
     setNewChTitle("");
     setNewChDesc("");
@@ -2428,7 +2432,14 @@ export function CoursesWidget({
 
                 <button
                   type="button"
-                  onClick={() => setActiveModal("chapter")}
+                  onClick={() => {
+                    if (activeModule && activeModule !== "all") {
+                      setNewChModuleId(activeModule);
+                    } else if (activeCoursesData.length > 0) {
+                      setNewChModuleId(activeCoursesData[0].id);
+                    }
+                    setActiveModal("chapter");
+                  }}
                   className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
@@ -3336,7 +3347,7 @@ export function CoursesWidget({
                     )}
 
                     {/* ── 4. FICHES DE SYNTHÈSE DANS BOÎTIER ÉLÉGANT ── */}
-                    {fiches.length > 0 && (
+                    {(fiches.length > 0 || isTeacherView) && (
                       <div className="bg-[#fdfaf5] dark:bg-[#111827] border border-[#f2e7d7] dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
                         <div className="flex items-center justify-between pb-2 border-b border-[#ebdccd] dark:border-slate-800">
                           <div className="flex items-center gap-2">
@@ -3357,27 +3368,33 @@ export function CoursesWidget({
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                          {fiches.map((f, fIdx) => (
-                            <CourseFicheCard
-                              key={f.id || fIdx}
-                              fiche={f}
-                              chapTitre={chapter.titre}
-                              onOpenPdf={onOpenPdf}
-                              isTeacherView={isTeacherView}
-                              onEdit={
-                                isTeacherView
-                                  ? () => openEditFiche(chapter, f)
-                                  : undefined
-                              }
-                              onDelete={
-                                isTeacherView
-                                  ? () => deleteFiche(chapter.moduleId, chapter.id, f.id || f.titre)
-                                  : undefined
-                              }
-                            />
-                          ))}
-                        </div>
+                        {fiches.length > 0 ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {fiches.map((f, fIdx) => (
+                              <CourseFicheCard
+                                key={f.id || fIdx}
+                                fiche={f}
+                                chapTitre={chapter.titre}
+                                onOpenPdf={onOpenPdf}
+                                isTeacherView={isTeacherView}
+                                onEdit={
+                                  isTeacherView
+                                    ? () => openEditFiche(chapter, f)
+                                    : undefined
+                                }
+                                onDelete={
+                                  isTeacherView
+                                    ? () => deleteFiche(chapter.moduleId, chapter.id, f.id || f.titre)
+                                    : undefined
+                                }
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-4 text-center rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-dashed border-amber-200/70 dark:border-amber-500/20 text-xs text-amber-900 dark:text-amber-300">
+                            Aucune fiche de synthèse pour ce chapitre pour le moment.
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -4198,7 +4215,11 @@ export function CoursesWidget({
                   Module parent *
                 </label>
                 <select
-                  value={newChModuleId}
+                  value={
+                    activeCoursesData.some((m) => m.id === newChModuleId)
+                      ? newChModuleId
+                      : activeCoursesData[0]?.id || ""
+                  }
                   onChange={(e) => setNewChModuleId(e.target.value)}
                   className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white"
                 >

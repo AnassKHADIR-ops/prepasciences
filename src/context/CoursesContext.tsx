@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { ModuleCoursBlock, BatchDocumentEntry, SessionSupportItem } from "@/types/courses";
+import { ModuleCoursBlock, BatchDocumentEntry, SessionSupportItem, ChapitreItem } from "@/types/courses";
 import {
   getCoursesDB,
   addSessionToChapter,
@@ -112,7 +112,7 @@ interface CoursesContextType {
   editModule: (moduleId: string, updates: { titre?: string; icon?: string; description?: string }) => boolean;
   removeModule: (moduleId: string) => boolean;
   // Gestion dynamique des sous-chapitres
-  createChapter: (moduleId: string, chapterData: { id?: string; num?: number; titre: string; description: string; badge?: string }) => boolean;
+  createChapter: (moduleId: string, chapterData: { id?: string; num?: number; titre: string; description: string; badge?: string }) => ChapitreItem | null;
   editChapter: (moduleId: string, chapterId: string, updates: { num?: number; titre?: string; description?: string; badge?: string }) => boolean;
   removeChapter: (moduleId: string, chapterId: string) => boolean;
 }
@@ -307,10 +307,10 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
   const createChapter = (
     moduleId: string,
     chapterData: { id?: string; num?: number; titre: string; description: string; badge?: string }
-  ) => {
+  ): ChapitreItem | null => {
     const res = addChapterToModule(moduleId, chapterData);
     if (res) refreshCourses();
-    return Boolean(res);
+    return res;
   };
 
   const editChapter = (

@@ -1072,14 +1072,17 @@ export function addChapterToModule(
   if (!moduleItem) return null;
 
   const chapterId = chapterData.id || `${moduleId}-ch${Date.now()}`;
-  const num = chapterData.num || (moduleItem.chapitres.length + 1);
+  const maxNum = moduleItem.chapitres.reduce((max, c) => Math.max(max, c.num || 0), 0);
+  const num = chapterData.num || (maxNum + 1);
 
   const newChapter: ChapitreItem = {
     id: chapterId,
+    moduleId: moduleId,
     num,
     titre: chapterData.titre.trim(),
     description: chapterData.description.trim(),
-    badge: chapterData.badge?.trim() || "Spé MP / MP*",
+    badge: chapterData.badge?.trim() || "Spé MP / PSI / TSI",
+    niveau: moduleItem.niveau,
     moduleName: moduleItem.titre,
     cours: [],
     tds: [],
@@ -1250,9 +1253,10 @@ export async function syncCoursesFromSupabase(): Promise<ModuleCoursBlock[]> {
 
       dbChapters[mId].push({
         id: ch.id,
+        moduleId: mId,
         num: ch.num,
         titre: ch.titre,
-        badge: ch.badge || "Spé MP / MP*",
+        badge: ch.badge || "Spé MP / PSI / TSI",
         description: ch.description || "",
         cours: chapterSessions,
         tds: chapterExercises,
@@ -1266,11 +1270,23 @@ export async function syncCoursesFromSupabase(): Promise<ModuleCoursBlock[]> {
         dbChapters[block.id].forEach((dbCh) => {
           const idx = mergedChapitres.findIndex((c) => c.id === dbCh.id);
           if (idx >= 0) {
-            mergedChapitres[idx] = { ...mergedChapitres[idx], ...dbCh };
+            mergedChapitres[idx] = {
+              ...mergedChapitres[idx],
+              ...dbCh,
+              cours: dbCh.cours.length > 0 ? dbCh.cours : mergedChapitres[idx].cours,
+              tds: dbCh.tds.length > 0 ? dbCh.tds : mergedChapitres[idx].tds,
+              fiches: dbCh.fiches.length > 0 ? dbCh.fiches : mergedChapitres[idx].fiches,
+            };
           } else {
-            mergedChapitres.push(dbCh);
+            mergedChapitres.push({
+              ...dbCh,
+              moduleId: block.id,
+              moduleName: block.titre,
+              niveau: block.niveau,
+            });
           }
         });
+        mergedChapitres.sort((a, b) => (a.num || 0) - (b.num || 0));
         return { ...block, chapitres: mergedChapitres };
       }
       return block;
