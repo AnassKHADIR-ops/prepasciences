@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserCheck,
+  MessageCircle,
 } from "lucide-react";
 
 interface FreemiumLockModalProps {
@@ -29,6 +30,8 @@ export function FreemiumLockModal({
   resourceTitle,
   isPendingStudent = false,
   studentName = "",
+  studentEmail = "",
+  defaultPole = "pc",
 }: FreemiumLockModalProps) {
   if (!isOpen) return null;
 
@@ -126,16 +129,49 @@ export function FreemiumLockModal({
                 </Link>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-center justify-center gap-2 font-mono">
                   <Clock className="w-4 h-4 animate-spin text-amber-300" />
-                  <span>Activation en cours (délai moyen : &lt; 1h)</span>
+                  <span>Activation en attente d&apos;approbation</span>
+                </div>
+
+                {/* Boutons d'Action WhatsApp directs pour valider l'accès à la ressource */}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[10px] font-mono uppercase text-slate-400 block text-center font-bold">
+                    Notifier directement votre professeur sur WhatsApp :
+                  </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <a
+                      href={`https://wa.me/212659041407?text=${encodeURIComponent(
+                        `Bonjour Pr. Anass Khadir,\n\nJe suis l'étudiant(e) : ${studentName || "Étudiant CPGE"}\nEmail : ${studentEmail || "Non renseigné"}\n\nJe me suis inscrit(e) sur la plateforme et mon compte est actuellement en attente d'approbation. Pourriez-vous s'il vous plaît valider mon accès aux cours ?\n(Ressource concernée : ${resourceTitle})\n\nMerci d'avance pour votre aide !`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>Pr. Khadir (Maths)</span>
+                    </a>
+
+                    <a
+                      href={`https://wa.me/212721729799?text=${encodeURIComponent(
+                        `Bonjour Pr. Hassan Eddams,\n\nJe suis l'étudiant(e) : ${studentName || "Étudiant CPGE"}\nEmail : ${studentEmail || "Non renseigné"}\n\nJe me suis inscrit(e) sur la plateforme et mon compte est actuellement en attente d'approbation. Pourriez-vous s'il vous plaît valider mon accès aux cours ?\n(Ressource concernée : ${resourceTitle})\n\nMerci d'avance pour votre aide !`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>Pr. Eddams (Physique)</span>
+                    </a>
+                  </div>
                 </div>
 
                 <Link
                   href="/connexion"
                   onClick={onClose}
-                  className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs text-center text-slate-400 hover:text-white flex items-center justify-center gap-1.5 transition-colors"
+                  className="w-full py-2 px-4 rounded-xl font-semibold text-xs text-center text-slate-400 hover:text-white flex items-center justify-center gap-1.5 transition-colors pt-1"
                 >
                   <UserCheck className="w-3.5 h-3.5" />
                   <span>Changer de compte / Se reconnecter</span>

@@ -4,6 +4,14 @@ export type StudentStatus = "pending" | "active" | "suspended";
 
 export type StudentOffer = "pc" | "maths" | "integral";
 
+export interface ProfileNotesMeta {
+  pwd?: string;
+  resetCode?: string;
+  resetExpires?: number;
+  resourceRequested?: string;
+  rawNotes?: string;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -25,3 +33,4 @@ export interface AuthState {
   currentUser: UserProfile | null;
   teacherViewMode: "teacher" | "preview-student"; // Permet aux professeurs de prévisualiser comme un étudiant
 }
+

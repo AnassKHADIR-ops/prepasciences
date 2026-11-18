@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useCourses } from "@/context/CoursesContext";
 import { StudentStatus, StudentOffer, UserProfile } from "@/types/auth";
+import { parseNotesMeta } from "@/lib/authStore";
 import { BatchDocumentEntry } from "@/types/courses";
 import { EddamsNavbar } from "@/components/eddams/EddamsNavbar";
 import {
@@ -24,7 +25,11 @@ import {
   Search,
   Check,
   Eye,
+  EyeOff,
   Copy,
+  RefreshCw,
+  KeyRound,
+  Sparkles,
 } from "lucide-react";
 
 export default function DashboardProfPage() {
@@ -42,6 +47,9 @@ export default function DashboardProfPage() {
     register,
     teacherViewMode,
     toggleTeacherViewMode,
+    refreshUsersFromCloud,
+    adminResetPassword,
+    quickApprove,
   } = useAuth();
 
   const {
@@ -179,6 +187,116 @@ export default function DashboardProfPage() {
       setManualCenter("");
     } else {
       showToast("error", res.error || "Erreur lors de l'ajout.");
+    }
+  };
+
+  // ── Synchronisation Cloud Supabase Manuelle ──
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+  const handleCloudSync = async () => {
+    setIsSyncingCloud(true);
+    try {
+      await refreshUsersFromCloud();
+      showToast("success", "Synchronisation avec Supabase réussie ! Tous les profils d'étudiants sont à jour.");
+    } catch {
+      showToast("error", "Erreur lors de la synchronisation Supabase.");
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  };
+
+  // ── Validation Rapide par Email (suite à un message WhatsApp reçu) ──
+  const [quickApproveEmail, setQuickApproveEmail] = useState("");
+  const [isQuickApproving, setIsQuickApproving] = useState(false);
+
+  const handleQuickApproveSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickApproveEmail.trim()) {
+      showToast("error", "Veuillez saisir une adresse e-mail.");
+      return;
+    }
+    setIsQuickApproving(true);
+    try {
+      const res = await quickApprove({ email: quickApproveEmail.trim() });
+      if (res.success) {
+        showToast("success", res.message);
+        setQuickApproveEmail("");
+      } else {
+        showToast("error", "Erreur lors de la validation rapide.");
+      }
+    } catch {
+      showToast("error", "Erreur lors de la validation.");
+    } finally {
+      setIsQuickApproving(false);
+    }
+  };
+
+  // ── Modale de Réinitialisation / Changement de mot de passe par le Professeur ──
+  const [resetPasswordModal, setResetPasswordModal] = useState<{
+    isOpen: boolean;
+    student: UserProfile | null;
+    newPassword: string;
+    showPassword: boolean;
+  }>({
+    isOpen: false,
+    student: null,
+    newPassword: "",
+    showPassword: false,
+  });
+
+  const handleOpenResetPasswordModal = (student: UserProfile) => {
+    // Générer par défaut un mot de passe mémorisable ex: Prepa2026!
+    const defaultPass = `Prepa${Math.floor(1000 + Math.random() * 9000)}!`;
+    setResetPasswordModal({
+      isOpen: true,
+      student,
+      newPassword: defaultPass,
+      showPassword: true,
+    });
+  };
+
+  const handleAdminResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetPasswordModal.student) return;
+    if (!resetPasswordModal.newPassword || resetPasswordModal.newPassword.length < 4) {
+      showToast("error", "Le mot de passe doit comporter au moins 4 caractères.");
+      return;
+    }
+    try {
+      const res = await adminResetPassword(resetPasswordModal.student.id, resetPasswordModal.newPassword);
+      if (res.success) {
+        showToast("success", `Mot de passe mis à jour avec succès pour ${resetPasswordModal.student.fullName} !`);
+        setResetPasswordModal((prev) => ({ ...prev, isOpen: false }));
+      } else {
+        showToast("error", res.error || "Erreur lors de la mise à jour.");
+      }
+    } catch {
+      showToast("error", "Erreur lors de la réinitialisation.");
+    }
+  };
+
+  const handleAdminResetAndSendWhatsApp = async () => {
+    if (!resetPasswordModal.student) return;
+    const student = resetPasswordModal.student;
+    const pass = resetPasswordModal.newPassword;
+    if (!pass || pass.length < 4) {
+      showToast("error", "Le mot de passe doit comporter au moins 4 caractères.");
+      return;
+    }
+
+    try {
+      const res = await adminResetPassword(student.id, pass);
+      if (res.success) {
+        showToast("success", `Mot de passe enregistré pour ${student.fullName}. Ouverture de WhatsApp...`);
+        setResetPasswordModal((prev) => ({ ...prev, isOpen: false }));
+
+        const cleanPhone = student.phone.replace(/[^0-9]/g, "");
+        const waText = `Bonjour ${student.fullName},\n\nVotre mot de passe pour la plateforme Prépasciences CPGE a été réinitialisé par votre professeur :\n\n🔑 Nouveau mot de passe : ${pass}\n📧 Email : ${student.email}\n🌐 Connexion : https://prepasciences.ma/connexion\n\nBonne continuation dans vos révisions !`;
+        window.open(`https://wa.me/${cleanPhone || "212600000000"}?text=${encodeURIComponent(waText)}`, "_blank");
+      } else {
+        showToast("error", res.error || "Erreur lors de la sauvegarde.");
+      }
+    } catch {
+      showToast("error", "Erreur lors de la validation.");
     }
   };
 
@@ -816,7 +934,76 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
         {/* ══════════════════════════════════════════════════════════════════ */}
         {activeTab === "students" && (
           <div className="space-y-6 animate-fadeIn">
-            {/* Statistiques en cartes */}
+            {/* BANNIÈRE D'ALERTE : DEMANDES EN ATTENTE (NOTIFICATIONS WHATSAPP & INSCRIPTIONS) */}
+            {pendingCount > 0 && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/40 text-amber-950 dark:text-amber-200 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-scaleUp">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-sm mt-0.5 md:mt-0">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                      <span>{pendingCount} Demande(s) d&apos;accès en attente d&apos;approbation</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+                        Action requise
+                      </span>
+                    </h3>
+                    <p className="text-xs text-amber-800/90 dark:text-slate-300 mt-1 leading-relaxed max-w-2xl">
+                      Des étudiants (ex: <strong>Mohamed anas elmerkhi</strong> et autres élèves pré-inscrits) ont notifié leur inscription et attendent votre validation pour accéder aux cours et replays vidéos.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStatusFilter("pending");
+                      setStudentSearch("");
+                    }}
+                    className="flex-1 md:flex-initial px-4 py-2 text-xs font-black rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-sm text-center"
+                  >
+                    Voir les demandes en attente
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* BARRE DE VALIDATION RAPIDE WHATSAPP & ACTIONS CLOUD */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
+                    Validation Rapide WhatsApp
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Saisissez l&apos;e-mail reçu sur WhatsApp pour valider ou activer le compte en 1 clic
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleQuickApproveSubmit} className="flex items-center gap-2 w-full md:w-auto">
+                <input
+                  type="email"
+                  placeholder="ex: anas.elmerkhi@gmail.com"
+                  value={quickApproveEmail}
+                  onChange={(e) => setQuickApproveEmail(e.target.value)}
+                  className="px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 outline-hidden w-full md:w-64"
+                />
+                <button
+                  type="submit"
+                  disabled={isQuickApproving}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shrink-0 transition-all cursor-pointer shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>{isQuickApproving ? "Validation..." : "Valider l'accès"}</span>
+                </button>
+              </form>
+            </div>
+
             {/* Statistiques en cartes */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-xs">
@@ -853,7 +1040,7 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
               </div>
             </div>
 
-            {/* Barre de Filtre & Recherche */}
+            {/* Barre de Filtre & Recherche & Bouton Actualiser Cloud */}
             <div className="p-4 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-xs flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2.5 flex-wrap">
                 {/* Filtre Statut */}
@@ -893,17 +1080,29 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
-                <div className="relative w-full">
+              <div className="flex items-center gap-2 flex-1 sm:max-w-md justify-end">
+                <div className="relative w-full max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                   <input
                     type="text"
-                    placeholder="Chercher un étudiant..."
+                    placeholder="Chercher nom, email, filière..."
                     value={studentSearch}
                     onChange={(e) => setStudentSearch(e.target.value)}
                     className="w-full pl-9 pr-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-purple-500 focus:bg-white outline-hidden shadow-2xs"
                   />
                 </div>
+
+                {/* Bouton Synchronisation Supabase Cloud */}
+                <button
+                  type="button"
+                  onClick={handleCloudSync}
+                  disabled={isSyncingCloud}
+                  className="px-3.5 py-2 text-xs font-bold rounded-xl bg-cyan-600/15 hover:bg-cyan-600/25 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 shrink-0 transition-colors cursor-pointer flex items-center gap-1.5"
+                  title="Synchroniser avec la base de données Supabase"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? "animate-spin text-cyan-500" : ""}`} />
+                  <span className="hidden md:inline">Sync Cloud</span>
+                </button>
 
                 <button
                   type="button"
@@ -917,12 +1116,12 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
             </div>
 
             {/* Liste des Étudiants */}
-            {/* Liste des Étudiants */}
             <div className="space-y-3">
               {filteredStudents.map((std) => {
                 const isPending = std.status === "pending";
                 const isActive = std.status === "active";
                 const isSuspended = std.status === "suspended";
+                const meta = parseNotesMeta(std.notes);
 
                 return (
                   <div
@@ -961,9 +1160,9 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
                             }`}
                           >
                             {isPending
-                              ? "⏳ En attente"
+                              ? "⏳ En attente de validation"
                               : isActive
-                              ? "✓ Actif"
+                              ? "✓ Compte Actif"
                               : "✕ Suspendu"}
                           </span>
 
@@ -981,6 +1180,23 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
                           <span>📱 {std.phone}</span>
                           <span>🎓 Filière {std.filiere}</span>
                           <span>🏛️ {std.center}</span>
+                        </div>
+
+                        {/* Badges contextuels : Ressource demandée & Demande de mot de passe active */}
+                        <div className="flex items-center gap-2 flex-wrap mt-2">
+                          {meta.resourceRequested && (
+                            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-800 dark:text-cyan-300 border border-cyan-500/30 inline-flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                              <span>Ressource : <strong>{meta.resourceRequested}</strong></span>
+                            </span>
+                          )}
+
+                          {meta.resetCode && (
+                            <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-purple-500/15 text-purple-800 dark:text-purple-300 border border-purple-500/30 inline-flex items-center gap-1.5 animate-pulse">
+                              <KeyRound className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                              <span>Code reset actif : <strong>{meta.resetCode}</strong></span>
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1012,6 +1228,17 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
                           <span>Valider l&apos;accès</span>
                         </button>
                       )}
+
+                      {/* Gestion / Réinitialisation sécurisée du Mot de passe */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenResetPasswordModal(std)}
+                        className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title="Modifier ou réinitialiser le mot de passe de cet étudiant"
+                      >
+                        <KeyRound className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Mot de passe</span>
+                      </button>
 
                       {/* Suspendre / Réactiver */}
                       {isActive && (
@@ -2388,6 +2615,110 @@ NEXT_PUBLIC_SUPABASE_URL=https://xyz.supabase.co&#10;NEXT_PUBLIC_SUPABASE_ANON_K
                   className="px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white cursor-pointer shadow-xs"
                 >
                   Mettre à jour
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* MODAL RÉINITIALISATION DU MOT DE PASSE PAR LE PROFESSEUR */}
+      {resetPasswordModal.isOpen && resetPasswordModal.student && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-500 flex items-center justify-center">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Réinitialiser le mot de passe
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {resetPasswordModal.student.fullName}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResetPasswordModal((prev) => ({ ...prev, isOpen: false }))}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-slate-400 space-y-1">
+              <div><strong>Email :</strong> {resetPasswordModal.student.email}</div>
+              <div><strong>Téléphone :</strong> {resetPasswordModal.student.phone}</div>
+            </div>
+
+            <form onSubmit={handleAdminResetSubmit} className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Nouveau mot de passe
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rand = `Prepa${Math.floor(1000 + Math.random() * 9000)}!`;
+                      setResetPasswordModal((prev) => ({
+                        ...prev,
+                        newPassword: rand,
+                        showPassword: true,
+                      }));
+                    }}
+                    className="text-[11px] text-purple-600 dark:text-purple-400 font-bold hover:underline cursor-pointer"
+                  >
+                    Générer un mot de passe
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type={resetPasswordModal.showPassword ? "text" : "password"}
+                    required
+                    value={resetPasswordModal.newPassword}
+                    onChange={(e) =>
+                      setResetPasswordModal((prev) => ({ ...prev, newPassword: e.target.value }))
+                    }
+                    className="w-full pl-3.5 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-hidden focus:border-purple-600 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setResetPasswordModal((prev) => ({
+                        ...prev,
+                        showPassword: !prev.showPassword,
+                      }))
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                  >
+                    {resetPasswordModal.showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 dark:bg-white dark:text-slate-950 text-white font-bold text-xs hover:brightness-110 transition-all cursor-pointer text-center"
+                >
+                  Sauvegarder dans le Cloud
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleAdminResetAndSendWhatsApp}
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-emerald-950/40 text-center"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Envoyer par WhatsApp</span>
                 </button>
               </div>
             </form>
