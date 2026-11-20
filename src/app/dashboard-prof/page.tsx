@@ -54,6 +54,8 @@ export default function DashboardProfPage() {
 
   const {
     courses,
+    cloudSync,
+    syncWithCloud,
     createSession,
     createExercise,
     createFiche,
@@ -807,7 +809,48 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center flex-wrap gap-2 shrink-0">
+            {/* Synchronisation Cloud des Cours */}
+            <button
+              type="button"
+              disabled={cloudSync.status === "syncing"}
+              onClick={async () => {
+                const res = await syncWithCloud({ pushLocal: true });
+                if (res.error) {
+                  showToast("error", `Erreur Cloud Cours : ${res.error}`);
+                } else {
+                  const total =
+                    res.pushedChapters +
+                    res.pushedSessions +
+                    res.pushedExercises +
+                    res.pushedFiches;
+                  showToast(
+                    "success",
+                    total > 0
+                      ? `☁️ ${res.pushedChapters} chap., ${res.pushedSessions} séances, ${res.pushedExercises} TDs et ${res.pushedFiches} fiches publiés dans le Cloud !`
+                      : "☁️ Tous les cours et chapitres sont synchronisés avec Supabase Cloud."
+                  );
+                }
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 ${
+                cloudSync.status === "error" || cloudSync.status === "offline"
+                  ? "bg-red-600/20 border-red-500/50 text-red-600 dark:text-red-300"
+                  : "bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white shadow-xs"
+              }`}
+              title="Publier vos cours locaux et synchroniser depuis Supabase Cloud"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${cloudSync.status === "syncing" ? "animate-spin" : ""}`}
+              />
+              <span>
+                {cloudSync.status === "syncing"
+                  ? "Sync Cloud..."
+                  : cloudSync.status === "error"
+                  ? "Réessayer Sync Cloud"
+                  : "Sync Cours Cloud"}
+              </span>
+            </button>
+
             {/* Bascule Mode Édition / Aperçu Étudiant */}
             <button
               type="button"

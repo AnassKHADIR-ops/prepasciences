@@ -1,7 +1,21 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { ModuleCoursBlock, BatchDocumentEntry, SessionSupportItem, ChapitreItem } from "@/types/courses";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  ReactNode,
+  useCallback,
+} from "react";
+import {
+  ModuleCoursBlock,
+  BatchDocumentEntry,
+  SessionSupportItem,
+  ChapitreItem,
+} from "@/types/courses";
+import { PC_COURSES_DATA } from "@/components/eddams/pcCoursesData";
 import {
   getCoursesDB,
   addSessionToChapter,
@@ -24,11 +38,27 @@ import {
   updateChapter,
   deleteChapter,
   syncCoursesFromSupabase,
+  pushLocalCoursesToSupabase,
+  getCloudSyncState,
+  subscribeCloudSyncState,
+  CloudSyncSnapshot,
 } from "@/lib/coursesStore";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "./AuthContext";
+
+export interface SyncWithCloudResult {
+  pushedChapters: number;
+  pushedSessions: number;
+  pushedExercises: number;
+  pushedFiches: number;
+  error?: string;
+}
 
 interface CoursesContextType {
   courses: ModuleCoursBlock[];
+  cloudSync: CloudSyncSnapshot;
   refreshCourses: () => void;
+  syncWithCloud: (options?: { pushLocal?: boolean }) => Promise<SyncWithCloudResult>;
   createSession: (
     moduleId: string,
     chapterId: string,
@@ -55,8 +85,18 @@ interface CoursesContextType {
     }
   ) => boolean;
   deleteSession: (moduleId: string, chapterId: string, sessionId: string) => boolean;
-  removeVideo: (moduleId: string, chapterId: string, videoId: string, isConcours?: boolean) => boolean;
-  reorderVideos: (moduleId: string, chapterId: string, newOrder: string[], isConcours?: boolean) => boolean;
+  removeVideo: (
+    moduleId: string,
+    chapterId: string,
+    videoId: string,
+    isConcours?: boolean
+  ) => boolean;
+  reorderVideos: (
+    moduleId: string,
+    chapterId: string,
+    newOrder: string[],
+    isConcours?: boolean
+  ) => boolean;
   restoreVideos: (moduleId: string, chapterId: string, isConcours?: boolean) => boolean;
   transferVideo: (
     sourceModuleId: string,
@@ -107,32 +147,143 @@ interface CoursesContextType {
     chapterData: { num: number; titre: string; description: string; badge?: string },
     documents: BatchDocumentEntry[]
   ) => boolean;
-  // Gestion dynamique des modules
-  createModule: (moduleData: { id?: string; titre: string; icon?: string; description?: string }) => boolean;
-  editModule: (moduleId: string, updates: { titre?: string; icon?: string; description?: string }) => boolean;
+  createModule: (moduleData: {
+    id?: string;
+    titre: string;
+    icon?: string;
+    description?: string;
+    niveau?: "sup" | "spe";
+  }) => boolean;
+  editModule: (
+    moduleId: string,
+    updates: { titre?: string; icon?: string; description?: string }
+  ) => boolean;
   removeModule: (moduleId: string) => boolean;
-  // Gestion dynamique des sous-chapitres
-  createChapter: (moduleId: string, chapterData: { id?: string; num?: number; titre: string; description: string; badge?: string }) => ChapitreItem | null;
-  editChapter: (moduleId: string, chapterId: string, updates: { num?: number; titre?: string; description?: string; badge?: string }) => boolean;
+  createChapter: (
+    moduleId: string,
+    chapterData: {
+      id?: string;
+      num?: number;
+      titre: string;
+      description: string;
+      badge?: string;
+    }
+  ) => ChapitreItem | null;
+  editChapter: (
+    moduleId: string,
+    chapterId: string,
+    updates: { num?: number; titre?: string; description?: string; badge?: string }
+  ) => boolean;
   removeChapter: (moduleId: string, chapterId: string) => boolean;
 }
 
 const CoursesContext = createContext<CoursesContextType | undefined>(undefined);
 
 export function CoursesProvider({ children }: { children: ReactNode }) {
-  const [courses, setCourses] = useState<ModuleCoursBlock[]>(() => getCoursesDB());
+  const { currentUser, isTeacher, isAdmin } = useAuth();
+  const canPublishToCloud = isTeacher || isAdmin;
+
+  // Initialisation identique SSR/Client (zéro erreur d'hydratation React), puis synchronisation Cloud immédiate dans useEffect
+  const [courses, setCourses] = useState<ModuleCoursBlock[]>(PC_COURSES_DATA);
+  const [cloudSync, setCloudSync] = useState<CloudSyncSnapshot>(() => getCloudSyncState());
+
+  const lastPullTsRef = useRef<number>(0);
+  const syncInFlightRef = useRef<boolean>(false);
 
   const refreshCourses = useCallback(() => {
     setCourses(getCoursesDB());
   }, []);
 
+  // Abonnement à l'état observable de synchronisation Cloud
   useEffect(() => {
-    syncCoursesFromSupabase().then((data) => {
-      if (data && data.length > 0) {
-        setCourses(data);
-      }
+    return subscribeCloudSyncState((snap) => {
+      setCloudSync(snap);
     });
   }, []);
+
+  const syncWithCloud = useCallback(
+    async (options?: { pushLocal?: boolean }): Promise<SyncWithCloudResult> => {
+      if (syncInFlightRef.current) {
+        return { pushedChapters: 0, pushedSessions: 0, pushedExercises: 0, pushedFiches: 0 };
+      }
+      syncInFlightRef.current = true;
+      let pushRes: SyncWithCloudResult = {
+        pushedChapters: 0,
+        pushedSessions: 0,
+        pushedExercises: 0,
+        pushedFiches: 0,
+      };
+      try {
+        const shouldPush = options?.pushLocal ?? canPublishToCloud;
+        if (shouldPush && canPublishToCloud) {
+          pushRes = await pushLocalCoursesToSupabase();
+        }
+        const data = await syncCoursesFromSupabase();
+        lastPullTsRef.current = Date.now();
+        if (data && data.length > 0) {
+          setCourses(data);
+        }
+        return pushRes;
+      } finally {
+        syncInFlightRef.current = false;
+      }
+    },
+    [canPublishToCloud]
+  );
+
+  // 1. Synchronisation initiale & à chaque changement de compte (Professeur -> auto-publication locale + pull ; Étudiant -> pull Cloud)
+  useEffect(() => {
+    syncWithCloud({ pushLocal: canPublishToCloud });
+  }, [currentUser?.id, canPublishToCloud, syncWithCloud]);
+
+  // 2. Re-synchronisation automatique au retour sur l'onglet (évite tout cache périmé chez les étudiants & admins)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const triggerRefresh = () => {
+      if (document.visibilityState === "hidden") return;
+      if (Date.now() - lastPullTsRef.current < 6000) return;
+      syncWithCloud({ pushLocal: false });
+    };
+
+    window.addEventListener("focus", triggerRefresh);
+    document.addEventListener("visibilitychange", triggerRefresh);
+    return () => {
+      window.removeEventListener("focus", triggerRefresh);
+      document.removeEventListener("visibilitychange", triggerRefresh);
+    };
+  }, [syncWithCloud]);
+
+  // 3. Abonnement Temps Réel Supabase (postgres_changes sur les tables de cours)
+  useEffect(() => {
+    if (!supabase) return;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const schedulePull = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        syncWithCloud({ pushLocal: false });
+      }, 500);
+    };
+
+    const channel = supabase
+      .channel("prepasciences-courses-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "chapters" }, schedulePull)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sessions" }, schedulePull)
+      .on("postgres_changes", { event: "*", schema: "public", table: "exercises" }, schedulePull)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "exercise_corrections" },
+        schedulePull
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "fiches" }, schedulePull)
+      .subscribe();
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      supabase?.removeChannel(channel);
+    };
+  }, [syncWithCloud]);
 
   const createSession = (
     moduleId: string,
@@ -175,13 +326,23 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
     return res;
   };
 
-  const removeVideo = (moduleId: string, chapterId: string, videoId: string, isConcours?: boolean) => {
+  const removeVideo = (
+    moduleId: string,
+    chapterId: string,
+    videoId: string,
+    isConcours?: boolean
+  ) => {
     const res = removeVideoFromChapter(moduleId, chapterId, videoId, isConcours);
     if (res) refreshCourses();
     return res;
   };
 
-  const reorderVideos = (moduleId: string, chapterId: string, newOrder: string[], isConcours?: boolean) => {
+  const reorderVideos = (
+    moduleId: string,
+    chapterId: string,
+    newOrder: string[],
+    isConcours?: boolean
+  ) => {
     const res = reorderChapterVideos(moduleId, chapterId, newOrder, isConcours);
     if (res) refreshCourses();
     return res;
@@ -286,13 +447,22 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
     return res;
   };
 
-  const createModule = (moduleData: { id?: string; titre: string; icon?: string; description?: string }) => {
+  const createModule = (moduleData: {
+    id?: string;
+    titre: string;
+    icon?: string;
+    description?: string;
+    niveau?: "sup" | "spe";
+  }) => {
     const res = addModule(moduleData);
     if (res) refreshCourses();
     return Boolean(res);
   };
 
-  const editModule = (moduleId: string, updates: { titre?: string; icon?: string; description?: string }) => {
+  const editModule = (
+    moduleId: string,
+    updates: { titre?: string; icon?: string; description?: string }
+  ) => {
     const res = updateModule(moduleId, updates);
     if (res) refreshCourses();
     return res;
@@ -306,7 +476,13 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
 
   const createChapter = (
     moduleId: string,
-    chapterData: { id?: string; num?: number; titre: string; description: string; badge?: string }
+    chapterData: {
+      id?: string;
+      num?: number;
+      titre: string;
+      description: string;
+      badge?: string;
+    }
   ): ChapitreItem | null => {
     const res = addChapterToModule(moduleId, chapterData);
     if (res) refreshCourses();
@@ -333,7 +509,9 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
     <CoursesContext.Provider
       value={{
         courses,
+        cloudSync,
         refreshCourses,
+        syncWithCloud,
         createSession,
         updateSession,
         deleteSession,

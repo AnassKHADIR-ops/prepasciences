@@ -14,19 +14,303 @@ import { PC_COURSES_DATA } from "@/components/eddams/pcCoursesData";
 import { getDriveImageUrls, getYoutubeThumbnail } from "./driveUtils";
 import { supabase } from "./supabase";
 
+// IMPORTANT : On conserve strictement la clé v8 pour ne JAMAIS perdre les chapitres/séances
+// déjà saisis localement par Pr. Eddams avant l'activation de la synchronisation Cloud.
 const COURSES_STORAGE_KEY = "prepasciences_courses_db_v8";
+const SYNC_META_CHAPTER_ID = "__prepasciences_sync_meta__";
+const SYNC_META_MODULE_ID = "__meta__";
 
+export type CloudSyncStatus = "idle" | "syncing" | "synced" | "offline" | "error";
+
+export interface CloudSyncSnapshot {
+  status: CloudSyncStatus;
+  lastSyncedAt: string | null;
+  lastError: string | null;
+  pendingWrites: number;
+  lastRecoveredCount: number;
+}
+
+interface CloudModuleMeta {
+  id: string;
+  titre: string;
+  icon: string;
+  description: string;
+  niveau?: "sup" | "spe";
+}
+
+interface CloudChapterMeta {
+  niveau?: "sup" | "spe";
+  videoOrder?: string[];
+  concoursVideoOrder?: string[];
+  hiddenVideoIds?: string[];
+  hiddenConcoursVideoIds?: string[];
+}
+
+interface CloudSessionMeta {
+  supports?: SessionSupportItem[];
+  isConcours?: boolean;
+  badge?: string;
+  thumbnail?: string;
+  orderIndex?: number;
+}
+
+interface CoursesCloudMeta {
+  version: number;
+  updatedAt: string;
+  customModules: Record<string, CloudModuleMeta>;
+  deletedModuleIds: string[];
+  deletedChapterIds: string[];
+  deletedSessionIds: string[];
+  deletedExerciseIds: string[];
+  deletedFicheIds: string[];
+  chapterMeta: Record<string, CloudChapterMeta>;
+  sessionMeta: Record<string, CloudSessionMeta>;
+}
+
+function createEmptyCloudMeta(): CoursesCloudMeta {
+  return {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    customModules: {},
+    deletedModuleIds: [],
+    deletedChapterIds: [],
+    deletedSessionIds: [],
+    deletedExerciseIds: [],
+    deletedFicheIds: [],
+    chapterMeta: {},
+    sessionMeta: {},
+  };
+}
+
+function parseCloudMeta(raw?: string | null): CoursesCloudMeta {
+  const empty = createEmptyCloudMeta();
+  if (!raw) return empty;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return empty;
+    return {
+      version: typeof parsed.version === "number" ? parsed.version : 1,
+      updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : empty.updatedAt,
+      customModules: parsed.customModules && typeof parsed.customModules === "object" ? parsed.customModules : {},
+      deletedModuleIds: Array.isArray(parsed.deletedModuleIds) ? parsed.deletedModuleIds : [],
+      deletedChapterIds: Array.isArray(parsed.deletedChapterIds) ? parsed.deletedChapterIds : [],
+      deletedSessionIds: Array.isArray(parsed.deletedSessionIds) ? parsed.deletedSessionIds : [],
+      deletedExerciseIds: Array.isArray(parsed.deletedExerciseIds) ? parsed.deletedExerciseIds : [],
+      deletedFicheIds: Array.isArray(parsed.deletedFicheIds) ? parsed.deletedFicheIds : [],
+      chapterMeta: parsed.chapterMeta && typeof parsed.chapterMeta === "object" ? parsed.chapterMeta : {},
+      sessionMeta: parsed.sessionMeta && typeof parsed.sessionMeta === "object" ? parsed.sessionMeta : {},
+    };
+  } catch {
+    return empty;
+  }
+}
+
+function cloneStaticCourses(): ModuleCoursBlock[] {
+  return JSON.parse(JSON.stringify(PC_COURSES_DATA)) as ModuleCoursBlock[];
+}
+
+function addUnique(list: string[], id: string): string[] {
+  return list.includes(id) ? list : [...list, id];
+}
+
+function removeItem(list: string[], id: string): string[] {
+  return list.filter((x) => x !== id);
+}
+
+// ── État observable de synchronisation Cloud + File d'écriture séquentielle FIFO ──
+let syncSnapshot: CloudSyncSnapshot = {
+  status: supabase ? "idle" : "offline",
+  lastSyncedAt: null,
+  lastError: supabase ? null : "Variables Supabase non configurées sur cet environnement.",
+  pendingWrites: 0,
+  lastRecoveredCount: 0,
+};
+
+const syncListeners = new Set<(snap: CloudSyncSnapshot) => void>();
+
+function emitSyncState(patch: Partial<CloudSyncSnapshot>): void {
+  syncSnapshot = { ...syncSnapshot, ...patch };
+  syncListeners.forEach((fn) => {
+    try {
+      fn(syncSnapshot);
+    } catch {
+      // Ignore listener errors
+    }
+  });
+}
+
+export function isSupabaseConfigured(): boolean {
+  return Boolean(supabase);
+}
+
+export function getCloudSyncState(): CloudSyncSnapshot {
+  return syncSnapshot;
+}
+
+export function subscribeCloudSyncState(listener: (snap: CloudSyncSnapshot) => void): () => void {
+  syncListeners.add(listener);
+  listener(syncSnapshot);
+  return () => {
+    syncListeners.delete(listener);
+  };
+}
+
+// File d'exécution séquentielle pour éviter toute condition de concurrence entre
+// création de chapitre, ajout de séance, réordonnancement et mise à jour des métadonnées.
+let writeQueue: Promise<void> = Promise.resolve();
+
+function enqueueCloudWrite(label: string, task: () => Promise<void>): Promise<boolean> {
+  if (!supabase) {
+    emitSyncState({
+      status: "offline",
+      lastError: "Connexion Supabase indisponible (modification enregistrée uniquement en local).",
+    });
+    return Promise.resolve(false);
+  }
+
+  emitSyncState({
+    status: "syncing",
+    pendingWrites: syncSnapshot.pendingWrites + 1,
+    lastError: null,
+  });
+
+  let ok = false;
+  const run = async () => {
+    try {
+      await task();
+      ok = true;
+      const remaining = Math.max(0, syncSnapshot.pendingWrites - 1);
+      emitSyncState({
+        status: remaining > 0 ? "syncing" : "synced",
+        pendingWrites: remaining,
+        lastSyncedAt: new Date().toISOString(),
+        lastError: null,
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" && err !== null && "message" in err
+          ? String((err as { message: unknown }).message)
+          : String(err);
+      console.error(`[Supabase Sync Error - ${label}]:`, err);
+      const remaining = Math.max(0, syncSnapshot.pendingWrites - 1);
+      emitSyncState({
+        status: "error",
+        pendingWrites: remaining,
+        lastError: `${label} : ${message}`,
+      });
+    }
+  };
+
+  writeQueue = writeQueue.then(run, run);
+  return writeQueue.then(() => ok);
+}
+
+// ── Helpers Bas Niveau Supabase (Toujours avec UPSERT + Garanties FK) ──
+async function fetchCloudMetaFromSupabase(): Promise<CoursesCloudMeta> {
+  if (!supabase) return createEmptyCloudMeta();
+  const { data, error } = await supabase
+    .from("chapters")
+    .select("description")
+    .eq("id", SYNC_META_CHAPTER_ID)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`Lecture métadonnées Cloud impossible: ${error.message}`);
+  }
+  return parseCloudMeta(data?.description);
+}
+
+async function mutateCloudMeta(mutator: (meta: CoursesCloudMeta) => void): Promise<void> {
+  if (!supabase) return;
+  const meta = await fetchCloudMetaFromSupabase();
+  mutator(meta);
+  meta.updatedAt = new Date().toISOString();
+
+  const { error } = await supabase.from("chapters").upsert(
+    [
+      {
+        id: SYNC_META_CHAPTER_ID,
+        module_id: SYNC_META_MODULE_ID,
+        num: -1,
+        titre: "__sync_meta__",
+        description: JSON.stringify(meta),
+        badge: "system",
+      },
+    ],
+    { onConflict: "id" }
+  );
+  if (error) {
+    throw new Error(`Sauvegarde métadonnées Cloud impossible: ${error.message}`);
+  }
+}
+
+async function ensureChapterInSupabase(moduleId: string, chapter: ChapitreItem): Promise<void> {
+  if (!supabase) return;
+  const { error } = await supabase.from("chapters").upsert(
+    [
+      {
+        id: chapter.id,
+        module_id: moduleId,
+        num: typeof chapter.num === "number" && !Number.isNaN(chapter.num) ? chapter.num : 1,
+        titre: chapter.titre || "Chapitre",
+        description: chapter.description || "",
+        badge: chapter.badge || "Spé MP / PSI / TSI",
+      },
+    ],
+    { onConflict: "id" }
+  );
+  if (error) {
+    throw new Error(`Impossible d'enregistrer le chapitre « ${chapter.titre} » : ${error.message}`);
+  }
+}
+
+function findModuleAndChapter(
+  data: ModuleCoursBlock[],
+  moduleId: string,
+  chapterId: string
+): { moduleItem?: ModuleCoursBlock; chapter?: ChapitreItem } {
+  const exactMod = data.find((m) => m.id === moduleId);
+  const exactChap = exactMod?.chapitres.find((c) => c.id === chapterId);
+  if (exactMod && exactChap) {
+    return { moduleItem: exactMod, chapter: exactChap };
+  }
+  for (const m of data) {
+    const c = m.chapitres.find((ch) => ch.id === chapterId);
+    if (c) return { moduleItem: m, chapter: c };
+  }
+  return { moduleItem: exactMod, chapter: undefined };
+}
+
+function resolveSessionThumbnail(
+  videoUrl?: string | null,
+  supportUrl?: string | null,
+  fallback?: string
+): string | undefined {
+  if (videoUrl && videoUrl.trim() !== "") {
+    const yt = getYoutubeThumbnail(videoUrl);
+    if (yt) return yt;
+  }
+  if (fallback && fallback.trim() !== "") return fallback;
+  if (supportUrl && supportUrl.trim() !== "") {
+    return getDriveImageUrls(supportUrl)[0];
+  }
+  return undefined;
+}
+
+// ── Stockage Local (Cache rapide navigateur) ──
 export function getCoursesDB(): ModuleCoursBlock[] {
   if (typeof window === "undefined") return PC_COURSES_DATA;
   try {
     const raw = localStorage.getItem(COURSES_STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(COURSES_STORAGE_KEY, JSON.stringify(PC_COURSES_DATA));
-      return PC_COURSES_DATA;
+      return cloneStaticCourses();
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : cloneStaticCourses();
   } catch {
-    return PC_COURSES_DATA;
+    return cloneStaticCourses();
   }
 }
 
@@ -35,7 +319,7 @@ export function saveCoursesDB(data: ModuleCoursBlock[]): void {
   try {
     localStorage.setItem(COURSES_STORAGE_KEY, JSON.stringify(data));
   } catch {
-    // Ignore
+    // Ignore quota errors
   }
 }
 
@@ -53,12 +337,10 @@ export function addSessionToChapter(
   }
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
+  const { moduleItem, chapter } = findModuleAndChapter(data, moduleId, chapterId);
+  if (!moduleItem || !chapter) return false;
 
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
-  if (!chapter) return false;
-
+  const actualModuleId = moduleItem.id;
   const cleanSupports: SessionSupportItem[] = (session.supports || [])
     .filter((s) => s.url && s.url.trim() !== "")
     .map((s, idx) => ({
@@ -67,44 +349,71 @@ export function addSessionToChapter(
       url: s.url.trim(),
     }));
 
-  const primarySupport = cleanSupports.length > 0
-    ? cleanSupports[0].url
-    : session.supportUrl?.trim();
+  const primarySupport =
+    cleanSupports.length > 0 ? cleanSupports[0].url : session.supportUrl?.trim() || undefined;
 
   const newSession: CourseSession = {
-    id: "sess-" + Date.now(),
+    id: `sess-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     titre: session.titre.trim(),
-    sous: session.sous?.trim() || (session.isConcours ? "Extrait de Concours CPGE" : "Séance de cours & Replay"),
-    video: session.videoUrl?.trim(),
+    sous:
+      session.sous?.trim() ||
+      (session.isConcours ? "Extrait de Concours CPGE" : "Séance de cours & Replay"),
+    video: session.videoUrl?.trim() || undefined,
     support: primarySupport,
     supports: cleanSupports,
-    thumbnail:
-      (session.videoUrl ? getYoutubeThumbnail(session.videoUrl) || undefined : undefined) ||
-      (primarySupport ? getDriveImageUrls(primarySupport)[0] : undefined),
+    thumbnail: resolveSessionThumbnail(session.videoUrl, primarySupport),
     isConcours: session.isConcours,
   };
 
   chapter.cours = [newSession, ...(chapter.cours || [])];
+  if (chapter.videoOrder && !session.isConcours) {
+    chapter.videoOrder = [newSession.id!, ...chapter.videoOrder];
+  } else if (chapter.concoursVideoOrder && session.isConcours) {
+    chapter.concoursVideoOrder = [newSession.id!, ...chapter.concoursVideoOrder];
+  }
+
   saveCoursesDB(data);
 
-  // Synchronisation Cloud Supabase
-  if (supabase) {
-    supabase
-      .from("sessions")
-      .insert([
+  const chapterSnapshot: ChapitreItem = { ...chapter };
+  const sessionSnapshot: CourseSession = { ...newSession };
+  const currentVideoOrder = chapter.videoOrder ? [...chapter.videoOrder] : undefined;
+  const currentConcoursOrder = chapter.concoursVideoOrder ? [...chapter.concoursVideoOrder] : undefined;
+
+  enqueueCloudWrite(`Ajout séance « ${sessionSnapshot.titre} »`, async () => {
+    if (!supabase) return;
+    await ensureChapterInSupabase(actualModuleId, chapterSnapshot);
+    const { error } = await supabase.from("sessions").upsert(
+      [
         {
-          id: newSession.id,
-          chapter_id: chapterId,
-          titre: newSession.titre,
-          sous: newSession.sous,
-          support_url: newSession.support || null,
-          video_url: newSession.video || null,
+          id: sessionSnapshot.id,
+          chapter_id: chapterSnapshot.id,
+          titre: sessionSnapshot.titre,
+          sous: sessionSnapshot.sous || null,
+          support_url: sessionSnapshot.support || null,
+          video_url: sessionSnapshot.video || null,
         },
-      ])
-      .then(({ error }) => {
-        if (error) console.error("Supabase insert session error:", error);
-      });
-  }
+      ],
+      { onConflict: "id" }
+    );
+    if (error) throw new Error(error.message);
+
+    await mutateCloudMeta((meta) => {
+      meta.deletedChapterIds = removeItem(meta.deletedChapterIds, chapterSnapshot.id);
+      meta.deletedSessionIds = removeItem(meta.deletedSessionIds, sessionSnapshot.id!);
+      meta.sessionMeta[sessionSnapshot.id!] = {
+        supports: sessionSnapshot.supports && sessionSnapshot.supports.length > 0 ? sessionSnapshot.supports : undefined,
+        isConcours: sessionSnapshot.isConcours || undefined,
+        badge: sessionSnapshot.badge || undefined,
+        thumbnail: sessionSnapshot.thumbnail || undefined,
+      };
+      meta.chapterMeta[chapterSnapshot.id] = {
+        ...meta.chapterMeta[chapterSnapshot.id],
+        niveau: chapterSnapshot.niveau || moduleItem.niveau,
+        ...(currentVideoOrder ? { videoOrder: currentVideoOrder } : {}),
+        ...(currentConcoursOrder ? { concoursVideoOrder: currentConcoursOrder } : {}),
+      };
+    });
+  });
 
   return true;
 }
@@ -122,68 +431,73 @@ export function addExerciseToChapter(
   }
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
+  const { moduleItem, chapter } = findModuleAndChapter(data, moduleId, chapterId);
+  if (!moduleItem || !chapter) return false;
 
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
-  if (!chapter) return false;
-
+  const actualModuleId = moduleItem.id;
+  const ts = Date.now();
   const corrigesItems: CorrigeItem[] = (exercise.corriges || [])
     .filter((c) => c.url && c.url.trim() !== "")
     .map((c, idx) => ({
-      id: "corr-" + Date.now() + "-" + idx,
+      id: `corr-${ts}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
       titre: c.titre.trim() || `Corrigé ${idx + 1}`,
       url: c.url.trim(),
       type: c.type || (c.url.includes("youtube.com") || c.url.includes("youtu.be") ? "video" : "pdf"),
     }));
 
   const newExercise: CourseExercise = {
-    id: "td-" + Date.now(),
+    id: `td-${ts}-${Math.random().toString(36).substring(2, 5)}`,
     titre: exercise.titre.trim(),
     sous: exercise.sous?.trim() || "",
-    enonce: exercise.enonceUrl?.trim(),
-    correction: corrigesItems.length > 0 ? corrigesItems[0].url : undefined, // Rétrocompatibilité
+    enonce: exercise.enonceUrl?.trim() || undefined,
+    correction: corrigesItems.length > 0 ? corrigesItems[0].url : undefined,
     corriges: corrigesItems,
-    video: exercise.videoUrl?.trim(),
+    video: exercise.videoUrl?.trim() || undefined,
   };
 
   chapter.tds = [...(chapter.tds || []), newExercise];
   saveCoursesDB(data);
 
-  // Synchronisation Cloud Supabase
-  if (supabase) {
-    supabase
-      .from("exercises")
-      .insert([
+  const chapterSnapshot: ChapitreItem = { ...chapter };
+  const exerciseSnapshot: CourseExercise = { ...newExercise };
+
+  enqueueCloudWrite(`Ajout TD « ${exerciseSnapshot.titre} »`, async () => {
+    if (!supabase) return;
+    await ensureChapterInSupabase(actualModuleId, chapterSnapshot);
+    const { error: exErr } = await supabase.from("exercises").upsert(
+      [
         {
-          id: newExercise.id,
-          chapter_id: chapterId,
-          titre: newExercise.titre,
-          sous: newExercise.sous || null,
-          enonce_url: newExercise.enonce || null,
-          video_url: newExercise.video || null,
+          id: exerciseSnapshot.id,
+          chapter_id: chapterSnapshot.id,
+          titre: exerciseSnapshot.titre,
+          sous: exerciseSnapshot.sous || null,
+          enonce_url: exerciseSnapshot.enonce || null,
+          video_url: exerciseSnapshot.video || null,
         },
-      ])
-      .then(({ error }) => {
-        if (error) console.error("Supabase insert exercise error:", error);
-      });
+      ],
+      { onConflict: "id" }
+    );
+    if (exErr) throw new Error(exErr.message);
 
     if (corrigesItems.length > 0) {
       const corrs = corrigesItems.map((c) => ({
         id: c.id,
-        exercise_id: newExercise.id,
+        exercise_id: exerciseSnapshot.id,
         titre: c.titre,
         url: c.url,
         type: c.type || "pdf",
       }));
-      supabase
+      const { error: cErr } = await supabase
         .from("exercise_corrections")
-        .insert(corrs)
-        .then(({ error }) => {
-          if (error) console.error("Supabase insert corrections error:", error);
-        });
+        .upsert(corrs, { onConflict: "id" });
+      if (cErr) throw new Error(cErr.message);
     }
-  }
+
+    await mutateCloudMeta((meta) => {
+      meta.deletedChapterIds = removeItem(meta.deletedChapterIds, chapterSnapshot.id);
+      meta.deletedExerciseIds = removeItem(meta.deletedExerciseIds, exerciseSnapshot.id!);
+    });
+  });
 
   return true;
 }
@@ -199,14 +513,12 @@ export function addFicheToChapter(
   }
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
+  const { moduleItem, chapter } = findModuleAndChapter(data, moduleId, chapterId);
+  if (!moduleItem || !chapter) return false;
 
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
-  if (!chapter) return false;
-
+  const actualModuleId = moduleItem.id;
   const newFiche: CourseFiche = {
-    id: "fiche-" + Date.now(),
+    id: `fiche-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
     titre: fiche.titre.trim(),
     sous: fiche.sous?.trim() || "Fiche de méthode & formulaire",
     url: fiche.drivePdfUrl.trim(),
@@ -216,23 +528,31 @@ export function addFicheToChapter(
   chapter.fiches = [...(chapter.fiches || []), newFiche];
   saveCoursesDB(data);
 
-  // Synchronisation Cloud Supabase
-  if (supabase) {
-    supabase
-      .from("fiches")
-      .insert([
+  const chapterSnapshot: ChapitreItem = { ...chapter };
+  const ficheSnapshot: CourseFiche = { ...newFiche };
+
+  enqueueCloudWrite(`Ajout fiche « ${ficheSnapshot.titre} »`, async () => {
+    if (!supabase) return;
+    await ensureChapterInSupabase(actualModuleId, chapterSnapshot);
+    const { error } = await supabase.from("fiches").upsert(
+      [
         {
-          id: newFiche.id,
-          chapter_id: chapterId,
-          titre: newFiche.titre,
-          sous: newFiche.sous || null,
-          url: newFiche.url,
+          id: ficheSnapshot.id,
+          chapter_id: chapterSnapshot.id,
+          titre: ficheSnapshot.titre,
+          sous: ficheSnapshot.sous || null,
+          url: ficheSnapshot.url,
         },
-      ])
-      .then(({ error }) => {
-        if (error) console.error("Supabase insert fiche error:", error);
-      });
-  }
+      ],
+      { onConflict: "id" }
+    );
+    if (error) throw new Error(error.message);
+
+    await mutateCloudMeta((meta) => {
+      meta.deletedChapterIds = removeItem(meta.deletedChapterIds, chapterSnapshot.id);
+      meta.deletedFicheIds = removeItem(meta.deletedFicheIds, ficheSnapshot.id!);
+    });
+  });
 
   return true;
 }
@@ -250,20 +570,23 @@ export function addBatchChapter(
 ): boolean {
   const data = getCoursesDB();
   let moduleItem = data.find((m) => m.id === moduleId);
+  let createdNewModule = false;
 
   if (!moduleItem) {
-    // Si le module n'existe pas, on le crée
     moduleItem = {
       id: moduleId,
       titre: moduleId.toUpperCase(),
       icon: "📚",
       description: "Module de physique-chimie CPGE",
+      niveau: moduleId.includes("sup") ? "sup" : "spe",
       chapitres: [],
     };
     data.push(moduleItem);
+    createdNewModule = true;
   }
 
-  const chapterId = `${moduleId}-ch${Date.now()}`;
+  const ts = Date.now();
+  const chapterId = `${moduleId}-ch${ts}`;
   const coursList: CourseSession[] = [];
   const tdsList: CourseExercise[] = [];
   const fichesList: CourseFiche[] = [];
@@ -273,18 +596,18 @@ export function addBatchChapter(
 
     if (doc.type === "session") {
       coursList.push({
-        id: `batch-sess-${Date.now()}-${idx}`,
+        id: `batch-sess-${ts}-${idx}`,
         titre: doc.titre.trim(),
         sous: "Séance théorique & Replay",
-        support: doc.driveSupportUrl?.trim(),
-        video: doc.videoUrl?.trim(),
-        thumbnail: doc.driveSupportUrl ? getDriveImageUrls(doc.driveSupportUrl)[0] : undefined,
+        support: doc.driveSupportUrl?.trim() || undefined,
+        video: doc.videoUrl?.trim() || undefined,
+        thumbnail: resolveSessionThumbnail(doc.videoUrl, doc.driveSupportUrl),
       });
     } else if (doc.type === "td") {
       const corriges: CorrigeItem[] = [];
       if (doc.driveCorrigeUrl1 && doc.driveCorrigeUrl1.trim()) {
         corriges.push({
-          id: `corr-1-${Date.now()}-${idx}`,
+          id: `corr-1-${ts}-${idx}`,
           titre: doc.corrige1Title?.trim() || "Corrigé officiel rédigé",
           url: doc.driveCorrigeUrl1.trim(),
           type: "pdf",
@@ -292,7 +615,7 @@ export function addBatchChapter(
       }
       if (doc.driveCorrigeUrl2 && doc.driveCorrigeUrl2.trim()) {
         corriges.push({
-          id: `corr-2-${Date.now()}-${idx}`,
+          id: `corr-2-${ts}-${idx}`,
           titre: doc.corrige2Title?.trim() || "Corrigé méthode 2 / Alternative",
           url: doc.driveCorrigeUrl2.trim(),
           type: "pdf",
@@ -300,18 +623,18 @@ export function addBatchChapter(
       }
 
       tdsList.push({
-        id: `batch-td-${Date.now()}-${idx}`,
+        id: `batch-td-${ts}-${idx}`,
         titre: doc.titre.trim(),
         sous: "Exercices d'application concours",
-        enonce: doc.driveSupportUrl?.trim(),
+        enonce: doc.driveSupportUrl?.trim() || undefined,
         correction: corriges.length > 0 ? corriges[0].url : undefined,
         corriges,
-        video: doc.videoUrl?.trim(),
+        video: doc.videoUrl?.trim() || undefined,
       });
     } else if (doc.type === "fiche") {
       if (doc.driveSupportUrl && doc.driveSupportUrl.trim()) {
         fichesList.push({
-          id: `batch-fiche-${Date.now()}-${idx}`,
+          id: `batch-fiche-${ts}-${idx}`,
           titre: doc.titre.trim(),
           sous: "Fiche formulaire & réflexes",
           url: doc.driveSupportUrl.trim(),
@@ -323,10 +646,12 @@ export function addBatchChapter(
 
   const newChapter: ChapitreItem = {
     id: chapterId,
+    moduleId,
     num: chapterData.num || moduleItem.chapitres.length + 1,
     titre: chapterData.titre.trim(),
     description: chapterData.description.trim(),
     badge: chapterData.badge?.trim() || "Nouveau Chapitre MP*",
+    niveau: moduleItem.niveau,
     moduleName: moduleItem.titre,
     cours: coursList,
     tds: tdsList,
@@ -336,26 +661,13 @@ export function addBatchChapter(
   moduleItem.chapitres.push(newChapter);
   saveCoursesDB(data);
 
-  // Synchronisation Cloud Supabase pour le chapitre et ses ressources
-  if (supabase) {
-    // 1. Insertion Chapitre
-    supabase
-      .from("chapters")
-      .insert([
-        {
-          id: chapterId,
-          module_id: moduleId,
-          num: newChapter.num,
-          titre: newChapter.titre,
-          description: newChapter.description,
-          badge: newChapter.badge,
-        },
-      ])
-      .then(({ error }) => {
-        if (error) console.error("Supabase insert chapter error:", error);
-      });
+  const moduleSnapshot = { ...moduleItem };
 
-    // 2. Insertion Séances de cours
+  // Synchronisation séquentielle garantie : Chapitre d'abord (await), puis enfants !
+  enqueueCloudWrite(`Création groupée « ${newChapter.titre} »`, async () => {
+    if (!supabase) return;
+    await ensureChapterInSupabase(moduleId, newChapter);
+
     if (coursList.length > 0) {
       const sRows = coursList.map((s) => ({
         id: s.id,
@@ -365,15 +677,10 @@ export function addBatchChapter(
         support_url: s.support || null,
         video_url: s.video || null,
       }));
-      supabase
-        .from("sessions")
-        .insert(sRows)
-        .then(({ error }) => {
-          if (error) console.error("Supabase batch insert sessions error:", error);
-        });
+      const { error } = await supabase.from("sessions").upsert(sRows, { onConflict: "id" });
+      if (error) throw new Error(error.message);
     }
 
-    // 3. Insertion TDs et Corrigés multiples
     if (tdsList.length > 0) {
       const exRows = tdsList.map((td) => ({
         id: td.id,
@@ -383,84 +690,84 @@ export function addBatchChapter(
         enonce_url: td.enonce || null,
         video_url: td.video || null,
       }));
-      supabase
-        .from("exercises")
-        .insert(exRows)
-        .then(({ error }) => {
-          if (error) console.error("Supabase batch insert exercises error:", error);
-        });
+      const { error: exErr } = await supabase.from("exercises").upsert(exRows, { onConflict: "id" });
+      if (exErr) throw new Error(exErr.message);
 
       const allCorrs: { id: string; exercise_id: string; titre: string; url: string; type: string }[] = [];
       tdsList.forEach((td) => {
-        if (td.corriges && td.corriges.length > 0) {
-          td.corriges.forEach((c) => {
-            allCorrs.push({
-              id: c.id,
-              exercise_id: td.id!,
-              titre: c.titre,
-              url: c.url,
-              type: c.type || "pdf",
-            });
+        (td.corriges || []).forEach((c) => {
+          allCorrs.push({
+            id: c.id,
+            exercise_id: td.id!,
+            titre: c.titre,
+            url: c.url,
+            type: c.type || "pdf",
           });
-        }
+        });
       });
 
       if (allCorrs.length > 0) {
-        supabase
+        const { error: cErr } = await supabase
           .from("exercise_corrections")
-          .insert(allCorrs)
-          .then(({ error }) => {
-            if (error) console.error("Supabase batch insert corrections error:", error);
-          });
+          .upsert(allCorrs, { onConflict: "id" });
+        if (cErr) throw new Error(cErr.message);
       }
     }
 
-    // 4. Insertion Fiches
     if (fichesList.length > 0) {
       const fRows = fichesList.map((f) => ({
-        id: "fiche-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7),
+        id: f.id!,
         chapter_id: chapterId,
         titre: f.titre,
         sous: f.sous || null,
         url: f.url,
       }));
-      supabase
-        .from("fiches")
-        .insert(fRows)
-        .then(({ error }) => {
-          if (error) console.error("Supabase batch insert fiches error:", error);
-        });
+      const { error: fErr } = await supabase.from("fiches").upsert(fRows, { onConflict: "id" });
+      if (fErr) throw new Error(fErr.message);
     }
-  }
+
+    await mutateCloudMeta((meta) => {
+      if (createdNewModule) {
+        meta.customModules[moduleSnapshot.id] = {
+          id: moduleSnapshot.id,
+          titre: moduleSnapshot.titre,
+          icon: moduleSnapshot.icon,
+          description: moduleSnapshot.description,
+          niveau: moduleSnapshot.niveau,
+        };
+      }
+      meta.chapterMeta[chapterId] = {
+        ...meta.chapterMeta[chapterId],
+        niveau: newChapter.niveau,
+        videoOrder: coursList.map((s) => s.id!).filter(Boolean),
+      };
+    });
+  });
 
   return true;
 }
 
-// ── 5. Suppression d'un élément ──
+// ── 5. Suppression d'un TD ──
 export function deleteExerciseFromChapter(
   moduleId: string,
   chapterId: string,
   exerciseId: string
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  const { chapter } = findModuleAndChapter(data, moduleId, chapterId);
   if (!chapter || !chapter.tds) return false;
 
   chapter.tds = chapter.tds.filter((td) => td.id !== exerciseId);
   saveCoursesDB(data);
 
-  // Synchronisation Cloud Supabase
-  if (supabase) {
-    supabase
-      .from("exercises")
-      .delete()
-      .eq("id", exerciseId)
-      .then(({ error }) => {
-        if (error) console.error("Supabase delete exercise error:", error);
-      });
-  }
+  enqueueCloudWrite("Suppression TD", async () => {
+    if (!supabase) return;
+    const { error } = await supabase.from("exercises").delete().eq("id", exerciseId);
+    if (error) throw new Error(error.message);
+    await mutateCloudMeta((meta) => {
+      meta.deletedExerciseIds = addUnique(meta.deletedExerciseIds, exerciseId);
+    });
+  });
 
   return true;
 }
@@ -472,17 +779,13 @@ export function deleteSessionFromChapter(
   sessionId: string
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  const { chapter } = findModuleAndChapter(data, moduleId, chapterId);
   if (!chapter) return false;
 
-  // 1. Suppression dans chapter.cours si c'est une séance personnalisée
   if (chapter.cours) {
     chapter.cours = chapter.cours.filter((s) => s.id !== sessionId);
   }
 
-  // 2. Enregistrement dans les vidéos masquées/retirées (notamment pour les vidéos du catalogue Prépasciences)
   if (!chapter.hiddenVideoIds) chapter.hiddenVideoIds = [];
   if (!chapter.hiddenVideoIds.includes(sessionId)) {
     chapter.hiddenVideoIds.push(sessionId);
@@ -493,15 +796,23 @@ export function deleteSessionFromChapter(
 
   saveCoursesDB(data);
 
-  if (supabase) {
-    supabase
-      .from("sessions")
-      .delete()
-      .eq("id", sessionId)
-      .then(({ error }) => {
-        if (error) console.error("Supabase delete session error:", error);
-      });
-  }
+  const hiddenSnap = [...chapter.hiddenVideoIds];
+  const orderSnap = chapter.videoOrder ? [...chapter.videoOrder] : undefined;
+
+  enqueueCloudWrite("Suppression séance", async () => {
+    if (!supabase) return;
+    const { error } = await supabase.from("sessions").delete().eq("id", sessionId);
+    if (error) throw new Error(error.message);
+    await mutateCloudMeta((meta) => {
+      meta.deletedSessionIds = addUnique(meta.deletedSessionIds, sessionId);
+      delete meta.sessionMeta[sessionId];
+      meta.chapterMeta[chapter.id] = {
+        ...meta.chapterMeta[chapter.id],
+        hiddenVideoIds: hiddenSnap,
+        ...(orderSnap ? { videoOrder: orderSnap } : {}),
+      };
+    });
+  });
 
   return true;
 }
@@ -514,9 +825,7 @@ export function removeVideoFromChapter(
   isConcours: boolean = false
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  const { chapter } = findModuleAndChapter(data, moduleId, chapterId);
   if (!chapter) return false;
 
   if (isConcours) {
@@ -538,19 +847,47 @@ export function removeVideoFromChapter(
     if (chapter.videoOrder) {
       chapter.videoOrder = chapter.videoOrder.filter((id) => id !== videoId);
     }
-
-    if (supabase) {
-      supabase
-        .from("sessions")
-        .delete()
-        .eq("id", videoId)
-        .then(({ error }) => {
-          if (error) console.error("Supabase delete session error:", error);
-        });
-    }
   }
 
   saveCoursesDB(data);
+
+  const hiddenSnap = isConcours
+    ? [...(chapter.hiddenConcoursVideoIds || [])]
+    : [...(chapter.hiddenVideoIds || [])];
+  const orderSnap = isConcours
+    ? chapter.concoursVideoOrder
+      ? [...chapter.concoursVideoOrder]
+      : undefined
+    : chapter.videoOrder
+    ? [...chapter.videoOrder]
+    : undefined;
+
+  enqueueCloudWrite("Retrait vidéo", async () => {
+    if (!supabase) return;
+    if (!isConcours) {
+      const { error } = await supabase.from("sessions").delete().eq("id", videoId);
+      if (error) throw new Error(error.message);
+    }
+    await mutateCloudMeta((meta) => {
+      if (!isConcours) {
+        meta.deletedSessionIds = addUnique(meta.deletedSessionIds, videoId);
+        delete meta.sessionMeta[videoId];
+      }
+      meta.chapterMeta[chapter.id] = {
+        ...meta.chapterMeta[chapter.id],
+        ...(isConcours
+          ? {
+              hiddenConcoursVideoIds: hiddenSnap,
+              ...(orderSnap ? { concoursVideoOrder: orderSnap } : {}),
+            }
+          : {
+              hiddenVideoIds: hiddenSnap,
+              ...(orderSnap ? { videoOrder: orderSnap } : {}),
+            }),
+      };
+    });
+  });
+
   return true;
 }
 
@@ -562,15 +899,13 @@ export function reorderChapterVideos(
   isConcours: boolean = false
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  const { chapter } = findModuleAndChapter(data, moduleId, chapterId);
   if (!chapter) return false;
 
   if (isConcours) {
-    chapter.concoursVideoOrder = newOrder;
+    chapter.concoursVideoOrder = [...newOrder];
   } else {
-    chapter.videoOrder = newOrder;
+    chapter.videoOrder = [...newOrder];
     if (chapter.cours && chapter.cours.length > 0) {
       const coursMap = new Map(chapter.cours.map((s) => [s.id || "", s]));
       const sortedCours: CourseSession[] = [];
@@ -588,6 +923,17 @@ export function reorderChapterVideos(
   }
 
   saveCoursesDB(data);
+
+  const orderSnapshot = [...newOrder];
+  enqueueCloudWrite("Réordonnancement vidéos", async () => {
+    await mutateCloudMeta((meta) => {
+      meta.chapterMeta[chapter.id] = {
+        ...meta.chapterMeta[chapter.id],
+        ...(isConcours ? { concoursVideoOrder: orderSnapshot } : { videoOrder: orderSnapshot }),
+      };
+    });
+  });
+
   return true;
 }
 
@@ -598,9 +944,7 @@ export function restoreChapterVideos(
   isConcours: boolean = false
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  const { chapter } = findModuleAndChapter(data, moduleId, chapterId);
   if (!chapter) return false;
 
   if (isConcours) {
@@ -612,6 +956,16 @@ export function restoreChapterVideos(
   }
 
   saveCoursesDB(data);
+
+  enqueueCloudWrite("Restauration vidéos", async () => {
+    await mutateCloudMeta((meta) => {
+      const prev = meta.chapterMeta[chapter.id] || {};
+      meta.chapterMeta[chapter.id] = isConcours
+        ? { ...prev, hiddenConcoursVideoIds: [], concoursVideoOrder: undefined }
+        : { ...prev, hiddenVideoIds: [], videoOrder: undefined };
+    });
+  });
+
   return true;
 }
 
@@ -637,38 +991,15 @@ export function transferVideoBetweenChapters(
   sourceIsConcours: boolean = false
 ): boolean {
   const data = getCoursesDB();
+  const { chapter: sourceChap } = findModuleAndChapter(data, sourceModuleId, sourceChapterId);
+  const { moduleItem: targetMod, chapter: targetChap } = findModuleAndChapter(
+    data,
+    targetModuleId,
+    targetChapterId
+  );
 
-  // 1. Recherche du module et chapitre source
-  let sourceMod = data.find((m) => m.id === sourceModuleId);
-  let sourceChap = sourceMod?.chapitres.find((c) => c.id === sourceChapterId);
-  if (!sourceChap) {
-    for (const m of data) {
-      const c = m.chapitres.find((ch) => ch.id === sourceChapterId);
-      if (c) {
-        sourceMod = m;
-        sourceChap = c;
-        break;
-      }
-    }
-  }
+  if (!targetMod || !targetChap) return false;
 
-  // 2. Recherche du module et chapitre cible
-  let targetMod = data.find((m) => m.id === targetModuleId);
-  let targetChap = targetMod?.chapitres.find((c) => c.id === targetChapterId);
-  if (!targetChap) {
-    for (const m of data) {
-      const c = m.chapitres.find((ch) => ch.id === targetChapterId);
-      if (c) {
-        targetMod = m;
-        targetChap = c;
-        break;
-      }
-    }
-  }
-
-  if (!targetChap) return false;
-
-  // 3. Retrait de la vidéo dans le chapitre source
   if (sourceChap) {
     if (sourceIsConcours) {
       if (!sourceChap.hiddenConcoursVideoIds) sourceChap.hiddenConcoursVideoIds = [];
@@ -676,7 +1007,9 @@ export function transferVideoBetweenChapters(
         sourceChap.hiddenConcoursVideoIds.push(videoData.id);
       }
       if (sourceChap.concoursVideoOrder) {
-        sourceChap.concoursVideoOrder = sourceChap.concoursVideoOrder.filter((id) => id !== videoData.id);
+        sourceChap.concoursVideoOrder = sourceChap.concoursVideoOrder.filter(
+          (id) => id !== videoData.id
+        );
       }
     } else {
       if (!sourceChap.hiddenVideoIds) sourceChap.hiddenVideoIds = [];
@@ -693,29 +1026,32 @@ export function transferVideoBetweenChapters(
     }
   }
 
-  // 4. Préparation de la nouvelle séance dans targetChap
   const newSessionId = `transferred-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
   const newSession: CourseSession = {
     id: newSessionId,
     titre: videoData.titre.trim(),
-    sous: videoData.sous?.trim() || (targetIsConcours ? "Extrait de Concours CPGE" : "Séance de cours transférée"),
+    sous:
+      videoData.sous?.trim() ||
+      (targetIsConcours ? "Extrait de Concours CPGE" : "Séance de cours transférée"),
     video: videoData.video.trim(),
-    support: videoData.support?.trim(),
+    support: videoData.support?.trim() || undefined,
     supports: videoData.supports,
-    thumbnail: videoData.thumbnail || (videoData.video ? getYoutubeThumbnail(videoData.video) || undefined : undefined),
+    thumbnail: resolveSessionThumbnail(videoData.video, videoData.support, videoData.thumbnail),
     isConcours: targetIsConcours,
     badge: videoData.badge || (targetIsConcours ? "Concours CPGE" : "Séance transférée"),
   };
 
-  // 5. Ajout dans targetChap
   if (!targetChap.cours) targetChap.cours = [];
 
-  // Supprimer des listes masquées du chapitre cible au cas où la vidéo était masquée auparavant
   if (targetChap.hiddenVideoIds) {
-    targetChap.hiddenVideoIds = targetChap.hiddenVideoIds.filter((id) => id !== videoData.id && id !== newSessionId);
+    targetChap.hiddenVideoIds = targetChap.hiddenVideoIds.filter(
+      (id) => id !== videoData.id && id !== newSessionId
+    );
   }
   if (targetChap.hiddenConcoursVideoIds) {
-    targetChap.hiddenConcoursVideoIds = targetChap.hiddenConcoursVideoIds.filter((id) => id !== videoData.id && id !== newSessionId);
+    targetChap.hiddenConcoursVideoIds = targetChap.hiddenConcoursVideoIds.filter(
+      (id) => id !== videoData.id && id !== newSessionId
+    );
   }
 
   if (insertAt === "start" || insertAt === 0) {
@@ -726,7 +1062,6 @@ export function transferVideoBetweenChapters(
     targetChap.cours.push(newSession);
   }
 
-  // Mettre à jour l'ordre personnalisé si présent
   if (targetIsConcours) {
     if (targetChap.concoursVideoOrder) {
       if (insertAt === "start" || insertAt === 0) {
@@ -737,41 +1072,73 @@ export function transferVideoBetweenChapters(
         targetChap.concoursVideoOrder.push(newSessionId);
       }
     }
-  } else {
-    if (targetChap.videoOrder) {
-      if (insertAt === "start" || insertAt === 0) {
-        targetChap.videoOrder.unshift(newSessionId);
-      } else if (typeof insertAt === "number") {
-        targetChap.videoOrder.splice(insertAt, 0, newSessionId);
-      } else {
-        targetChap.videoOrder.push(newSessionId);
-      }
+  } else if (targetChap.videoOrder) {
+    if (insertAt === "start" || insertAt === 0) {
+      targetChap.videoOrder.unshift(newSessionId);
+    } else if (typeof insertAt === "number") {
+      targetChap.videoOrder.splice(insertAt, 0, newSessionId);
+    } else {
+      targetChap.videoOrder.push(newSessionId);
     }
   }
 
   saveCoursesDB(data);
 
-  // Synchronisation Cloud Supabase
-  if (supabase) {
+  const targetChapterSnap = { ...targetChap };
+  const sourceChapterSnap = sourceChap ? { ...sourceChap } : null;
+
+  enqueueCloudWrite(`Transfert vidéo « ${newSession.titre} »`, async () => {
+    if (!supabase) return;
+    await ensureChapterInSupabase(targetMod.id, targetChapterSnap);
+
     if (videoData.isCustom) {
-      supabase.from("sessions").delete().eq("id", videoData.id).then();
+      await supabase.from("sessions").delete().eq("id", videoData.id);
     }
-    supabase
-      .from("sessions")
-      .insert([
+
+    const { error } = await supabase.from("sessions").upsert(
+      [
         {
           id: newSession.id,
-          chapter_id: targetChapterId,
+          chapter_id: targetChapterSnap.id,
           titre: newSession.titre,
-          sous: newSession.sous,
+          sous: newSession.sous || null,
           support_url: newSession.support || null,
           video_url: newSession.video || null,
         },
-      ])
-      .then(({ error }) => {
-        if (error) console.error("Supabase insert transferred session error:", error);
-      });
-  }
+      ],
+      { onConflict: "id" }
+    );
+    if (error) throw new Error(error.message);
+
+    await mutateCloudMeta((meta) => {
+      if (videoData.isCustom) {
+        meta.deletedSessionIds = addUnique(meta.deletedSessionIds, videoData.id);
+        delete meta.sessionMeta[videoData.id];
+      }
+      meta.sessionMeta[newSessionId] = {
+        supports: newSession.supports,
+        isConcours: newSession.isConcours,
+        badge: newSession.badge,
+        thumbnail: newSession.thumbnail,
+      };
+      if (sourceChapterSnap) {
+        meta.chapterMeta[sourceChapterSnap.id] = {
+          ...meta.chapterMeta[sourceChapterSnap.id],
+          hiddenVideoIds: sourceChapterSnap.hiddenVideoIds,
+          hiddenConcoursVideoIds: sourceChapterSnap.hiddenConcoursVideoIds,
+          videoOrder: sourceChapterSnap.videoOrder,
+          concoursVideoOrder: sourceChapterSnap.concoursVideoOrder,
+        };
+      }
+      meta.chapterMeta[targetChapterSnap.id] = {
+        ...meta.chapterMeta[targetChapterSnap.id],
+        hiddenVideoIds: targetChapterSnap.hiddenVideoIds,
+        hiddenConcoursVideoIds: targetChapterSnap.hiddenConcoursVideoIds,
+        videoOrder: targetChapterSnap.videoOrder,
+        concoursVideoOrder: targetChapterSnap.concoursVideoOrder,
+      };
+    });
+  });
 
   return true;
 }
@@ -791,21 +1158,11 @@ export function updateSessionInChapter(
   }
 ): boolean {
   const data = getCoursesDB();
-  let moduleItem = data.find((m) => m.id === moduleId);
-  let chapter = moduleItem?.chapitres.find((c) => c.id === chapterId);
-  if (!chapter) {
-    for (const m of data) {
-      const c = m.chapitres.find((ch) => ch.id === chapterId);
-      if (c) {
-        moduleItem = m;
-        chapter = c;
-        break;
-      }
-    }
-  }
-  if (!chapter) return false;
+  const { moduleItem, chapter } = findModuleAndChapter(data, moduleId, chapterId);
+  if (!moduleItem || !chapter) return false;
   if (!chapter.cours) chapter.cours = [];
 
+  const actualModuleId = moduleItem.id;
   const cleanSupports: SessionSupportItem[] = (updates.supports || [])
     .filter((s) => s.url && s.url.trim() !== "")
     .map((s, idx) => ({
@@ -814,21 +1171,17 @@ export function updateSessionInChapter(
       url: s.url.trim(),
     }));
 
-  const primarySupport = cleanSupports.length > 0
-    ? cleanSupports[0].url
-    : updates.supportUrl?.trim() || undefined;
+  const primarySupport =
+    cleanSupports.length > 0 ? cleanSupports[0].url : updates.supportUrl?.trim() || undefined;
 
   const session = chapter.cours.find((s) => s.id === sessionId);
 
   if (session) {
-    // 1. Séance personnalisée déjà présente dans chapter.cours
     if (updates.titre !== undefined) session.titre = updates.titre.trim();
     if (updates.sous !== undefined) session.sous = updates.sous.trim();
     if (updates.videoUrl !== undefined) {
       session.video = updates.videoUrl.trim() || undefined;
-      if (session.video) {
-        session.thumbnail = getYoutubeThumbnail(session.video) || session.thumbnail;
-      }
+      session.thumbnail = resolveSessionThumbnail(session.video, session.support, session.thumbnail);
     }
     if (primarySupport !== undefined) {
       session.support = primarySupport;
@@ -842,23 +1195,38 @@ export function updateSessionInChapter(
 
     saveCoursesDB(data);
 
-    if (supabase) {
-      supabase
-        .from("sessions")
-        .update({
-          titre: session.titre,
-          sous: session.sous,
-          video_url: session.video || null,
-          support_url: session.support || null,
-        })
-        .eq("id", sessionId)
-        .then(({ error }) => {
-          if (error) console.error("Supabase update session error:", error);
-        });
-    }
+    const chapterSnap = { ...chapter };
+    const sessionSnap = { ...session };
+
+    // UPSERT (et non update) pour garantir la synchronisation même si la séance était statique ou locale !
+    enqueueCloudWrite(`Modification séance « ${sessionSnap.titre} »`, async () => {
+      if (!supabase) return;
+      await ensureChapterInSupabase(actualModuleId, chapterSnap);
+      const { error } = await supabase.from("sessions").upsert(
+        [
+          {
+            id: sessionId,
+            chapter_id: chapterSnap.id,
+            titre: sessionSnap.titre,
+            sous: sessionSnap.sous || null,
+            video_url: sessionSnap.video || null,
+            support_url: sessionSnap.support || null,
+          },
+        ],
+        { onConflict: "id" }
+      );
+      if (error) throw new Error(error.message);
+
+      await mutateCloudMeta((meta) => {
+        meta.sessionMeta[sessionId] = {
+          supports: sessionSnap.supports && sessionSnap.supports.length > 0 ? sessionSnap.supports : undefined,
+          isConcours: sessionSnap.isConcours || undefined,
+          badge: sessionSnap.badge || undefined,
+          thumbnail: sessionSnap.thumbnail || undefined,
+        };
+      });
+    });
   } else {
-    // 2. Vidéo issue du catalogue Prépasciences personnalisée pour la 1ère fois :
-    // a. Masquer l'ID du catalogue pour ce chapitre pour éviter tout doublon
     const isConcours = Boolean(updates.isConcours);
     if (isConcours) {
       if (!chapter.hiddenConcoursVideoIds) chapter.hiddenConcoursVideoIds = [];
@@ -872,12 +1240,9 @@ export function updateSessionInChapter(
       }
     }
 
-    // b. Créer une nouvelle séance personnalisée dans chapter.cours avec les données éditées
-    const newSessionId = `custom-vid-${Date.now()}`;
+    const newSessionId = `custom-vid-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
     const videoVal = updates.videoUrl?.trim() || undefined;
-    const thumbnailVal = videoVal
-      ? getYoutubeThumbnail(videoVal) || undefined
-      : (primarySupport ? getDriveImageUrls(primarySupport)[0] : undefined);
+    const thumbnailVal = resolveSessionThumbnail(videoVal, primarySupport);
 
     const newSession: CourseSession = {
       id: newSessionId,
@@ -892,38 +1257,60 @@ export function updateSessionInChapter(
 
     chapter.cours = [newSession, ...chapter.cours];
 
-    // c. Remplacer l'ancien ID par le nouveau dans l'ordre personnalisé
     if (isConcours && chapter.concoursVideoOrder) {
-      chapter.concoursVideoOrder = chapter.concoursVideoOrder.map((id) => (id === sessionId ? newSessionId : id));
+      chapter.concoursVideoOrder = chapter.concoursVideoOrder.map((id) =>
+        id === sessionId ? newSessionId : id
+      );
     } else if (chapter.videoOrder) {
-      chapter.videoOrder = chapter.videoOrder.map((id) => (id === sessionId ? newSessionId : id));
+      chapter.videoOrder = chapter.videoOrder.map((id) =>
+        id === sessionId ? newSessionId : id
+      );
     }
 
     saveCoursesDB(data);
 
-    if (supabase) {
-      supabase
-        .from("sessions")
-        .insert([
+    const chapterSnap = { ...chapter };
+    const newSessionSnap = { ...newSession };
+
+    enqueueCloudWrite(`Personnalisation vidéo « ${newSessionSnap.titre} »`, async () => {
+      if (!supabase) return;
+      await ensureChapterInSupabase(actualModuleId, chapterSnap);
+      const { error } = await supabase.from("sessions").upsert(
+        [
           {
-            id: newSession.id,
-            chapter_id: chapterId,
-            titre: newSession.titre,
-            sous: newSession.sous,
-            video_url: newSession.video || null,
-            support_url: newSession.support || null,
+            id: newSessionSnap.id,
+            chapter_id: chapterSnap.id,
+            titre: newSessionSnap.titre,
+            sous: newSessionSnap.sous || null,
+            video_url: newSessionSnap.video || null,
+            support_url: newSessionSnap.support || null,
           },
-        ])
-        .then(({ error }) => {
-          if (error) console.error("Supabase insert modified session error:", error);
-        });
-    }
+        ],
+        { onConflict: "id" }
+      );
+      if (error) throw new Error(error.message);
+
+      await mutateCloudMeta((meta) => {
+        meta.sessionMeta[newSessionId] = {
+          supports: newSessionSnap.supports && newSessionSnap.supports.length > 0 ? newSessionSnap.supports : undefined,
+          isConcours: newSessionSnap.isConcours || undefined,
+          thumbnail: newSessionSnap.thumbnail || undefined,
+        };
+        meta.chapterMeta[chapterSnap.id] = {
+          ...meta.chapterMeta[chapterSnap.id],
+          hiddenVideoIds: chapterSnap.hiddenVideoIds,
+          hiddenConcoursVideoIds: chapterSnap.hiddenConcoursVideoIds,
+          videoOrder: chapterSnap.videoOrder,
+          concoursVideoOrder: chapterSnap.concoursVideoOrder,
+        };
+      });
+    });
   }
 
   return true;
 }
 
-// ── 6c. Modification d'une fiche de synthèse (titre, sous-titre, lien Drive PDF) ──
+// ── 6c. Modification d'une fiche de synthèse ──
 export function updateFicheInChapter(
   moduleId: string,
   chapterId: string,
@@ -935,14 +1322,15 @@ export function updateFicheInChapter(
   }
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
-  if (!chapter || !chapter.fiches) return false;
+  const { moduleItem, chapter } = findModuleAndChapter(data, moduleId, chapterId);
+  if (!moduleItem || !chapter || !chapter.fiches) return false;
 
   const fiche = chapter.fiches.find((f) => f.id === ficheId || f.titre === ficheId);
   if (!fiche) return false;
 
+  if (!fiche.id) {
+    fiche.id = `fiche-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+  }
   if (updates.titre !== undefined) fiche.titre = updates.titre.trim();
   if (updates.sous !== undefined) fiche.sous = updates.sous.trim();
   if (updates.url !== undefined) {
@@ -952,19 +1340,26 @@ export function updateFicheInChapter(
 
   saveCoursesDB(data);
 
-  if (supabase) {
-    supabase
-      .from("fiches")
-      .update({
-        titre: fiche.titre,
-        sous: fiche.sous,
-        url: fiche.url,
-      })
-      .eq("id", fiche.id)
-      .then(({ error }) => {
-        if (error) console.error("Supabase update fiche error:", error);
-      });
-  }
+  const chapterSnap = { ...chapter };
+  const ficheSnap = { ...fiche };
+
+  enqueueCloudWrite(`Modification fiche « ${ficheSnap.titre} »`, async () => {
+    if (!supabase) return;
+    await ensureChapterInSupabase(moduleItem.id, chapterSnap);
+    const { error } = await supabase.from("fiches").upsert(
+      [
+        {
+          id: ficheSnap.id!,
+          chapter_id: chapterSnap.id,
+          titre: ficheSnap.titre,
+          sous: ficheSnap.sous || null,
+          url: ficheSnap.url,
+        },
+      ],
+      { onConflict: "id" }
+    );
+    if (error) throw new Error(error.message);
+  });
 
   return true;
 }
@@ -976,25 +1371,34 @@ export function deleteFicheFromChapter(
   ficheTitleOrId: string
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
+  const { chapter } = findModuleAndChapter(data, moduleId, chapterId);
   if (!chapter || !chapter.fiches) return false;
 
+  const matched = chapter.fiches.find(
+    (f) => f.id === ficheTitleOrId || f.titre === ficheTitleOrId
+  );
   chapter.fiches = chapter.fiches.filter(
     (f) => f.id !== ficheTitleOrId && f.titre !== ficheTitleOrId
   );
   saveCoursesDB(data);
 
-  if (supabase) {
-    supabase
-      .from("fiches")
-      .delete()
-      .or(`id.eq.${ficheTitleOrId},titre.eq.${ficheTitleOrId}`)
-      .then(({ error }) => {
-        if (error) console.error("Supabase delete fiche error:", error);
-      });
-  }
+  const targetId = matched?.id || ficheTitleOrId;
+  enqueueCloudWrite("Suppression fiche", async () => {
+    if (!supabase) return;
+    if (matched?.id) {
+      const { error } = await supabase.from("fiches").delete().eq("id", matched.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase.from("fiches").delete().eq("titre", ficheTitleOrId);
+      if (error) throw new Error(error.message);
+    }
+    await mutateCloudMeta((meta) => {
+      meta.deletedFicheIds = addUnique(meta.deletedFicheIds, targetId);
+      if (matched?.titre) {
+        meta.deletedFicheIds = addUnique(meta.deletedFicheIds, matched.titre);
+      }
+    });
+  });
 
   return true;
 }
@@ -1005,18 +1409,34 @@ export function addModule(moduleData: {
   titre: string;
   icon?: string;
   description?: string;
+  niveau?: "sup" | "spe";
 }): ModuleCoursBlock {
   const data = getCoursesDB();
-  const safeId = moduleData.id?.trim() || "mod-" + Date.now();
+  const safeId = moduleData.id?.trim() || `mod-${Date.now()}`;
   const newMod: ModuleCoursBlock = {
     id: safeId,
     titre: moduleData.titre.trim(),
     icon: moduleData.icon?.trim() || "📚",
     description: moduleData.description?.trim() || "Module de cours CPGE",
+    niveau: moduleData.niveau || "spe",
     chapitres: [],
   };
   data.push(newMod);
   saveCoursesDB(data);
+
+  enqueueCloudWrite(`Création module « ${newMod.titre} »`, async () => {
+    await mutateCloudMeta((meta) => {
+      meta.deletedModuleIds = removeItem(meta.deletedModuleIds, newMod.id);
+      meta.customModules[newMod.id] = {
+        id: newMod.id,
+        titre: newMod.titre,
+        icon: newMod.icon,
+        description: newMod.description,
+        niveau: newMod.niveau,
+      };
+    });
+  });
+
   return newMod;
 }
 
@@ -1033,6 +1453,20 @@ export function updateModule(
   if (updates.description !== undefined) data[index].description = updates.description.trim();
 
   saveCoursesDB(data);
+
+  const modSnap = { ...data[index] };
+  enqueueCloudWrite(`Modification module « ${modSnap.titre} »`, async () => {
+    await mutateCloudMeta((meta) => {
+      meta.customModules[modSnap.id] = {
+        id: modSnap.id,
+        titre: modSnap.titre,
+        icon: modSnap.icon,
+        description: modSnap.description,
+        niveau: modSnap.niveau,
+      };
+    });
+  });
+
   return true;
 }
 
@@ -1043,15 +1477,15 @@ export function deleteModule(moduleId: string): boolean {
 
   saveCoursesDB(filtered);
 
-  if (supabase) {
-    supabase
-      .from("chapters")
-      .delete()
-      .eq("module_id", moduleId)
-      .then(({ error }) => {
-        if (error) console.error("Supabase delete module chapters error:", error);
-      });
-  }
+  enqueueCloudWrite("Suppression module", async () => {
+    if (!supabase) return;
+    const { error } = await supabase.from("chapters").delete().eq("module_id", moduleId);
+    if (error) throw new Error(error.message);
+    await mutateCloudMeta((meta) => {
+      meta.deletedModuleIds = addUnique(meta.deletedModuleIds, moduleId);
+      delete meta.customModules[moduleId];
+    });
+  });
 
   return true;
 }
@@ -1073,11 +1507,11 @@ export function addChapterToModule(
 
   const chapterId = chapterData.id || `${moduleId}-ch${Date.now()}`;
   const maxNum = moduleItem.chapitres.reduce((max, c) => Math.max(max, c.num || 0), 0);
-  const num = chapterData.num || (maxNum + 1);
+  const num = chapterData.num || maxNum + 1;
 
   const newChapter: ChapitreItem = {
     id: chapterId,
-    moduleId: moduleId,
+    moduleId,
     num,
     titre: chapterData.titre.trim(),
     description: chapterData.description.trim(),
@@ -1092,23 +1526,16 @@ export function addChapterToModule(
   moduleItem.chapitres.push(newChapter);
   saveCoursesDB(data);
 
-  if (supabase) {
-    supabase
-      .from("chapters")
-      .insert([
-        {
-          id: chapterId,
-          module_id: moduleId,
-          num: newChapter.num,
-          titre: newChapter.titre,
-          description: newChapter.description,
-          badge: newChapter.badge,
-        },
-      ])
-      .then(({ error }) => {
-        if (error) console.error("Supabase insert chapter error:", error);
-      });
-  }
+  enqueueCloudWrite(`Création chapitre « ${newChapter.titre} »`, async () => {
+    await ensureChapterInSupabase(moduleId, newChapter);
+    await mutateCloudMeta((meta) => {
+      meta.deletedChapterIds = removeItem(meta.deletedChapterIds, chapterId);
+      meta.chapterMeta[chapterId] = {
+        ...meta.chapterMeta[chapterId],
+        niveau: newChapter.niveau,
+      };
+    });
+  });
 
   return newChapter;
 }
@@ -1124,11 +1551,8 @@ export function updateChapter(
   }
 ): boolean {
   const data = getCoursesDB();
-  const moduleItem = data.find((m) => m.id === moduleId);
-  if (!moduleItem) return false;
-
-  const chapter = moduleItem.chapitres.find((c) => c.id === chapterId);
-  if (!chapter) return false;
+  const { moduleItem, chapter } = findModuleAndChapter(data, moduleId, chapterId);
+  if (!moduleItem || !chapter) return false;
 
   if (updates.num !== undefined) chapter.num = updates.num;
   if (updates.titre !== undefined) chapter.titre = updates.titre.trim();
@@ -1137,20 +1561,10 @@ export function updateChapter(
 
   saveCoursesDB(data);
 
-  if (supabase) {
-    supabase
-      .from("chapters")
-      .update({
-        ...(updates.num !== undefined ? { num: updates.num } : {}),
-        ...(updates.titre !== undefined ? { titre: updates.titre.trim() } : {}),
-        ...(updates.description !== undefined ? { description: updates.description.trim() } : {}),
-        ...(updates.badge !== undefined ? { badge: updates.badge.trim() } : {}),
-      })
-      .eq("id", chapterId)
-      .then(({ error }) => {
-        if (error) console.error("Supabase update chapter error:", error);
-      });
-  }
+  const chapterSnap = { ...chapter };
+  enqueueCloudWrite(`Modification chapitre « ${chapterSnap.titre} »`, async () => {
+    await ensureChapterInSupabase(moduleItem.id, chapterSnap);
+  });
 
   return true;
 }
@@ -1166,136 +1580,600 @@ export function deleteChapter(moduleId: string, chapterId: string): boolean {
 
   saveCoursesDB(data);
 
-  if (supabase) {
-    supabase
-      .from("chapters")
-      .delete()
-      .eq("id", chapterId)
-      .then(({ error }) => {
-        if (error) console.error("Supabase delete chapter error:", error);
-      });
-  }
+  enqueueCloudWrite("Suppression chapitre", async () => {
+    if (!supabase) return;
+    const { error } = await supabase.from("chapters").delete().eq("id", chapterId);
+    if (error) throw new Error(error.message);
+    await mutateCloudMeta((meta) => {
+      meta.deletedChapterIds = addUnique(meta.deletedChapterIds, chapterId);
+      delete meta.chapterMeta[chapterId];
+    });
+  });
 
   return true;
 }
 
-// ── 6. Synchronisation ascendante depuis Supabase (Temps réel) ──
-export async function syncCoursesFromSupabase(): Promise<ModuleCoursBlock[]> {
-  if (!supabase) return getCoursesDB();
+// ── 10. PUBLICATION AUTOMATIQUE DES DONNÉES LOCALES NON SYNCHRONISÉES (RÉCUPÉRATION PR. EDDAMS) ──
+// Détecte tout chapitre, séance, TD, fiche, module ou ordre vidéo créé dans le localStorage d'un
+// professeur/admin avant la correction Cloud et les pousse dans Supabase sans jamais ressusciter
+// ce qui a été supprimé (tombstones deleted*Ids).
+export async function pushLocalCoursesToSupabase(): Promise<{
+  pushedChapters: number;
+  pushedSessions: number;
+  pushedExercises: number;
+  pushedFiches: number;
+  error?: string;
+}> {
+  if (!supabase || typeof window === "undefined") {
+    return { pushedChapters: 0, pushedSessions: 0, pushedExercises: 0, pushedFiches: 0 };
+  }
+
+  let pushedChapters = 0;
+  let pushedSessions = 0;
+  let pushedExercises = 0;
+  let pushedFiches = 0;
+
   try {
-    const [chRes, sessRes, exRes, corrRes, fichesRes] = await Promise.all([
-      supabase.from("chapters").select("*").order("num", { ascending: true }),
+    await writeQueue;
+    emitSyncState({ status: "syncing", lastError: null });
+
+    const localData = getCoursesDB();
+
+    // Indexation du catalogue statique de référence
+    const staticModuleMap = new Map<string, ModuleCoursBlock>();
+    const staticChapterMap = new Map<string, ChapitreItem>();
+    const staticSessionMap = new Map<string, CourseSession>();
+    const staticExerciseMap = new Map<string, CourseExercise>();
+    const staticFicheMap = new Map<string, CourseFiche>();
+
+    PC_COURSES_DATA.forEach((m) => {
+      staticModuleMap.set(m.id, m);
+      (m.chapitres || []).forEach((c) => {
+        staticChapterMap.set(c.id, c);
+        (c.cours || []).forEach((s) => {
+          if (s.id) staticSessionMap.set(s.id, s);
+        });
+        (c.tds || []).forEach((td) => {
+          if (td.id) staticExerciseMap.set(td.id, td);
+        });
+        (c.fiches || []).forEach((f) => {
+          if (f.id) staticFicheMap.set(f.id, f);
+          staticFicheMap.set(f.titre, f);
+        });
+      });
+    });
+
+    // Lecture de l'état Cloud actuel
+    const [chRes, sessRes, exRes, fichesRes] = await Promise.all([
+      supabase.from("chapters").select("*"),
       supabase.from("sessions").select("*"),
       supabase.from("exercises").select("*"),
-      supabase.from("exercise_corrections").select("*"),
       supabase.from("fiches").select("*"),
     ]);
 
-    if (chRes.error || !chRes.data || chRes.data.length === 0) {
-      return getCoursesDB();
+    if (chRes.error) throw new Error(chRes.error.message);
+
+    const metaRow = (chRes.data || []).find((r) => r.id === SYNC_META_CHAPTER_ID);
+    const cloudMeta = parseCloudMeta(metaRow?.description);
+
+    const cloudChapterIds = new Set(
+      (chRes.data || []).filter((c) => c.id !== SYNC_META_CHAPTER_ID).map((c) => c.id)
+    );
+    const cloudSessionIds = new Set((sessRes.data || []).map((s) => s.id));
+    const cloudExerciseIds = new Set((exRes.data || []).map((e) => e.id));
+    const cloudFicheIds = new Set((fichesRes.data || []).map((f) => f.id));
+
+    const deletedModules = new Set(cloudMeta.deletedModuleIds);
+    const deletedChapters = new Set(cloudMeta.deletedChapterIds);
+    const deletedSessions = new Set(cloudMeta.deletedSessionIds);
+    const deletedExercises = new Set(cloudMeta.deletedExerciseIds);
+    const deletedFiches = new Set(cloudMeta.deletedFicheIds);
+
+    let metaChanged = false;
+
+    for (const mod of localData) {
+      if (deletedModules.has(mod.id)) continue;
+
+      const staticMod = staticModuleMap.get(mod.id);
+      if (
+        !staticMod ||
+        staticMod.titre !== mod.titre ||
+        staticMod.icon !== mod.icon ||
+        staticMod.description !== mod.description
+      ) {
+        if (!cloudMeta.customModules[mod.id]) {
+          cloudMeta.customModules[mod.id] = {
+            id: mod.id,
+            titre: mod.titre,
+            icon: mod.icon,
+            description: mod.description,
+            niveau: mod.niveau,
+          };
+          metaChanged = true;
+        }
+      }
+
+      for (const chap of mod.chapitres || []) {
+        if (deletedChapters.has(chap.id)) continue;
+
+        const staticChap = staticChapterMap.get(chap.id);
+        const chapterModified =
+          !staticChap ||
+          staticChap.titre !== chap.titre ||
+          staticChap.description !== chap.description ||
+          staticChap.badge !== chap.badge ||
+          staticChap.num !== chap.num;
+
+        const unsyncedSessions = (chap.cours || [])
+          .map((s, idx) => ({
+            ...s,
+            id: s.id || `rec-sess-${chap.id}-${idx}`,
+          }))
+          .filter((s) => {
+            const sid = s.id;
+            if (!sid || deletedSessions.has(sid) || cloudSessionIds.has(sid)) return false;
+            const staticSess = staticSessionMap.get(sid);
+            if (!staticSess) return true;
+            return (
+              staticSess.titre !== s.titre ||
+              (staticSess.sous || "") !== (s.sous || "") ||
+              (staticSess.video || "") !== (s.video || "") ||
+              (staticSess.support || "") !== (s.support || "")
+            );
+          });
+
+        const unsyncedExercises = (chap.tds || []).filter((td) => {
+          const tid = td.id || "";
+          if (!tid || deletedExercises.has(tid) || cloudExerciseIds.has(tid)) return false;
+          return !staticExerciseMap.has(tid);
+        });
+
+        const unsyncedFiches = (chap.fiches || []).filter((f) => {
+          const fid = f.id || "";
+          if (deletedFiches.has(fid) || deletedFiches.has(f.titre)) return false;
+          if (fid && cloudFicheIds.has(fid)) return false;
+          return !staticFicheMap.has(fid || f.titre);
+        });
+
+        const hasLocalChapterMeta =
+          (chap.videoOrder && chap.videoOrder.length > 0 && !cloudMeta.chapterMeta[chap.id]?.videoOrder) ||
+          (chap.concoursVideoOrder &&
+            chap.concoursVideoOrder.length > 0 &&
+            !cloudMeta.chapterMeta[chap.id]?.concoursVideoOrder) ||
+          (chap.hiddenVideoIds &&
+            chap.hiddenVideoIds.length > 0 &&
+            !cloudMeta.chapterMeta[chap.id]?.hiddenVideoIds) ||
+          (chap.hiddenConcoursVideoIds &&
+            chap.hiddenConcoursVideoIds.length > 0 &&
+            !cloudMeta.chapterMeta[chap.id]?.hiddenConcoursVideoIds);
+
+        const needsChapterUpsert =
+          (!cloudChapterIds.has(chap.id) &&
+            (chapterModified ||
+              unsyncedSessions.length > 0 ||
+              unsyncedExercises.length > 0 ||
+              unsyncedFiches.length > 0)) ||
+          (!staticChap && !cloudChapterIds.has(chap.id));
+
+        if (needsChapterUpsert) {
+          await ensureChapterInSupabase(mod.id, chap);
+          cloudChapterIds.add(chap.id);
+          if (!staticChap) pushedChapters++;
+        }
+
+        if (unsyncedSessions.length > 0) {
+          const sRows = unsyncedSessions.map((s) => ({
+            id: s.id!,
+            chapter_id: chap.id,
+            titre: s.titre,
+            sous: s.sous || null,
+            support_url: s.support || null,
+            video_url: s.video || null,
+          }));
+          const { error } = await supabase.from("sessions").upsert(sRows, { onConflict: "id" });
+          if (error) throw new Error(error.message);
+          unsyncedSessions.forEach((s, idx) => {
+            cloudSessionIds.add(s.id!);
+            cloudMeta.sessionMeta[s.id!] = {
+              supports: s.supports && s.supports.length > 0 ? s.supports : undefined,
+              isConcours: s.isConcours || undefined,
+              badge: s.badge || undefined,
+              thumbnail: s.thumbnail || resolveSessionThumbnail(s.video, s.support),
+              orderIndex: idx,
+            };
+          });
+          // Conserver l'ordre exact des séances personnalisées du chapitre
+          if (!cloudMeta.chapterMeta[chap.id]?.videoOrder) {
+            cloudMeta.chapterMeta[chap.id] = {
+              ...cloudMeta.chapterMeta[chap.id],
+              niveau: chap.niveau || mod.niveau,
+              videoOrder:
+                chap.videoOrder && chap.videoOrder.length > 0
+                  ? chap.videoOrder
+                  : (chap.cours || []).map((s) => s.id!).filter(Boolean),
+            };
+          }
+          pushedSessions += unsyncedSessions.length;
+          metaChanged = true;
+        }
+
+        if (unsyncedExercises.length > 0) {
+          const exRows = unsyncedExercises.map((td) => ({
+            id: td.id!,
+            chapter_id: chap.id,
+            titre: td.titre,
+            sous: td.sous || null,
+            enonce_url: td.enonce || null,
+            video_url: td.video || null,
+          }));
+          const { error: exErr } = await supabase
+            .from("exercises")
+            .upsert(exRows, { onConflict: "id" });
+          if (exErr) throw new Error(exErr.message);
+
+          const allCorrs: { id: string; exercise_id: string; titre: string; url: string; type: string }[] = [];
+          unsyncedExercises.forEach((td) => {
+            (td.corriges || []).forEach((c) => {
+              allCorrs.push({
+                id: c.id,
+                exercise_id: td.id!,
+                titre: c.titre,
+                url: c.url,
+                type: c.type || "pdf",
+              });
+            });
+          });
+          if (allCorrs.length > 0) {
+            const { error: cErr } = await supabase
+              .from("exercise_corrections")
+              .upsert(allCorrs, { onConflict: "id" });
+            if (cErr) throw new Error(cErr.message);
+          }
+          pushedExercises += unsyncedExercises.length;
+        }
+
+        if (unsyncedFiches.length > 0) {
+          const fRows = unsyncedFiches.map((f, idx) => ({
+            id: f.id || `fiche-rec-${Date.now()}-${idx}`,
+            chapter_id: chap.id,
+            titre: f.titre,
+            sous: f.sous || null,
+            url: f.url,
+          }));
+          const { error: fErr } = await supabase.from("fiches").upsert(fRows, { onConflict: "id" });
+          if (fErr) throw new Error(fErr.message);
+          pushedFiches += unsyncedFiches.length;
+        }
+
+        if (hasLocalChapterMeta) {
+          cloudMeta.chapterMeta[chap.id] = {
+            ...cloudMeta.chapterMeta[chap.id],
+            niveau: chap.niveau || mod.niveau,
+            ...(chap.videoOrder ? { videoOrder: chap.videoOrder } : {}),
+            ...(chap.concoursVideoOrder ? { concoursVideoOrder: chap.concoursVideoOrder } : {}),
+            ...(chap.hiddenVideoIds ? { hiddenVideoIds: chap.hiddenVideoIds } : {}),
+            ...(chap.hiddenConcoursVideoIds
+              ? { hiddenConcoursVideoIds: chap.hiddenConcoursVideoIds }
+              : {}),
+          };
+          metaChanged = true;
+        }
+      }
     }
 
-    const currentBlocks = getCoursesDB();
-    const chaptersData = chRes.data;
+    if (metaChanged) {
+      cloudMeta.updatedAt = new Date().toISOString();
+      const { error: metaErr } = await supabase.from("chapters").upsert(
+        [
+          {
+            id: SYNC_META_CHAPTER_ID,
+            module_id: SYNC_META_MODULE_ID,
+            num: -1,
+            titre: "__sync_meta__",
+            description: JSON.stringify(cloudMeta),
+            badge: "system",
+          },
+        ],
+        { onConflict: "id" }
+      );
+      if (metaErr) throw new Error(metaErr.message);
+    }
+
+    const totalRecovered = pushedChapters + pushedSessions + pushedExercises + pushedFiches;
+    emitSyncState({
+      status: "synced",
+      lastSyncedAt: new Date().toISOString(),
+      lastError: null,
+      lastRecoveredCount: totalRecovered,
+    });
+
+    return { pushedChapters, pushedSessions, pushedExercises, pushedFiches };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("pushLocalCoursesToSupabase error:", err);
+    emitSyncState({
+      status: "error",
+      lastError: `Publication Cloud échouée : ${msg}`,
+    });
+    return {
+      pushedChapters,
+      pushedSessions,
+      pushedExercises,
+      pushedFiches,
+      error: msg,
+    };
+  }
+}
+
+// ── 11. SYNCHRONISATION DESCENDANTE DEPUIS SUPABASE (SOURCE DE VÉRITÉ PARTAGÉE) ──
+export async function syncCoursesFromSupabase(): Promise<ModuleCoursBlock[]> {
+  if (!supabase) {
+    emitSyncState({
+      status: "offline",
+      lastError: "Supabase non configuré sur cet environnement.",
+    });
+    return getCoursesDB();
+  }
+
+  try {
+    await writeQueue;
+    const [chRes, sessRes, exRes, corrRes, fichesRes] = await Promise.all([
+      supabase.from("chapters").select("*").order("num", { ascending: true }),
+      supabase.from("sessions").select("*").order("created_at", { ascending: true }),
+      supabase.from("exercises").select("*").order("created_at", { ascending: true }),
+      supabase.from("exercise_corrections").select("*").order("created_at", { ascending: true }),
+      supabase.from("fiches").select("*").order("created_at", { ascending: true }),
+    ]);
+
+    if (chRes.error) {
+      throw new Error(chRes.error.message);
+    }
+
+    const rawChapters = chRes.data || [];
     const sessionsData = sessRes.data || [];
     const exercisesData = exRes.data || [];
     const correctionsData = corrRes.data || [];
     const fichesData = fichesRes.data || [];
 
-    const dbChapters: { [moduleId: string]: ChapitreItem[] } = {};
+    const metaRow = rawChapters.find((c) => c.id === SYNC_META_CHAPTER_ID);
+    const cloudMeta = parseCloudMeta(metaRow?.description);
 
-    chaptersData.forEach((ch) => {
-      const mId = ch.module_id;
-      if (!dbChapters[mId]) dbChapters[mId] = [];
+    const chaptersData = rawChapters.filter((c) => c.id !== SYNC_META_CHAPTER_ID);
 
-      const chapterSessions: CourseSession[] = sessionsData
-        .filter((s) => s.chapter_id === ch.id)
-        .map((s) => ({
-          id: s.id,
-          titre: s.titre,
-          sous: s.sous || "Séance de cours & Replay",
-          support: s.support_url || undefined,
-          video: s.video_url || undefined,
-          thumbnail: s.support_url ? getDriveImageUrls(s.support_url)[0] : undefined,
-        }));
+    const deletedModuleSet = new Set(cloudMeta.deletedModuleIds);
+    const deletedChapterSet = new Set(cloudMeta.deletedChapterIds);
+    const deletedSessionSet = new Set(cloudMeta.deletedSessionIds);
+    const deletedExerciseSet = new Set(cloudMeta.deletedExerciseIds);
+    const deletedFicheSet = new Set(cloudMeta.deletedFicheIds);
 
-      const chapterExercises: CourseExercise[] = exercisesData
-        .filter((e) => e.chapter_id === ch.id)
-        .map((e) => {
-          const corrs: CorrigeItem[] = correctionsData
-            .filter((c) => c.exercise_id === e.id)
-            .map((c) => ({
-              id: c.id,
-              titre: c.titre,
-              url: c.url,
-              type: (c.type as "pdf" | "video") || "pdf",
-            }));
-
-          return {
-            id: e.id,
-            titre: e.titre,
-            sous: e.sous || "",
-            enonce: e.enonce_url || undefined,
-            correction: corrs.length > 0 ? corrs[0].url : undefined,
-            corriges: corrs,
-            video: e.video_url || undefined,
-          };
-        });
-
-      const chapterFiches: CourseFiche[] = fichesData
-        .filter((f) => f.chapter_id === ch.id)
-        .map((f) => ({
-          titre: f.titre,
-          sous: f.sous || "Fiche de méthode & formulaire",
-          url: f.url,
-          thumbnail: f.url ? getDriveImageUrls(f.url)[0] : undefined,
-        }));
-
-      dbChapters[mId].push({
-        id: ch.id,
-        moduleId: mId,
-        num: ch.num,
-        titre: ch.titre,
-        badge: ch.badge || "Spé MP / PSI / TSI",
-        description: ch.description || "",
-        cours: chapterSessions,
-        tds: chapterExercises,
-        fiches: chapterFiches,
+    // 1. Partir du syllabus statique officiel (jamais du localStorage périmé !)
+    const mergedModules: ModuleCoursBlock[] = cloneStaticCourses()
+      .filter((m) => !deletedModuleSet.has(m.id))
+      .map((m) => {
+        const override = cloudMeta.customModules[m.id];
+        return {
+          ...m,
+          ...(override
+            ? {
+                titre: override.titre,
+                icon: override.icon,
+                description: override.description,
+                niveau: override.niveau || m.niveau,
+              }
+            : {}),
+          chapitres: (m.chapitres || [])
+            .filter((ch) => !deletedChapterSet.has(ch.id))
+            .map((ch) => ({
+              ...ch,
+              moduleId: m.id,
+              moduleName: override?.titre || m.titre,
+              niveau: ch.niveau || m.niveau,
+              cours: (ch.cours || []).filter((s) => !s.id || !deletedSessionSet.has(s.id)),
+              tds: (ch.tds || []).filter((td) => !td.id || !deletedExerciseSet.has(td.id)),
+              fiches: (ch.fiches || []).filter(
+                (f) => !deletedFicheSet.has(f.id || "") && !deletedFicheSet.has(f.titre)
+              ),
+            })),
+        };
       });
+
+    // 2. Ajouter les modules personnalisés créés dans le Cloud
+    Object.values(cloudMeta.customModules).forEach((cm) => {
+      if (deletedModuleSet.has(cm.id)) return;
+      if (!mergedModules.some((m) => m.id === cm.id)) {
+        mergedModules.push({
+          id: cm.id,
+          titre: cm.titre,
+          icon: cm.icon || "📚",
+          description: cm.description || "Module de cours CPGE",
+          niveau: cm.niveau || "spe",
+          chapitres: [],
+        });
+      }
     });
 
-    const updated = currentBlocks.map((block) => {
-      if (dbChapters[block.id]) {
-        const mergedChapitres = [...block.chapitres];
-        dbChapters[block.id].forEach((dbCh) => {
-          const idx = mergedChapitres.findIndex((c) => c.id === dbCh.id);
-          if (idx >= 0) {
-            mergedChapitres[idx] = {
-              ...mergedChapitres[idx],
-              ...dbCh,
-              cours: dbCh.cours.length > 0 ? dbCh.cours : mergedChapitres[idx].cours,
-              tds: dbCh.tds.length > 0 ? dbCh.tds : mergedChapitres[idx].tds,
-              fiches: dbCh.fiches.length > 0 ? dbCh.fiches : mergedChapitres[idx].fiches,
-            };
-          } else {
-            mergedChapitres.push({
-              ...dbCh,
-              moduleId: block.id,
-              moduleName: block.titre,
-              niveau: block.niveau,
-            });
-          }
-        });
-        mergedChapitres.sort((a, b) => (a.num || 0) - (b.num || 0));
-        return { ...block, chapitres: mergedChapitres };
-      }
-      return block;
+    // 3. Regrouper les ressources Cloud par chapter_id
+    const sessionsByChapter = new Map<string, CourseSession[]>();
+    sessionsData.forEach((s) => {
+      if (deletedSessionSet.has(s.id)) return;
+      const sm = cloudMeta.sessionMeta[s.id] || {};
+      const item: CourseSession = {
+        id: s.id,
+        titre: s.titre,
+        sous: s.sous || "Séance de cours & Replay",
+        support: s.support_url || undefined,
+        supports: sm.supports,
+        video: s.video_url || undefined,
+        thumbnail: resolveSessionThumbnail(s.video_url, s.support_url, sm.thumbnail),
+        isConcours: sm.isConcours,
+        badge: sm.badge,
+      };
+      const arr = sessionsByChapter.get(s.chapter_id) || [];
+      arr.push(item);
+      sessionsByChapter.set(s.chapter_id, arr);
+    });
+
+    const exercisesByChapter = new Map<string, CourseExercise[]>();
+    exercisesData.forEach((e) => {
+      if (deletedExerciseSet.has(e.id)) return;
+      const corrs: CorrigeItem[] = correctionsData
+        .filter((c) => c.exercise_id === e.id)
+        .map((c) => ({
+          id: c.id,
+          titre: c.titre,
+          url: c.url,
+          type: (c.type as "pdf" | "video") || "pdf",
+        }));
+      const item: CourseExercise = {
+        id: e.id,
+        titre: e.titre,
+        sous: e.sous || "",
+        enonce: e.enonce_url || undefined,
+        correction: corrs.length > 0 ? corrs[0].url : undefined,
+        corriges: corrs,
+        video: e.video_url || undefined,
+      };
+      const arr = exercisesByChapter.get(e.chapter_id) || [];
+      arr.push(item);
+      exercisesByChapter.set(e.chapter_id, arr);
+    });
+
+    const fichesByChapter = new Map<string, CourseFiche[]>();
+    fichesData.forEach((f) => {
+      if (deletedFicheSet.has(f.id) || deletedFicheSet.has(f.titre)) return;
+      const item: CourseFiche = {
+        id: f.id,
+        titre: f.titre,
+        sous: f.sous || "Fiche de méthode & formulaire",
+        url: f.url,
+        thumbnail: f.url ? getDriveImageUrls(f.url)[0] : undefined,
+      };
+      const arr = fichesByChapter.get(f.chapter_id) || [];
+      arr.push(item);
+      fichesByChapter.set(f.chapter_id, arr);
+    });
+
+    // Helper de fusion sans écraser les éléments statiques existants
+    const mergeById = <T extends { id?: string }>(baseList: T[], cloudList: T[]): T[] => {
+      const result = [...baseList];
+      cloudList.forEach((cloudItem) => {
+        const idx = cloudItem.id ? result.findIndex((b) => b.id === cloudItem.id) : -1;
+        if (idx >= 0) {
+          result[idx] = { ...result[idx], ...cloudItem };
+        } else {
+          result.push(cloudItem);
+        }
+      });
+      return result;
+    };
+
+    // 4. Fusionner les chapitres Supabase dans leurs modules cibles
+    const dbChaptersByModule = new Map<string, typeof chaptersData>();
+    chaptersData.forEach((ch) => {
+      if (deletedChapterSet.has(ch.id)) return;
+      const list = dbChaptersByModule.get(ch.module_id) || [];
+      list.push(ch);
+      dbChaptersByModule.set(ch.module_id, list);
+    });
+
+    const updated = mergedModules.map((block) => {
+      const mergedChapitres = [...block.chapitres];
+      const cloudChaps = dbChaptersByModule.get(block.id) || [];
+
+      cloudChaps.forEach((ch) => {
+        const cSessions = sessionsByChapter.get(ch.id) || [];
+        const cExercises = exercisesByChapter.get(ch.id) || [];
+        const cFiches = fichesByChapter.get(ch.id) || [];
+        const chMeta = cloudMeta.chapterMeta[ch.id] || {};
+
+        const idx = mergedChapitres.findIndex((c) => c.id === ch.id);
+        if (idx >= 0) {
+          const baseCh = mergedChapitres[idx];
+          mergedChapitres[idx] = {
+            ...baseCh,
+            num: ch.num ?? baseCh.num,
+            titre: ch.titre || baseCh.titre,
+            description: ch.description !== null && ch.description !== undefined ? ch.description : baseCh.description,
+            badge: ch.badge || baseCh.badge,
+            moduleId: block.id,
+            moduleName: block.titre,
+            niveau: chMeta.niveau || baseCh.niveau || block.niveau,
+            cours: mergeById(baseCh.cours || [], cSessions),
+            tds: mergeById(baseCh.tds || [], cExercises),
+            fiches: mergeById(baseCh.fiches || [], cFiches),
+            ...(chMeta.videoOrder ? { videoOrder: chMeta.videoOrder } : {}),
+            ...(chMeta.concoursVideoOrder ? { concoursVideoOrder: chMeta.concoursVideoOrder } : {}),
+            ...(chMeta.hiddenVideoIds ? { hiddenVideoIds: chMeta.hiddenVideoIds } : {}),
+            ...(chMeta.hiddenConcoursVideoIds
+              ? { hiddenConcoursVideoIds: chMeta.hiddenConcoursVideoIds }
+              : {}),
+          };
+        } else {
+          mergedChapitres.push({
+            id: ch.id,
+            moduleId: block.id,
+            moduleName: block.titre,
+            niveau: chMeta.niveau || block.niveau,
+            num: ch.num,
+            titre: ch.titre,
+            badge: ch.badge || "Spé MP / PSI / TSI",
+            description: ch.description || "",
+            cours: cSessions,
+            tds: cExercises,
+            fiches: cFiches,
+            ...(chMeta.videoOrder ? { videoOrder: chMeta.videoOrder } : {}),
+            ...(chMeta.concoursVideoOrder ? { concoursVideoOrder: chMeta.concoursVideoOrder } : {}),
+            ...(chMeta.hiddenVideoIds ? { hiddenVideoIds: chMeta.hiddenVideoIds } : {}),
+            ...(chMeta.hiddenConcoursVideoIds
+              ? { hiddenConcoursVideoIds: chMeta.hiddenConcoursVideoIds }
+              : {}),
+          });
+        }
+      });
+
+      // Appliquer aussi les métadonnées Cloud (videoOrder, hiddenVideoIds) aux chapitres statiques
+      // qui n'ont pas encore de ligne dédiée dans `chapters`
+      mergedChapitres.forEach((chap, i) => {
+        const chMeta = cloudMeta.chapterMeta[chap.id];
+        if (!chMeta) return;
+        const nextChap = {
+          ...chap,
+          ...(chMeta.videoOrder ? { videoOrder: chMeta.videoOrder } : {}),
+          ...(chMeta.concoursVideoOrder ? { concoursVideoOrder: chMeta.concoursVideoOrder } : {}),
+          ...(chMeta.hiddenVideoIds ? { hiddenVideoIds: chMeta.hiddenVideoIds } : {}),
+          ...(chMeta.hiddenConcoursVideoIds
+            ? { hiddenConcoursVideoIds: chMeta.hiddenConcoursVideoIds }
+            : {}),
+        };
+        if (nextChap.videoOrder && nextChap.cours && nextChap.cours.length > 1) {
+          const orderIdx = new Map(nextChap.videoOrder.map((id, pos) => [id, pos]));
+          nextChap.cours = [...nextChap.cours].sort((a, b) => {
+            const pa = a.id && orderIdx.has(a.id) ? orderIdx.get(a.id)! : 9999;
+            const pb = b.id && orderIdx.has(b.id) ? orderIdx.get(b.id)! : 9999;
+            return pa - pb;
+          });
+        }
+        mergedChapitres[i] = nextChap;
+      });
+
+      mergedChapitres.sort((a, b) => (a.num || 0) - (b.num || 0));
+      return { ...block, chapitres: mergedChapitres };
     });
 
     saveCoursesDB(updated);
+    emitSyncState({
+      status: syncSnapshot.pendingWrites > 0 ? "syncing" : "synced",
+      lastSyncedAt: new Date().toISOString(),
+      lastError: null,
+    });
     return updated;
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     console.error("Error syncing courses from Supabase:", err);
+    emitSyncState({
+      status: "error",
+      lastError: `Erreur de synchronisation Cloud : ${msg}`,
+    });
     return getCoursesDB();
   }
 }

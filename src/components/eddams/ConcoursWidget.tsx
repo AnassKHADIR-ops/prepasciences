@@ -70,13 +70,15 @@ export function ConcoursWidget({
   onSelectFiliere,
 }: ConcoursWidgetProps) {
   const { currentUser, isTeacher, isAdmin, teacherViewMode, toggleTeacherViewMode } = useAuth();
-  const isTeacherView = (isTeacher || isAdmin) && teacherViewMode === "teacher";
 
   const isMounted = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false
   );
+  const activeIsTeacher = isMounted && isTeacher;
+  const activeIsAdmin = isMounted && isAdmin;
+  const isTeacherView = (activeIsTeacher || activeIsAdmin) && teacherViewMode === "teacher";
 
   const [concoursData, setConcoursData] = useState<ConcoursBlock[]>(() => getConcoursDB());
   const [localFiliere, setLocalFiliere] = useState<FiliereConcours | null>(null);
@@ -635,7 +637,7 @@ export function ConcoursWidget({
       </div>
 
       {/* ── BARRE D'ADMINISTRATION ENSEIGNANT / ADMIN ── */}
-      {(isTeacher || isAdmin) && (
+      {(activeIsTeacher || activeIsAdmin) && (
         <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-950/90 text-white border border-purple-500/30 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-200">
@@ -647,7 +649,7 @@ export function ConcoursWidget({
                   Administration des Concours ({activeFiliereInfo.shortLabel})
                 </span>
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-500 text-white shadow-2xs">
-                  {isAdmin ? "Admin" : "Professeur"}
+                  {activeIsAdmin ? "Admin" : "Professeur"}
                 </span>
               </div>
               <p className="text-xs text-purple-200/80 mt-0.5">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { PC_COURSES_DATA } from "./pcCoursesData";
 import { ChapitreItem, CourseSession, CourseExercise, CourseFiche, CorrigeItem, SessionSupportItem } from "@/types/courses";
@@ -29,6 +29,9 @@ import {
   RotateCcw,
   Eye,
   ArrowRightLeft,
+  Cloud,
+  RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { getDriveImageUrls, extractDriveFileId, getYoutubeThumbnailCandidates, getYoutubeThumbnail } from "@/lib/driveUtils";
 import { useCourses } from "@/context/CoursesContext";
@@ -1633,6 +1636,8 @@ export function CoursesWidget({
 }: CoursesWidgetProps) {
   const {
     courses,
+    cloudSync,
+    syncWithCloud,
     createSession,
     updateSession,
     deleteSession,
@@ -1652,8 +1657,15 @@ export function CoursesWidget({
     removeModule,
   } = useCourses();
 
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const { isTeacher, isAdmin, teacherViewMode, toggleTeacherViewMode } = useAuth();
-  const isTeacherView = (isTeacher || isAdmin) && teacherViewMode === "teacher";
+  const activeIsTeacher = isMounted && isTeacher;
+  const activeIsAdmin = isMounted && isAdmin;
+  const isTeacherView = (activeIsTeacher || activeIsAdmin) && teacherViewMode === "teacher";
 
   // État et gestionnaires pour le Drag & Drop et réordonnancement des vidéos
   const [draggedVideo, setDraggedVideo] = useState<{
@@ -2327,6 +2339,7 @@ export function CoursesWidget({
       titre: newModTitle.trim(),
       icon: newModIcon.trim() || "⚡",
       description: newModDesc.trim() || "Module de cours CPGE",
+      niveau: selectedNiveau || "spe",
     });
     if (created) {
       setActiveModule("all");
@@ -2351,107 +2364,188 @@ export function CoursesWidget({
   return (
     <div className="w-full max-w-6xl mx-auto my-4 font-sans">
       {/* Bandeau Mode Édition Enseignant & Administrateur */}
-      {(isTeacher || isAdmin) && (
-        <div className="mb-6 p-4 rounded-2xl bg-purple-950/60 border border-purple-500/40 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <span className={`w-2.5 h-2.5 rounded-full ${isTeacherView ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-purple-200 uppercase tracking-wider">
-                  {isTeacherView ? "Mode Édition Administrateur Actif" : "Aperçu : Vue Étudiant"}
-                </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-900/80 text-purple-200 border border-purple-400/30">
-                  Pleins Droits de Modification
-                </span>
+      {(activeIsTeacher || activeIsAdmin) && (
+        <div className="mb-6 p-4 rounded-2xl bg-purple-950/60 border border-purple-500/40 backdrop-blur-md space-y-2.5 animate-fadeIn">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className={`w-2.5 h-2.5 rounded-full ${isTeacherView ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-black text-purple-200 uppercase tracking-wider">
+                    {isTeacherView ? "Mode Édition Administrateur Actif" : "Aperçu : Vue Étudiant"}
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-900/80 text-purple-200 border border-purple-400/30">
+                    Pleins Droits de Modification
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      cloudSync.status === "synced"
+                        ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                        : cloudSync.status === "syncing"
+                        ? "bg-amber-950/80 text-amber-200 border-amber-500/40"
+                        : cloudSync.status === "error" || cloudSync.status === "offline"
+                        ? "bg-red-950/90 text-red-200 border-red-500/50"
+                        : "bg-slate-900/80 text-slate-300 border-slate-600/40"
+                    }`}
+                  >
+                    {cloudSync.status === "syncing" ? (
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                    ) : cloudSync.status === "error" || cloudSync.status === "offline" ? (
+                      <AlertTriangle className="w-3 h-3" />
+                    ) : (
+                      <Cloud className="w-3 h-3" />
+                    )}
+                    <span>
+                      {cloudSync.status === "synced"
+                        ? "Cloud Synchronisé"
+                        : cloudSync.status === "syncing"
+                        ? "Synchronisation Cloud..."
+                        : cloudSync.status === "offline"
+                        ? "Cloud Hors-Ligne"
+                        : cloudSync.status === "error"
+                        ? "Erreur Sync Cloud"
+                        : "Prêt Cloud"}
+                    </span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-purple-300/80">
+                  {isTeacherView
+                    ? "Toute création, modification ou réordonnancement est synchronisé en temps réel pour tous les étudiants et professeurs."
+                    : "Vous visualisez l'espace exactement tel que le voient vos étudiants"}
+                </p>
               </div>
-              <p className="text-[11px] text-purple-300/80">
-                {isTeacherView
-                  ? "Drag & Drop actif pour réordonner les vidéos · Retrait et modification autorisés sur toutes les vidéos"
-                  : "Vous visualisez l'espace exactement tel que le voient vos étudiants"}
-              </p>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={toggleTeacherViewMode}
-              className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
-                isTeacherView
-                  ? "bg-slate-800 hover:bg-slate-700 text-purple-200 border-purple-500/40"
-                  : "bg-purple-600 hover:bg-purple-500 text-white border-purple-400 shadow-purple-600/30"
-              }`}
-              title={isTeacherView ? "Passer en vue étudiant" : "Activer les outils de modification"}
-            >
-              <Eye className="w-3.5 h-3.5" />
-              <span>{isTeacherView ? "Aperçu Étudiant" : "Activer Mode Éditeur"}</span>
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                disabled={cloudSync.status === "syncing"}
+                onClick={async () => {
+                  const res = await syncWithCloud({ pushLocal: true });
+                  if (res.error) {
+                    setToastMessage(`⚠️ Erreur de synchronisation Cloud : ${res.error}`);
+                  } else {
+                    const total =
+                      res.pushedChapters +
+                      res.pushedSessions +
+                      res.pushedExercises +
+                      res.pushedFiches;
+                    if (total > 0) {
+                      setToastMessage(
+                        `☁️ Publié dans le Cloud (${res.pushedChapters} chap., ${res.pushedSessions} séances, ${res.pushedExercises} TDs, ${res.pushedFiches} fiches) — visible par tous !`
+                      );
+                    } else {
+                      setToastMessage(
+                        "☁️ Synchronisation Cloud terminée — vos cours sont à jour pour tous les étudiants et professeurs."
+                      );
+                    }
+                  }
+                }}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white border border-emerald-400/50 flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                title="Publier les ajouts locaux et synchroniser avec Supabase Cloud"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${cloudSync.status === "syncing" ? "animate-spin" : ""}`}
+                />
+                <span>Synchroniser Cloud</span>
+              </button>
 
-            {isTeacherView && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewModTitle("");
-                    setNewModIcon("⚡");
-                    setNewModDesc("");
-                    setActiveModal("create_module");
-                  }}
-                  className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-700 hover:bg-purple-600 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                >
-                  <PlusCircle className="w-3.5 h-3.5" />
-                  <span>+ Nouveau Module</span>
-                </button>
+              <button
+                type="button"
+                onClick={toggleTeacherViewMode}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                  isTeacherView
+                    ? "bg-slate-800 hover:bg-slate-700 text-purple-200 border-purple-500/40"
+                    : "bg-purple-600 hover:bg-purple-500 text-white border-purple-400 shadow-purple-600/30"
+                }`}
+                title={isTeacherView ? "Passer en vue étudiant" : "Activer les outils de modification"}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>{isTeacherView ? "Aperçu Étudiant" : "Activer Mode Éditeur"}</span>
+              </button>
 
-                {activeModule !== "all" && (
+              {isTeacherView && (
+                <>
                   <button
                     type="button"
                     onClick={() => {
-                      const currentMod = activeCoursesData.find((m) => m.id === activeModule);
-                      if (currentMod) {
-                        setEditingModData({
-                          id: currentMod.id,
-                          titre: currentMod.titre,
-                          icon: currentMod.icon || "📚",
-                          description: currentMod.description || "",
-                        });
-                        setActiveModal("edit_module");
-                      }
+                      setNewModTitle("");
+                      setNewModIcon("⚡");
+                      setNewModDesc("");
+                      setActiveModal("create_module");
                     }}
-                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/40 flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                    title="Modifier le titre et l'émoticône de ce module"
+                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-700 hover:bg-purple-600 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    <span>✏️ Modifier ce Module</span>
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>+ Nouveau Module</span>
                   </button>
-                )}
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (activeModule && activeModule !== "all") {
-                      setNewChModuleId(activeModule);
-                    } else if (activeCoursesData.length > 0) {
-                      setNewChModuleId(activeCoursesData[0].id);
-                    }
-                    setActiveModal("chapter");
-                  }}
-                  className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                >
-                  <PlusCircle className="w-3.5 h-3.5" />
-                  <span>+ Chapitre</span>
-                </button>
-              </>
-            )}
+                  {activeModule !== "all" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentMod = activeCoursesData.find((m) => m.id === activeModule);
+                        if (currentMod) {
+                          setEditingModData({
+                            id: currentMod.id,
+                            titre: currentMod.titre,
+                            icon: currentMod.icon || "📚",
+                            description: currentMod.description || "",
+                          });
+                          setActiveModal("edit_module");
+                        }
+                      }}
+                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/40 flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                      title="Modifier le titre et l'émoticône de ce module"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>✏️ Modifier ce Module</span>
+                    </button>
+                  )}
 
-            <Link
-              href="/dashboard-prof"
-              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors shadow-xs"
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Dashboard Prof</span>
-            </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeModule && activeModule !== "all") {
+                        setNewChModuleId(activeModule);
+                      } else if (activeCoursesData.length > 0) {
+                        setNewChModuleId(activeCoursesData[0].id);
+                      }
+                      setActiveModal("chapter");
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>+ Chapitre</span>
+                  </button>
+                </>
+              )}
+
+              <Link
+                href="/dashboard-prof"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors shadow-xs"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Dashboard Prof</span>
+              </Link>
+            </div>
           </div>
+
+          {cloudSync.lastError && (
+            <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                <span className="truncate">{cloudSync.lastError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => syncWithCloud({ pushLocal: true })}
+                className="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-[11px] shrink-0 cursor-pointer"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
         </div>
       )}
 

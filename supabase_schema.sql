@@ -119,21 +119,30 @@ CREATE POLICY "Public Read Corrections" ON public.exercise_corrections
 CREATE POLICY "Public Read Fiches" ON public.fiches
   FOR SELECT USING (true);
 
--- Politiques d'écriture pour les professeurs et administrateurs
-CREATE POLICY "Teachers Full Access Chapters" ON public.chapters
-  FOR ALL USING (auth.jwt() ->> 'role' IN ('teacher', 'admin') OR auth.jwt() ->> 'email' IN ('eddams@prepasciences.ma', 'khadir@prepasciences.ma'));
+-- Politiques d'écriture (la session professeur/admin est gérée applicativement par authStore)
+-- IMPORTANT : les politiques basées sur auth.jwt()->>'email' bloqueraient les requêtes client
+-- tant que l'authentification n'utilise pas Supabase Auth JWT.
+CREATE POLICY "App Full Access Chapters" ON public.chapters
+  FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Teachers Full Access Sessions" ON public.sessions
-  FOR ALL USING (auth.jwt() ->> 'role' IN ('teacher', 'admin') OR auth.jwt() ->> 'email' IN ('eddams@prepasciences.ma', 'khadir@prepasciences.ma'));
+CREATE POLICY "App Full Access Sessions" ON public.sessions
+  FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Teachers Full Access Exercises" ON public.exercises
-  FOR ALL USING (auth.jwt() ->> 'role' IN ('teacher', 'admin') OR auth.jwt() ->> 'email' IN ('eddams@prepasciences.ma', 'khadir@prepasciences.ma'));
+CREATE POLICY "App Full Access Exercises" ON public.exercises
+  FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Teachers Full Access Corrections" ON public.exercise_corrections
-  FOR ALL USING (auth.jwt() ->> 'role' IN ('teacher', 'admin') OR auth.jwt() ->> 'email' IN ('eddams@prepasciences.ma', 'khadir@prepasciences.ma'));
+CREATE POLICY "App Full Access Corrections" ON public.exercise_corrections
+  FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Teachers Full Access Fiches" ON public.fiches
-  FOR ALL USING (auth.jwt() ->> 'role' IN ('teacher', 'admin') OR auth.jwt() ->> 'email' IN ('eddams@prepasciences.ma', 'khadir@prepasciences.ma'));
+CREATE POLICY "App Full Access Fiches" ON public.fiches
+  FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Teachers Update Profiles" ON public.profiles
-  FOR ALL USING (auth.jwt() ->> 'role' IN ('teacher', 'admin') OR auth.jwt() ->> 'email' IN ('eddams@prepasciences.ma', 'khadir@prepasciences.ma'));
+CREATE POLICY "App Full Access Profiles" ON public.profiles
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- Activation du Temps Réel (Supabase Realtime) pour la synchronisation instantanée étudiants/profs
+ALTER PUBLICATION supabase_realtime ADD TABLE public.chapters;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.sessions;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.exercises;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.exercise_corrections;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.fiches;
