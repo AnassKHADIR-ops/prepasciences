@@ -1,11 +1,23 @@
 "use client";
 
-import { PC_CONCOURS_DATA, ConcoursBlock, EpreuveItem, CorrigePartieItem } from "@/components/eddams/pcConcoursData";
+import {
+  PC_CONCOURS_DATA,
+  ConcoursBlock,
+  EpreuveItem,
+  CorrigePartieItem,
+  parseEpreuveFilieres,
+} from "@/components/eddams/pcConcoursData";
 
-const CONCOURS_STORAGE_KEY = "prepasciences_concours_db_v3";
+const CONCOURS_STORAGE_KEY = "prepasciences_concours_db_v5";
+const LEGACY_STORAGE_KEYS = [
+  "prepasciences_concours_db_v1",
+  "prepasciences_concours_db_v2",
+  "prepasciences_concours_db_v3",
+  "prepasciences_concours_db_v4",
+];
 
 /**
- * Assure que chaque bloc et épreuve possède un identifiant unique stable
+ * Assure que chaque bloc et épreuve possède un identifiant unique stable et des filières normalisées
  */
 function normalizeConcoursData(blocks: ConcoursBlock[]): ConcoursBlock[] {
   return blocks.map((block, bIdx) => ({
@@ -13,25 +25,31 @@ function normalizeConcoursData(blocks: ConcoursBlock[]): ConcoursBlock[] {
     id: block.id || `concours-${bIdx + 1}`,
     sujets: (block.sujets || []).map((s, sIdx) => {
       const eId = s.id || `${block.id || bIdx}-${s.annee}-${sIdx}`;
-      const corriges: CorrigePartieItem[] = Array.isArray(s.corriges) && s.corriges.length > 0
-        ? s.corriges.map((c, cIdx) => ({
-            id: c.id || `${eId}-corr-${cIdx}`,
-            titre: c.titre || `Corrigé Partie ${cIdx + 1}`,
-            url: c.url || "",
-          }))
-        : s.correction && s.correction.trim() !== ""
-        ? [
-            {
-              id: `${eId}-corr-0`,
-              titre: "Corrigé Détaillé Officiel",
-              url: s.correction.trim(),
-            },
-          ]
-        : [];
+      const corriges: CorrigePartieItem[] =
+        Array.isArray(s.corriges) && s.corriges.length > 0
+          ? s.corriges.map((c, cIdx) => ({
+              id: c.id || `${eId}-corr-${cIdx}`,
+              titre: c.titre || `Corrigé Partie ${cIdx + 1}`,
+              url: c.url || "",
+            }))
+          : s.correction && s.correction.trim() !== ""
+          ? [
+              {
+                id: `${eId}-corr-0`,
+                titre: "Corrigé Détaillé Officiel",
+                url: s.correction.trim(),
+              },
+            ]
+          : [];
+
+      const filieres = parseEpreuveFilieres(s.filiere, s.filieres);
 
       return {
         ...s,
         id: eId,
+        filiere: s.filiere || (filieres.length >= 5 ? "Toutes" : filieres.join(" / ")),
+        filieres,
+        matiere: s.matiere || (s.label.toLowerCase().startsWith("chimie") ? "Chimie" : "Physique"),
         description: s.description || "",
         themes: Array.isArray(s.themes) ? s.themes : [],
         videos: Array.isArray(s.videos) ? s.videos : [],
@@ -42,35 +60,47 @@ function normalizeConcoursData(blocks: ConcoursBlock[]): ConcoursBlock[] {
   }));
 }
 
+let cachedDefaultDB: ConcoursBlock[] | null = null;
+function getDefaultNormalizedDB(): ConcoursBlock[] {
+  if (!cachedDefaultDB) {
+    cachedDefaultDB = normalizeConcoursData(PC_CONCOURS_DATA);
+  }
+  return cachedDefaultDB;
+}
+
 /**
- * Récupère les données des concours depuis le stockage local (avec initialisation par défaut)
+ * Récupère les données des concours (base purgée v4 par défaut, ou surcharge locale si éditée par un professeur)
  */
 export function getConcoursDB(): ConcoursBlock[] {
   if (typeof window === "undefined") {
-    return normalizeConcoursData(PC_CONCOURS_DATA);
+    return getDefaultNormalizedDB();
   }
   try {
+    // Nettoyage des anciennes versions locales (v1/v2/v3 PC-only) pour éviter tout cache périmé
+    for (const oldKey of LEGACY_STORAGE_KEYS) {
+      if (localStorage.getItem(oldKey) !== null) {
+        localStorage.removeItem(oldKey);
+      }
+    }
+
     const raw = localStorage.getItem(CONCOURS_STORAGE_KEY);
     if (!raw) {
-      const initial = normalizeConcoursData(PC_CONCOURS_DATA);
-      localStorage.setItem(CONCOURS_STORAGE_KEY, JSON.stringify(initial));
-      return initial;
+      return getDefaultNormalizedDB();
     }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      const initial = normalizeConcoursData(PC_CONCOURS_DATA);
-      localStorage.setItem(CONCOURS_STORAGE_KEY, JSON.stringify(initial));
-      return initial;
+      localStorage.removeItem(CONCOURS_STORAGE_KEY);
+      return getDefaultNormalizedDB();
     }
     return normalizeConcoursData(parsed);
   } catch (err) {
     console.error("Error reading concours DB from localStorage:", err);
-    return normalizeConcoursData(PC_CONCOURS_DATA);
+    return getDefaultNormalizedDB();
   }
 }
 
 /**
- * Sauvegarde les concours dans le stockage local
+ * Sauvegarde les modifications professeur dans le stockage local
  */
 export function saveConcoursDB(data: ConcoursBlock[]): void {
   if (typeof window === "undefined") return;
@@ -82,16 +112,17 @@ export function saveConcoursDB(data: ConcoursBlock[]): void {
 }
 
 /**
- * Réinitialise la banque de concours aux données d'origine
+ * Réinitialise la banque de concours aux données d'origine purgées
  */
 export function resetConcoursDB(): ConcoursBlock[] {
-  const initial = normalizeConcoursData(PC_CONCOURS_DATA);
-  saveConcoursDB(initial);
-  return initial;
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(CONCOURS_STORAGE_KEY);
+  }
+  return getDefaultNormalizedDB();
 }
 
 /**
- * Ajoute une nouvelle banque de concours (ex: e3a-Polytech, CCINP TSI, etc.)
+ * Ajoute une nouvelle banque de concours
  */
 export function addConcoursBlock(blockData: {
   id?: string;
@@ -100,7 +131,7 @@ export function addConcoursBlock(blockData: {
   icon?: string;
 }): boolean {
   try {
-    const data = getConcoursDB();
+    const data = structuredClone(getConcoursDB());
     const slugId = (blockData.id || blockData.titre)
       .toLowerCase()
       .normalize("NFD")
@@ -109,8 +140,6 @@ export function addConcoursBlock(blockData: {
       .replace(/^-|-$/g, "");
 
     const finalId = slugId || `concours-${Date.now()}`;
-
-    // Vérifier si un concours avec cet ID existe déjà
     if (data.some((b) => b.id === finalId)) {
       return false;
     }
@@ -134,7 +163,7 @@ export function addConcoursBlock(blockData: {
 }
 
 /**
- * Modifie les métadonnées d'une banque de concours (nom, description, icône)
+ * Modifie les métadonnées d'une banque de concours
  */
 export function editConcoursBlock(
   blockId: string,
@@ -145,7 +174,7 @@ export function editConcoursBlock(
   }
 ): boolean {
   try {
-    const data = getConcoursDB();
+    const data = structuredClone(getConcoursDB());
     const block = data.find((b) => b.id === blockId);
     if (!block) return false;
 
@@ -172,7 +201,7 @@ export function editConcoursBlock(
  */
 export function deleteConcoursBlock(blockId: string): boolean {
   try {
-    const data = getConcoursDB();
+    const data = structuredClone(getConcoursDB());
     const filtered = data.filter((b) => b.id !== blockId);
     if (filtered.length === data.length) return false;
 
@@ -185,14 +214,16 @@ export function deleteConcoursBlock(blockId: string): boolean {
 }
 
 /**
- * Ajoute une nouvelle épreuve à un concours (avec énoncé et multi-parties de correction)
+ * Ajoute une nouvelle épreuve à un concours
  */
 export function addEpreuveToConcours(
   blockId: string,
   epreuve: {
     annee: number | string;
     filiere?: string;
+    matiere?: string;
     label: string;
+    description?: string;
     enonce?: string;
     correction?: string;
     corriges?: CorrigePartieItem[];
@@ -200,7 +231,7 @@ export function addEpreuveToConcours(
   }
 ): boolean {
   try {
-    const data = getConcoursDB();
+    const data = structuredClone(getConcoursDB());
     const block = data.find((b) => b.id === blockId);
     if (!block) return false;
 
@@ -227,17 +258,27 @@ export function addEpreuveToConcours(
       });
     }
 
-    const firstCorrigeUrl = cleanCorriges.length > 0 ? cleanCorriges[0].url : (epreuve.correction?.trim() || "");
+    const firstCorrigeUrl =
+      cleanCorriges.length > 0 ? cleanCorriges[0].url : epreuve.correction?.trim() || "";
+    const filiereStr = epreuve.filiere?.trim() || "MP";
+    const filieres = parseEpreuveFilieres(filiereStr);
 
     const newEpreuve: EpreuveItem = {
       id: eId,
       annee: epreuve.annee,
-      filiere: (epreuve.filiere?.trim() as any) || "MP / PC",
+      filiere: filiereStr,
+      filieres,
+      matiere: epreuve.matiere?.trim() || (epreuve.label.toLowerCase().includes("chimie") ? "Chimie" : "Physique"),
       label: epreuve.label.trim(),
+      description: epreuve.description?.trim() || "",
+      themes: [],
       enonce: epreuve.enonce?.trim() || "",
       correction: firstCorrigeUrl,
       corriges: cleanCorriges,
       video: epreuve.video?.trim() || null,
+      videos: epreuve.video?.trim()
+        ? [{ id: `${eId}-v0`, title: epreuve.label.trim(), url: epreuve.video.trim() }]
+        : [],
     };
 
     block.sujets.unshift(newEpreuve);
@@ -250,7 +291,7 @@ export function addEpreuveToConcours(
 }
 
 /**
- * Modifie une épreuve existante (titre, année, filière, énoncé, corrigés multi-parties, vidéo)
+ * Modifie une épreuve existante
  */
 export function editEpreuveInConcours(
   blockId: string,
@@ -258,7 +299,9 @@ export function editEpreuveInConcours(
   updates: {
     annee?: number | string;
     filiere?: string;
+    matiere?: string;
     label?: string;
+    description?: string;
     enonce?: string;
     correction?: string;
     corriges?: CorrigePartieItem[];
@@ -266,32 +309,46 @@ export function editEpreuveInConcours(
   }
 ): boolean {
   try {
-    const data = getConcoursDB();
+    const data = structuredClone(getConcoursDB());
     const block = data.find((b) => b.id === blockId);
     if (!block) return false;
 
-    let targetEpreuve: EpreuveItem | undefined;
-    if (typeof epreuveIdOrIndex === "number") {
-      targetEpreuve = block.sujets[epreuveIdOrIndex];
-    } else {
-      targetEpreuve = block.sujets.find((s) => s.id === epreuveIdOrIndex);
-    }
+    const targetEpreuve =
+      typeof epreuveIdOrIndex === "number"
+        ? block.sujets[epreuveIdOrIndex]
+        : block.sujets.find((s) => s.id === epreuveIdOrIndex);
     if (!targetEpreuve) return false;
 
     if (updates.annee !== undefined) {
       targetEpreuve.annee = updates.annee;
     }
     if (updates.filiere !== undefined) {
-      targetEpreuve.filiere = (updates.filiere.trim() as any) || "MP / PC";
+      const fStr = updates.filiere.trim() || "MP";
+      targetEpreuve.filiere = fStr;
+      targetEpreuve.filieres = parseEpreuveFilieres(fStr);
+    }
+    if (updates.matiere !== undefined) {
+      targetEpreuve.matiere = updates.matiere.trim();
     }
     if (updates.label !== undefined && updates.label.trim()) {
       targetEpreuve.label = updates.label.trim();
+    }
+    if (updates.description !== undefined) {
+      targetEpreuve.description = updates.description.trim();
     }
     if (updates.enonce !== undefined) {
       targetEpreuve.enonce = updates.enonce.trim();
     }
     if (updates.video !== undefined) {
-      targetEpreuve.video = updates.video?.trim() || null;
+      const cleanVid = updates.video?.trim() || null;
+      targetEpreuve.video = cleanVid;
+      if (!cleanVid) {
+        targetEpreuve.videos = [];
+      } else if (!targetEpreuve.videos || targetEpreuve.videos.length === 0) {
+        targetEpreuve.videos = [{ id: `${targetEpreuve.id}-v0`, title: targetEpreuve.label, url: cleanVid }];
+      } else {
+        targetEpreuve.videos[0] = { ...targetEpreuve.videos[0], url: cleanVid };
+      }
     }
 
     if (updates.corriges !== undefined) {
@@ -299,7 +356,7 @@ export function editEpreuveInConcours(
       updates.corriges.forEach((c, idx) => {
         if (c.url && c.url.trim()) {
           cleanCorriges.push({
-            id: c.id || `${targetEpreuve!.id || Date.now()}-corr-${idx}`,
+            id: c.id || `${targetEpreuve.id || Date.now()}-corr-${idx}`,
             titre: c.titre.trim() || `Corrigé Partie ${idx + 1}`,
             url: c.url.trim(),
           });
@@ -340,7 +397,7 @@ export function deleteEpreuveFromConcours(
   epreuveIdOrIndex: string | number
 ): boolean {
   try {
-    const data = getConcoursDB();
+    const data = structuredClone(getConcoursDB());
     const block = data.find((b) => b.id === blockId);
     if (!block) return false;
 

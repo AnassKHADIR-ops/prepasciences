@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BookOpen, Trophy, BookmarkCheck, ArrowRight, PlayCircle } from "lucide-react";
+import { BookOpen, Trophy, BookmarkCheck, ArrowRight } from "lucide-react";
 
 export type SectionType = "cours" | "concours" | "references";
 
@@ -28,11 +28,11 @@ export function GateCards3D({ onSelectSection }: GateCards3DProps) {
     },
     {
       id: "concours",
-      badge: "Annales Officielles",
+      badge: "Annales Officielles par Filière",
       title: "Concours",
-      subtitle: "Banques d'épreuves officielles écrites CNC Maroc, Mines-Ponts, CCINP, Centrale-Supélec, X-ENS avec corrigés rédigés détaillés et vidéos.",
+      subtitle: "Épreuves strictement classées par filière (MP, PSI, PC, TSI, PT) : CNC Maroc, Centrale-Supélec, Mines-Ponts, CCINP, X-ENS, e3a & Banque PT avec corrigés PDF et vidéos E-Learning Physique.",
       icon: <Trophy className="w-8 h-8 text-purple-700 dark:text-purple-400" />,
-      count: "5 Banques d'Épreuves",
+      count: "MP · PSI · PC · TSI · PT",
     },
     {
       id: "references",

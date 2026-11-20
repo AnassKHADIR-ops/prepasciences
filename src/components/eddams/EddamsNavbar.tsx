@@ -75,7 +75,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
                 H. Eddams
               </span>
               <span className="font-bold text-[8px] sm:text-[9px] tracking-wider uppercase text-slate-400 hidden xs:inline-block sm:inline-block truncate">
-                CPGE MP / PSI / TSI
+                CPGE MP · PSI · PC · TSI · PT
               </span>
             </div>
           </Link>

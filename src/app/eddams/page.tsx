@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Atom, MessageCircle, AlertTriangle } from "lucide-react";
 import { GateCards3D, SectionType } from "@/components/eddams/GateCards3D";
 import { ConcoursWidget } from "@/components/eddams/ConcoursWidget";
+import { FiliereConcours } from "@/components/eddams/pcConcoursData";
 import { CoursesWidget } from "@/components/eddams/CoursesWidget";
 import { ReferencesWidget } from "@/components/eddams/ReferencesWidget";
 import { PdfViewerModal } from "@/components/eddams/PdfViewerModal";
@@ -21,6 +22,15 @@ function EddamsPortal() {
   const rawNiveau = searchParams.get("niveau");
   const niveauParam: "sup" | "spe" | null =
     rawNiveau === "sup" || rawNiveau === "spe" ? rawNiveau : null;
+  const rawFiliere = searchParams.get("filiere")?.toUpperCase();
+  const filiereParam: FiliereConcours | null =
+    rawFiliere === "MP" ||
+    rawFiliere === "PSI" ||
+    rawFiliere === "PC" ||
+    rawFiliere === "TSI" ||
+    rawFiliere === "PT"
+      ? rawFiliere
+      : null;
   const { currentUser } = useAuth();
 
   const isMounted = useSyncExternalStore(
@@ -201,7 +211,7 @@ function EddamsPortal() {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium transition-colors">
-              Professeur Agrégé de Physique-Chimie · CPGE (MPSI / PCSI / TSI · MP / PSI / TSI)
+              Professeur Agrégé de Physique-Chimie · CPGE (MPSI / PCSI / TSI · MP / PSI / PC / TSI / PT)
             </p>
           </div>
 
@@ -219,6 +229,10 @@ function EddamsPortal() {
             <ConcoursWidget
               onOpenPdf={handleOpenPdf}
               onOpenVideo={handleOpenVideo}
+              initialFiliere={filiereParam}
+              onSelectFiliere={(fil) => {
+                router.replace(`/eddams?rubrique=concours&filiere=${fil}`, { scroll: false });
+              }}
             />
           )}
 

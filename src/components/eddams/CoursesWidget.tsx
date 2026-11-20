@@ -120,11 +120,7 @@ function getChapterOfficialPdf(chapter: ChapitreItem & { moduleId?: string; modu
 
 // ── Détection des Vidéos d'Extraits de Concours & Oraux CPGE ──
 export function isConcoursVideo(v: ElearningVideoItem): boolean {
-  if (v.moduleId === "concours" || Boolean(v.concoursTag)) return true;
-  const p = (v.playlists || []).join(" ").toLowerCase();
-  if (p.includes("concours")) return true;
-  const title = (v.title || "").toLowerCase();
-  return /\b(corrigé|corrigé|concours|centrale|mines-ponts|mines ponts|x-ens|x\/ens|ccp|ccinp|e3a|oral centrale|oral mines|planche|sujet)\b/i.test(title);
+  return v.moduleId === "concours" || Boolean(v.concoursTag);
 }
 
 // ── Extraction de l'identifiant YouTube canonique pour dé-duplication garantie ──

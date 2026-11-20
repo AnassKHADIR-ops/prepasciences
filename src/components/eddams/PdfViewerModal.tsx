@@ -59,7 +59,7 @@ export function PdfViewerModal({ isOpen, onClose, url, title }: PdfViewerModalPr
                 {title || "Document CPGE"}
               </h3>
               <p className="text-[11px] text-purple-300/80 hidden sm:block">
-                Physique-Chimie MP / MP* · Pr. Hassan EDDAMS
+                Physique-Chimie CPGE · Pr. Hassan EDDAMS
               </p>
             </div>
           </div>

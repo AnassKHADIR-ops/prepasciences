@@ -78,15 +78,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/7oTwo4_Fn1o/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "TSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Thermodynamique",
       "PC/PSI Bilans en mécanique des fluides",
@@ -130,16 +128,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/rFG6xngmzZw/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique quantique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -156,16 +151,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/_1ohXZN1c4A/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
       "MP : Corrigés épreuves de physiques concours X/ENS/Centrale/Mines Ponts/CCP E3A",
@@ -346,7 +338,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/ftiglAwHsv4/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Méthodologie Concours",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -355,7 +347,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "Concours CPGE",
     "playlists": [
       "électrostatique",
       "résolution de problème en physique/chimie",
@@ -467,15 +459,17 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=RohgxH6yzRM",
     "embedUrl": "https://www.youtube.com/embed/RohgxH6yzRM",
     "thumbnailUrl": "https://i.ytimg.com/vi/RohgxH6yzRM/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électronique Numérique & Modulation",
     "niveau": "spe",
     "filieres": [
-      "MP"
+      "PSI",
+      "TSI",
+      "PC"
     ],
     "isCommon": false,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -542,11 +536,9 @@
     "chapitre": "Corrigés X-ENS",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
+    "isCommon": false,
     "concoursTag": "X-ENS",
     "playlists": [
       "Statique des fluides MPSI/PCSI/MP/PC/BCPST/PT",
@@ -564,15 +556,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/83cWpynrON8/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
@@ -595,11 +585,9 @@
     "chapitre": "Corrigés X-ENS",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
+    "isCommon": false,
     "concoursTag": "X-ENS",
     "playlists": [
       "Dynamique des fluides newtonien. PC/PSI/Licence",
@@ -636,16 +624,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/urrUaRwNiy0/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
       "PSI : Corrigés d'épreuves de physique aux concours X/ENS/CCP/Centrale/Mines",
@@ -662,15 +647,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/ZdcNCt-0WwE/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
@@ -690,15 +673,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/flv6T2SCZqw/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Mécanique prépa",
       "électrostatique",
@@ -737,13 +718,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/-BDwdBKIOW4/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Mécanique prépa",
       "MP : Corrigés épreuves de physiques concours X/ENS/Centrale/Mines Ponts/CCP E3A",
@@ -856,13 +837,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/hKInxroik7k/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "PC"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Mécanique prépa",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -879,16 +860,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/gY7vT1DeYSo/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Mécanique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -930,13 +908,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/WEkcl_U4Yl4/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "PSI"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "PSI : Corrigés d'épreuves de physique aux concours X/ENS/CCP/Centrale/Mines",
       "Corrigés concours CCP"
@@ -952,7 +930,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/EXvereDRg1I/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "TP Concours Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -961,7 +939,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -979,16 +957,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/uEuTAovp-7Q/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Thermodynamique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -1032,7 +1007,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/nIaz5DauQWA/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -1041,7 +1016,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -1233,9 +1208,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=mRPfT7rnTpE",
     "embedUrl": "https://www.youtube.com/embed/mRPfT7rnTpE",
     "thumbnailUrl": "https://i.ytimg.com/vi/mRPfT7rnTpE/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "domaine": "Outils & Méthodologie",
+    "moduleId": "methodes",
+    "chapitre": "Orientation & Stratégie Concours",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -1244,7 +1219,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": null,
     "playlists": [
       "réussir en prépa"
     ]
@@ -1284,7 +1259,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/qGK2r4qWwQI/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Oraux Concours CPGE",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -1293,7 +1268,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "Concours CPGE",
     "playlists": [
       "Mécanique prépa",
       "Mécanique en référentiel non galiléen",
@@ -1310,13 +1285,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/I91XOsBIkbw/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "PC"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Ondes acoustiques - Propagation du son",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A"
@@ -1332,16 +1307,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/lpHZXfIFXDE/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique quantique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -1358,16 +1330,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/O7BjVatk-uc/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Ondes acoustiques - Propagation du son",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -1385,15 +1354,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/hk7S4QJujT8/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
@@ -1455,13 +1422,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/98lNEeJpQrk/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "MP"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "MP : Corrigés épreuves de physiques concours X/ENS/Centrale/Mines Ponts/CCP E3A",
       "Corrigés concours CCP"
@@ -1477,15 +1444,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/pU-oQORhDBs/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -1504,13 +1469,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/dBrXD17alH8/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "PC"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Ondes acoustiques - Propagation du son",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -1527,15 +1492,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/4AmdmiTzpFY/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "PSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "PC/PSI Bilans en mécanique des fluides",
       "Dynamique des fluides newtonien. PC/PSI/Licence",
@@ -1554,15 +1517,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Y9zVOKPRKH0/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Dynamique des fluides newtonien. PC/PSI/Licence",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -1579,16 +1540,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/PdnXQdx9abk/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -1630,11 +1588,10 @@
     "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "PC",
+      "PSI"
     ],
-    "isCommon": true,
+    "isCommon": false,
     "concoursTag": "Mines-Ponts",
     "playlists": [
       "Dynamique des fluides newtonien. PC/PSI/Licence"
@@ -1650,7 +1607,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/FNvOXxxeudM/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -1658,7 +1615,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Diffusion/conduction thermique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -1676,16 +1633,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/OIFdXBZz0jQ/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -1770,18 +1724,15 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=KIj9u6Sn2jc",
     "embedUrl": "https://www.youtube.com/embed/KIj9u6Sn2jc",
     "thumbnailUrl": "https://i.ytimg.com/vi/KIj9u6Sn2jc/hqdefault.jpg",
-    "domaine": "Optique Ondulatoire & Géométrique",
-    "moduleId": "optique",
-    "chapitre": "Optique Ondulatoire, Interférences & Réseaux",
+    "domaine": "Annales & Corrigés de Concours",
+    "moduleId": "concours",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": null,
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": []
   },
   {
@@ -2055,7 +2006,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Av0Dg5ZaAdE/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -2064,7 +2015,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -2104,16 +2055,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/gU4_XhZpET0/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés e3a",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "E3A",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A"
     ]
@@ -2128,16 +2076,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/20gHaeEiV4k/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
       "TSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Diffusion/conduction thermique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -2154,15 +2099,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=0UzCmX7dTsg",
     "embedUrl": "https://www.youtube.com/embed/0UzCmX7dTsg",
     "thumbnailUrl": "https://i.ytimg.com/vi/0UzCmX7dTsg/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électronique Numérique & Échantillonnage",
     "niveau": "spe",
     "filieres": [
+      "PSI",
+      "TSI",
+      "PC",
       "MP"
     ],
-    "isCommon": false,
-    "concoursTag": "TP Concours",
+    "isCommon": true,
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "Electronique numérique",
@@ -2253,16 +2201,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/e0_hmSHNWY4/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Optique géométrique théorique et pratique MPSI/PCSI",
       "Vidéos de physique pour MPSI/PCSI",
@@ -2331,16 +2278,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/pE6mtb8b7hY/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés e3a",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "E3A",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
       "PSI : Corrigés d'épreuves de physique aux concours X/ENS/CCP/Centrale/Mines",
@@ -2383,16 +2327,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/NOg1lIgxAro/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -2530,13 +2471,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/4isWLegtGoY/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "PSI"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Ondes électromagnétiques",
       "PSI : Corrigés d'épreuves de physique aux concours X/ENS/CCP/Centrale/Mines",
@@ -2551,9 +2492,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=OURAK1ciyuk",
     "embedUrl": "https://www.youtube.com/embed/OURAK1ciyuk",
     "thumbnailUrl": "https://i.ytimg.com/vi/OURAK1ciyuk/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Oscillateurs & Systèmes Linéaires Asservis",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -2562,7 +2503,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -2578,13 +2519,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/6AgOVWwH2pw/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "PSI"
+      "TSI"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Electronique prépa",
       "PSI : Corrigés d'épreuves de physique aux concours X/ENS/CCP/Centrale/Mines",
@@ -2601,7 +2542,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/I8IaHCXs-JE/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "chapitre": "TP Concours Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -2610,7 +2551,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -2625,15 +2566,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=4F1vOIy6FZU",
     "embedUrl": "https://www.youtube.com/embed/4F1vOIy6FZU",
     "thumbnailUrl": "https://i.ytimg.com/vi/4F1vOIy6FZU/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électrocinétique, Puissance & Filtrage Linéaire",
+    "niveau": "sup",
     "filieres": [
-      "MP"
+      "MP",
+      "PSI",
+      "PC",
+      "TSI"
     ],
-    "isCommon": false,
-    "concoursTag": "TP Concours",
+    "isCommon": true,
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -2647,9 +2591,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=C3uzEHzWInY",
     "embedUrl": "https://www.youtube.com/embed/C3uzEHzWInY",
     "thumbnailUrl": "https://i.ytimg.com/vi/C3uzEHzWInY/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Oscillateurs & Systèmes Linéaires Asservis",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -2658,7 +2602,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -2773,7 +2717,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/kscmcs1_QII/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -2781,7 +2725,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Thermodynamique",
       "PC/PSI Bilans en mécanique des fluides",
@@ -2799,15 +2743,15 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=FEglMZ1uxDo",
     "embedUrl": "https://www.youtube.com/embed/FEglMZ1uxDo",
     "thumbnailUrl": "https://i.ytimg.com/vi/FEglMZ1uxDo/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "domaine": "Outils & Méthodologie",
+    "moduleId": "methodes",
+    "chapitre": "Orientation & Stratégie Concours",
     "niveau": "spe",
     "filieres": [
       "PC"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": null,
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
       "Corrigés concours CCP",
@@ -2940,16 +2884,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/5h_wdG14tXk/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "MP"
     ],
-    "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Mécanique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -2966,7 +2907,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/XKyapPtB83s/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -2974,7 +2915,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Mécanique prépa",
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
@@ -3043,15 +2984,15 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=42xngVt2pEg",
     "embedUrl": "https://www.youtube.com/embed/42xngVt2pEg",
     "thumbnailUrl": "https://i.ytimg.com/vi/42xngVt2pEg/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "domaine": "Outils & Méthodologie",
+    "moduleId": "methodes",
+    "chapitre": "Actualités & Orientation CPGE",
     "niveau": "spe",
     "filieres": [
       "MP"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": null,
     "playlists": [
       "réussir en prépa"
     ]
@@ -3066,16 +3007,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/ro_GfGfRxkk/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
       "TSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Thermodynamique",
       "Vidéos de physique pour MPSI/PCSI",
@@ -3095,16 +3033,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Qm8FaiSxNLA/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
       "TSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Vidéos de physique pour MPSI/PCSI",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -3123,16 +3058,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/KKe8oe7xTKo/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
       "TSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Thermodynamique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -3223,7 +3155,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/N_rJf7x4vyQ/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "TP & Oraux Concours",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -3232,7 +3164,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "TP Concours",
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -3246,10 +3178,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=huU8hja6TXU",
     "embedUrl": "https://www.youtube.com/embed/huU8hja6TXU",
     "thumbnailUrl": "https://i.ytimg.com/vi/huU8hja6TXU/hqdefault.jpg",
-    "domaine": "Outils & Méthodologie",
-    "moduleId": "methodes",
-    "chapitre": "Outils Numériques & Méthodologie CPGE",
-    "niveau": "sup",
+    "domaine": "Annales & Corrigés de Concours",
+    "moduleId": "concours",
+    "chapitre": "Méthodologie Concours",
+    "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
@@ -3257,7 +3189,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": null,
+    "concoursTag": "Concours CPGE",
     "playlists": [
       "Vidéos de physique pour MPSI/PCSI",
       "réussir en prépa"
@@ -3535,7 +3467,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/if0CcSZFH_A/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -3543,7 +3475,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "PC/PSI Bilans en mécanique des fluides",
       "Dynamique des fluides newtonien. PC/PSI/Licence",
@@ -3658,15 +3590,14 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Tkfsy4PL4jM/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Oraux Concours CPGE",
     "niveau": "spe",
     "filieres": [
-      "MP",
       "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "isCommon": false,
+    "concoursTag": "Concours CPGE",
     "playlists": [
       "PC/PSI Bilans en mécanique des fluides",
       "Dynamique des fluides newtonien. PC/PSI/Licence",
@@ -3825,9 +3756,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=WUgGxmJfIO8",
     "embedUrl": "https://www.youtube.com/embed/WUgGxmJfIO8",
     "thumbnailUrl": "https://i.ytimg.com/vi/WUgGxmJfIO8/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Ondulatoire, Interférences & Réseaux",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -3836,7 +3767,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "TP de physique/concours CPGE"
     ]
@@ -3851,16 +3782,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Vct9A8PoU3g/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
       "PSI : Corrigés d'épreuves de physique aux concours X/ENS/CCP/Centrale/Mines",
@@ -3946,9 +3876,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=GBkfj1baSJo",
     "embedUrl": "https://www.youtube.com/embed/GBkfj1baSJo",
     "thumbnailUrl": "https://i.ytimg.com/vi/GBkfj1baSJo/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Analyse de Fourier & Traitement du Signal",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -3957,7 +3887,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "Mathématiques pour la physique",
@@ -3972,9 +3902,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=jE3ZOvFNyRo",
     "embedUrl": "https://www.youtube.com/embed/jE3ZOvFNyRo",
     "thumbnailUrl": "https://i.ytimg.com/vi/jE3ZOvFNyRo/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électromagnétisme & Induction",
+    "moduleId": "em",
+    "chapitre": "Induction Électromagnétique & Forces de Laplace",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -3983,7 +3913,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -3999,7 +3929,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/bNFHWU8SxZg/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "chapitre": "TP & Oraux Concours",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -4024,16 +3954,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/KH0MnxkVRsE/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Ondes mécaniques",
       "PSI : Corrigés d'épreuves de physique aux concours X/ENS/CCP/Centrale/Mines",
@@ -4048,9 +3977,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=_6SXhV1TT5w",
     "embedUrl": "https://www.youtube.com/embed/_6SXhV1TT5w",
     "thumbnailUrl": "https://i.ytimg.com/vi/_6SXhV1TT5w/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "domaine": "Outils & Méthodologie",
+    "moduleId": "methodes",
+    "chapitre": "Ressources & Méthodologie CPGE",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -4059,7 +3988,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": null,
     "playlists": [
       "réussir en prépa"
     ]
@@ -4096,15 +4025,14 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/bLu4qqJKWq4/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Mécanique quantique",
       "Vidéos de physique pour MPSI/PCSI",
@@ -4122,15 +4050,14 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/_caf1ADM3xk/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Mécanique quantique",
       "Vidéos de physique pour MPSI/PCSI",
@@ -4148,15 +4075,14 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/BLQwE4scMxs/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
@@ -4176,15 +4102,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/NGLUL7aLhbU/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique quantique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -4201,15 +4125,14 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/5RQSoc04sjA/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Mécanique quantique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -4227,15 +4150,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Q8YbQsNusEg/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique quantique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -4250,17 +4171,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=K76Ao8EHPc4",
     "embedUrl": "https://www.youtube.com/embed/K76Ao8EHPc4",
     "thumbnailUrl": "https://i.ytimg.com/vi/K76Ao8EHPc4/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Ondulatoire, Interférences & Réseaux",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC"
+      "PC",
+      "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Optique ondulatoire/Interférences lumineuses MP/PC/PT",
       "TP de physique/concours CPGE"
@@ -4301,15 +4223,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/etCfHg2wf68/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés e3a",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "E3A",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -4351,12 +4271,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/LMWJB8pvXks/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Concours CPGE",
+    "chapitre": "Méthodologie Concours",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC"
+      "PC",
+      "TSI"
     ],
     "isCommon": true,
     "concoursTag": "Concours CPGE",
@@ -4525,15 +4446,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/I4uIaxBcTVw/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés e3a",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "E3A",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -4551,15 +4470,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/_-e7510F0nA/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "TSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
@@ -4603,15 +4520,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/ylSRc8qsf3w/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Diffusion/conduction thermique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -4629,15 +4544,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/piYViYx0Q0I/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Diffusion/conduction thermique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -4655,8 +4568,8 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/45wiBwJjTl8/hqdefault.jpg",
     "domaine": "Outils & Méthodologie",
     "moduleId": "methodes",
-    "chapitre": "Outils Numériques & Méthodologie CPGE",
-    "niveau": "sup",
+    "chapitre": "Ressources & Méthodologie CPGE",
+    "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
@@ -4679,7 +4592,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Rt4kG7CgjKk/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -4687,7 +4600,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Ondes mécaniques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -4773,9 +4686,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=-x_v2Q7r218",
     "embedUrl": "https://www.youtube.com/embed/-x_v2Q7r218",
     "thumbnailUrl": "https://i.ytimg.com/vi/-x_v2Q7r218/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Polarisation de la Lumière (Lames & Réflexion)",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -4783,7 +4696,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "TP de physique/concours CPGE"
     ]
@@ -4915,17 +4828,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=8sUHOglKU44",
     "embedUrl": "https://www.youtube.com/embed/8sUHOglKU44",
     "thumbnailUrl": "https://i.ytimg.com/vi/8sUHOglKU44/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Ondulatoire, Interférences & Réseaux",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC"
+      "PC",
+      "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Optique ondulatoire/Interférences lumineuses MP/PC/PT",
       "TP de physique/concours CPGE"
@@ -4939,17 +4853,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=itEGBUTNcVI",
     "embedUrl": "https://www.youtube.com/embed/itEGBUTNcVI",
     "thumbnailUrl": "https://i.ytimg.com/vi/itEGBUTNcVI/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Ondulatoire, Interférences & Réseaux",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC"
+      "PC",
+      "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Optique ondulatoire/Interférences lumineuses MP/PC/PT",
       "TP de physique/concours CPGE"
@@ -4963,17 +4878,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=fXPOvN6gT3Q",
     "embedUrl": "https://www.youtube.com/embed/fXPOvN6gT3Q",
     "thumbnailUrl": "https://i.ytimg.com/vi/fXPOvN6gT3Q/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Ondulatoire, Interférences & Réseaux",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC"
+      "PC",
+      "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Optique ondulatoire/Interférences lumineuses MP/PC/PT",
       "TP de physique/concours CPGE"
@@ -4987,17 +4903,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=fY_MF5CrPOM",
     "embedUrl": "https://www.youtube.com/embed/fY_MF5CrPOM",
     "thumbnailUrl": "https://i.ytimg.com/vi/fY_MF5CrPOM/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Ondulatoire, Interférences & Réseaux",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC"
+      "PC",
+      "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Optique ondulatoire/Interférences lumineuses MP/PC/PT",
       "TP de physique/concours CPGE"
@@ -5013,15 +4930,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/DlU5Lm21Ch4/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique quantique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -5112,15 +5027,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/4osW4Pzr2Qc/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Diffusion/conduction thermique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -5138,15 +5051,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/T1ev9YWCIY4/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Vidéos de physique pour MPSI/PCSI",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -5166,15 +5077,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/dFIo79GHnjc/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Diffusion/conduction thermique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -5195,11 +5104,9 @@
     "chapitre": "Corrigés X-ENS",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
+    "isCommon": false,
     "concoursTag": "X-ENS",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -5266,10 +5173,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=Q52Rc4WjxXc",
     "embedUrl": "https://www.youtube.com/embed/Q52Rc4WjxXc",
     "thumbnailUrl": "https://i.ytimg.com/vi/Q52Rc4WjxXc/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électrocinétique, Puissance & Filtrage Linéaire",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -5277,7 +5184,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -5389,10 +5296,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=iaxNL6HWJqA",
     "embedUrl": "https://www.youtube.com/embed/iaxNL6HWJqA",
     "thumbnailUrl": "https://i.ytimg.com/vi/iaxNL6HWJqA/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électrocinétique, Puissance & Filtrage Linéaire",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -5400,7 +5307,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5415,10 +5322,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=x5T7H7BYCl0",
     "embedUrl": "https://www.youtube.com/embed/x5T7H7BYCl0",
     "thumbnailUrl": "https://i.ytimg.com/vi/x5T7H7BYCl0/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électrocinétique, Puissance & Filtrage Linéaire",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -5426,7 +5333,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5467,10 +5374,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=oj9gK-VMGg8",
     "embedUrl": "https://www.youtube.com/embed/oj9gK-VMGg8",
     "thumbnailUrl": "https://i.ytimg.com/vi/oj9gK-VMGg8/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Géométrique & Instruments d'Optique",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -5478,7 +5385,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Optique géométrique théorique et pratique MPSI/PCSI",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5520,7 +5427,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/I7iNFh7fMsI/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Oraux Concours CPGE",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -5529,7 +5436,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "Concours CPGE",
     "playlists": [
       "Optique géométrique théorique et pratique MPSI/PCSI",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5571,16 +5478,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/uUl6Q5Qedns/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
       "TSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5622,10 +5526,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=v2OBa0FTZbE",
     "embedUrl": "https://www.youtube.com/embed/v2OBa0FTZbE",
     "thumbnailUrl": "https://i.ytimg.com/vi/v2OBa0FTZbE/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électrocinétique, Puissance & Filtrage Linéaire",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -5633,7 +5537,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5648,10 +5552,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=tfSov0bGGzg",
     "embedUrl": "https://www.youtube.com/embed/tfSov0bGGzg",
     "thumbnailUrl": "https://i.ytimg.com/vi/tfSov0bGGzg/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électrocinétique, Puissance & Filtrage Linéaire",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -5659,7 +5563,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5699,10 +5603,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=0WqqLtnMdj0",
     "embedUrl": "https://www.youtube.com/embed/0WqqLtnMdj0",
     "thumbnailUrl": "https://i.ytimg.com/vi/0WqqLtnMdj0/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Géométrique & Instruments d'Optique",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -5710,7 +5614,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Optique géométrique théorique et pratique MPSI/PCSI",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5727,7 +5631,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/ltIWqsyZBsQ/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Résolution de Problème",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -5736,7 +5640,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "Concours CPGE",
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -5849,10 +5753,10 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=ok-qm2fvWSE",
     "embedUrl": "https://www.youtube.com/embed/ok-qm2fvWSE",
     "thumbnailUrl": "https://i.ytimg.com/vi/ok-qm2fvWSE/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électrocinétique, Puissance & Filtrage Linéaire",
+    "niveau": "sup",
     "filieres": [
       "MP",
       "PSI",
@@ -5860,7 +5764,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -6073,15 +5977,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=SSzp6CEa0fo",
     "embedUrl": "https://www.youtube.com/embed/SSzp6CEa0fo",
     "thumbnailUrl": "https://i.ytimg.com/vi/SSzp6CEa0fo/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
-    "niveau": "spe",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électrocinétique, Puissance & Filtrage Linéaire",
+    "niveau": "sup",
     "filieres": [
-      "MP"
+      "MP",
+      "PSI",
+      "PC",
+      "TSI"
     ],
-    "isCommon": false,
-    "concoursTag": "TP Concours",
+    "isCommon": true,
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -6145,16 +6052,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/TW7F1aRXFrc/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6172,16 +6078,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/_XJMqPcBXfg/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Electronique prépa",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6199,7 +6104,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/81nXa4CKbck/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -6207,7 +6112,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6225,7 +6130,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/WMU1pkEJJF0/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -6233,7 +6138,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique prépa",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6251,16 +6156,14 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Z7TlFiSLWCA/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Thermodynamique",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6277,15 +6180,14 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/gyrFK316ZJY/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
       "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Dynamique des fluides newtonien. PC/PSI/Licence",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6302,13 +6204,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/WSDI0hZSyXU/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "MP : Corrigés épreuves de physiques concours X/ENS/Centrale/Mines Ponts/CCP E3A"
     ]
@@ -6323,16 +6225,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/nGQaoxICkaI/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique prépa",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6398,7 +6299,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/EBbx_gslKBM/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -6407,7 +6308,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Mécanique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -6547,16 +6448,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/fHAb1ZxdBCI/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Thermodynamique",
       "Diffusion/conduction thermique",
@@ -6624,16 +6524,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/HB8P6Btl8iY/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés e3a",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "E3A",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6771,7 +6668,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/lmoMQsmAZ-s/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -6780,7 +6677,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -6801,16 +6698,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/P2kOesxe73g/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -6948,17 +6844,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=gNElaD4iHqc",
     "embedUrl": "https://www.youtube.com/embed/gNElaD4iHqc",
     "thumbnailUrl": "https://i.ytimg.com/vi/gNElaD4iHqc/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Optique Ondulatoire & Géométrique",
+    "moduleId": "optique",
+    "chapitre": "Optique Ondulatoire, Interférences & Réseaux",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC"
+      "PC",
+      "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Optique ondulatoire/Interférences lumineuses MP/PC/PT",
       "TP de physique/concours CPGE"
@@ -7148,17 +7045,16 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=lOvs3K_IX90",
     "embedUrl": "https://www.youtube.com/embed/lOvs3K_IX90",
     "thumbnailUrl": "https://i.ytimg.com/vi/lOvs3K_IX90/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Physique des Ondes",
+    "moduleId": "ondes",
+    "chapitre": "Physique des Ondes & Phénomènes de Propagation",
     "niveau": "spe",
     "filieres": [
-      "MP",
       "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "TP Concours",
+    "isCommon": false,
+    "concoursTag": null,
     "playlists": [
       "TP de physique/concours CPGE"
     ]
@@ -7171,17 +7067,16 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=5lCQCcgIIXw",
     "embedUrl": "https://www.youtube.com/embed/5lCQCcgIIXw",
     "thumbnailUrl": "https://i.ytimg.com/vi/5lCQCcgIIXw/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Physique des Ondes",
+    "moduleId": "ondes",
+    "chapitre": "Physique des Ondes & Phénomènes de Propagation",
     "niveau": "spe",
     "filieres": [
-      "MP",
       "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "TP Concours",
+    "isCommon": false,
+    "concoursTag": null,
     "playlists": [
       "TP de physique/concours CPGE"
     ]
@@ -7267,15 +7162,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/1XnpQUBtWOk/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC"
+      "PSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Ondes acoustiques - Propagation du son",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -7482,7 +7375,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/z-W5S_LPRyM/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Centrale-Supélec",
+    "chapitre": "TP & Oraux Concours",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -7491,7 +7384,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Centrale-Supélec",
+    "concoursTag": "TP Concours",
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -7595,15 +7488,17 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=wFs3XlzLLqc",
     "embedUrl": "https://www.youtube.com/embed/wFs3XlzLLqc",
     "thumbnailUrl": "https://i.ytimg.com/vi/wFs3XlzLLqc/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électronique Numérique & Modulation",
     "niveau": "spe",
     "filieres": [
-      "MP"
+      "PSI",
+      "TSI",
+      "PC"
     ],
     "isCommon": false,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -7619,7 +7514,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/_p31dPJBvRw/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "TP & Oraux Concours",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -7628,7 +7523,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "TP Concours",
     "playlists": [
       "Ondes acoustiques - Propagation du son",
       "TP de physique/concours CPGE"
@@ -7779,9 +7674,9 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=6-thwSfD87s",
     "embedUrl": "https://www.youtube.com/embed/6-thwSfD87s",
     "thumbnailUrl": "https://i.ytimg.com/vi/6-thwSfD87s/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Oscillateurs & Systèmes Linéaires Asservis",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -7790,7 +7685,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "TP Concours",
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "TP de physique/concours CPGE"
@@ -7877,16 +7772,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/G6w5Akgl3qg/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -8148,7 +8042,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/THpMG7V9LR8/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Méthodologie Concours",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -8157,7 +8051,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Concours CPGE",
     "playlists": [
       "réussir en prépa"
     ]
@@ -8172,13 +8066,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/YE-nbGPg6GM/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "MP"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Ondes électromagnétiques",
       "MP : Corrigés épreuves de physiques concours X/ENS/Centrale/Mines Ponts/CCP E3A"
@@ -8194,7 +8088,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/-3ol-CafkAc/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -8203,7 +8097,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Electronique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -8247,7 +8141,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/Nw78jcbbXzA/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -8255,7 +8149,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
       "PSI : Corrigés d'épreuves de physique aux concours X/ENS/CCP/Centrale/Mines",
@@ -8274,7 +8168,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/MajnfmAi8Ic/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -8282,7 +8176,7 @@
       "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Dynamique des fluides newtonien. PC/PSI/Licence",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -8350,16 +8244,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/mVRcFRgOiVo/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Electronique prépa",
       "Electronique numérique",
@@ -8378,16 +8271,15 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/7GtEhYKNJFM/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
     "isCommon": true,
-    "concoursTag": "X-ENS",
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -8477,16 +8369,16 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=K2Aua4meBro",
     "embedUrl": "https://www.youtube.com/embed/K2Aua4meBro",
     "thumbnailUrl": "https://i.ytimg.com/vi/K2Aua4meBro/hqdefault.jpg",
-    "domaine": "Physique Quantique",
-    "moduleId": "quantique",
-    "chapitre": "Mécanique Quantique & Effet Tunnel",
+    "domaine": "Annales & Corrigés de Concours",
+    "moduleId": "concours",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "MP",
       "PC"
     ],
     "isCommon": false,
-    "concoursTag": null,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
       "Expérience de Stern et Gerlach"
@@ -8502,13 +8394,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/FbyROi3heq8/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "PC"
     ],
     "isCommon": false,
-    "concoursTag": "X-ENS",
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
       "Corrigés concours CCP"
@@ -8524,16 +8416,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/v962yKSrR6A/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Ondes électromagnétiques",
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
@@ -8552,16 +8441,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/BKl8WerFLDM/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés Mines-Ponts",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PSI"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "Mines-Ponts",
     "playlists": [
       "Mécanique prépa",
       "Vidéos de physique pour MPSI/PCSI",
@@ -8604,16 +8490,13 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/9N3YSDzRBlg/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "PC corrigés d'épreuves de physique aux concours X/ENS/Centrale/Mines /CCP/E3A",
       "Corrigés concours CCP",
@@ -8628,15 +8511,18 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=QpqnHPh3Q9Q",
     "embedUrl": "https://www.youtube.com/embed/QpqnHPh3Q9Q",
     "thumbnailUrl": "https://i.ytimg.com/vi/QpqnHPh3Q9Q/hqdefault.jpg",
-    "domaine": "Annales & Corrigés de Concours",
-    "moduleId": "concours",
-    "chapitre": "Corrigés TP Concours",
+    "domaine": "Électronique & Signal",
+    "moduleId": "elec",
+    "chapitre": "Électronique Numérique & Échantillonnage",
     "niveau": "spe",
     "filieres": [
+      "PSI",
+      "TSI",
+      "PC",
       "MP"
     ],
-    "isCommon": false,
-    "concoursTag": "TP Concours",
+    "isCommon": true,
+    "concoursTag": null,
     "playlists": [
       "Electronique prépa",
       "Electronique numérique",
@@ -8678,15 +8564,14 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/DLHFj2SEdzs/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés X-ENS",
+    "chapitre": "Corrigés CCINP / CCP",
     "niveau": "spe",
     "filieres": [
       "MP",
-      "PSI",
       "PC"
     ],
-    "isCommon": true,
-    "concoursTag": "X-ENS",
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Magnétostatique/théorème d'Ampère",
       "Electrostatique/magnétostatique prépa MP/PC/PSI/PT",
@@ -8921,18 +8806,15 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=3fZh5d6kYxE",
     "embedUrl": "https://www.youtube.com/embed/3fZh5d6kYxE",
     "thumbnailUrl": "https://i.ytimg.com/vi/3fZh5d6kYxE/hqdefault.jpg",
-    "domaine": "Électromagnétisme & Induction",
-    "moduleId": "em",
-    "chapitre": "Induction Électromagnétique & Forces de Laplace",
-    "niveau": "sup",
+    "domaine": "Annales & Corrigés de Concours",
+    "moduleId": "concours",
+    "chapitre": "Corrigés CCINP / CCP",
+    "niveau": "spe",
     "filieres": [
-      "MP",
-      "PSI",
-      "PC",
-      "TSI"
+      "PC"
     ],
-    "isCommon": true,
-    "concoursTag": null,
+    "isCommon": false,
+    "concoursTag": "CCINP / CCP",
     "playlists": [
       "Induction électromagnétique MPSI/PCSI"
     ]
@@ -9040,7 +8922,7 @@
     "thumbnailUrl": "https://i.ytimg.com/vi/s6n0WQpI7Uw/hqdefault.jpg",
     "domaine": "Annales & Corrigés de Concours",
     "moduleId": "concours",
-    "chapitre": "Corrigés Mines-Ponts",
+    "chapitre": "Oraux Centrale-Supélec",
     "niveau": "spe",
     "filieres": [
       "MP",
@@ -9049,7 +8931,7 @@
       "TSI"
     ],
     "isCommon": true,
-    "concoursTag": "Mines-Ponts",
+    "concoursTag": "Centrale-Supélec",
     "playlists": [
       "Diffusion/conduction thermique",
       "Exercices oral centrale/mines/CCP/X"
