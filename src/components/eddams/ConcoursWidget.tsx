@@ -32,12 +32,8 @@ import {
   Trash2,
   PlusCircle,
   Eye,
-  Filter,
   GraduationCap,
-  Video,
-  FlaskConical,
-  Atom,
-  Layers,
+  SlidersHorizontal,
   RotateCcw,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -59,33 +55,12 @@ interface ConcoursWidgetProps {
   onSelectFiliere?: (filiere: FiliereConcours) => void;
 }
 
-type MatiereFilter = "all" | "physique" | "chimie" | "videos";
+type MatiereFilter = "all" | "physique" | "chimie";
 
 let corrigePartSeq = 0;
 function nextCorrigePartId(): string {
   corrigePartSeq += 1;
   return `corr-${corrigePartSeq}`;
-}
-
-function getDefaultOpenBlocks(filiere: FiliereConcours): Record<string, boolean> {
-  if (filiere === "PT") {
-    return { banquept: true, methodo: false };
-  }
-  if (filiere === "TSI") {
-    return { cs: true, ccinp: true, methodo: false };
-  }
-  if (filiere === "PC") {
-    return { cs: true, mp: true, ccinp: false, xens: false, e3a: false, methodo: false };
-  }
-  return {
-    cnc: true,
-    cs: true,
-    mp: false,
-    ccinp: false,
-    xens: false,
-    e3a: false,
-    methodo: false,
-  };
 }
 
 export function ConcoursWidget({
@@ -112,13 +87,19 @@ export function ConcoursWidget({
   const [openBlocksByFiliere, setOpenBlocksByFiliere] = useState<
     Partial<Record<FiliereConcours, Record<string, boolean>>>
   >({});
-  const [filteredOpenOverrides, setFilteredOpenOverrides] = useState<Record<string, boolean>>({});
 
   const defaultUserFiliere = resolveUserDefaultFiliere(
     isMounted ? currentUser?.filiere : undefined
   );
   const selectedFiliere: FiliereConcours =
     initialFiliere ?? localFiliere ?? defaultUserFiliere;
+
+  const collapseCurrentFiliere = useCallback(() => {
+    setOpenBlocksByFiliere((prev) => ({
+      ...prev,
+      [selectedFiliere]: {},
+    }));
+  }, [selectedFiliere]);
 
   const tablistRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -160,10 +141,9 @@ export function ConcoursWidget({
       setActiveFilter("all");
       setActiveMatiere("all");
       setActiveTheme("all");
-      setFilteredOpenOverrides({});
       setOpenBlocksByFiliere((prev) => ({
         ...prev,
-        [fil]: getDefaultOpenBlocks(fil),
+        [fil]: {},
       }));
       onSelectFiliere?.(fil);
 
@@ -404,7 +384,6 @@ export function ConcoursWidget({
     let videosCount = 0;
     let physiqueCount = 0;
     let chimieCount = 0;
-    let epreuvesWithVideoCount = 0;
 
     filiereBlocks.forEach((b) => {
       b.sujets.forEach((s) => {
@@ -422,7 +401,6 @@ export function ConcoursWidget({
             ? 1
             : 0;
         videosCount += vLen;
-        if (vLen > 0) epreuvesWithVideoCount++;
 
         const mat = (s.matiere || "").toLowerCase();
         if (mat === "chimie") chimieCount++;
@@ -438,7 +416,6 @@ export function ConcoursWidget({
       videos: videosCount,
       physiqueCount,
       chimieCount,
-      epreuvesWithVideoCount,
     };
   }, [filiereBlocks]);
 
@@ -484,17 +461,13 @@ export function ConcoursWidget({
         }
 
         const filteredSujets = block.sujets.filter((s) => {
-          // 1. Filtrage par matière / vidéo
+          // 1. Filtrage par matière
           if (activeMatiere === "physique") {
             const mat = (s.matiere || "").toLowerCase();
             if (!mat.includes("physique")) return false;
           } else if (activeMatiere === "chimie") {
             const mat = (s.matiere || "").toLowerCase();
             if (mat !== "chimie" && !mat.includes("chimie")) return false;
-          } else if (activeMatiere === "videos") {
-            const hasVid =
-              (s.videos && s.videos.length > 0) || Boolean(s.video && s.video.trim() !== "");
-            if (!hasVid) return false;
           }
 
           // 2. Filtrage par thème
@@ -539,24 +512,16 @@ export function ConcoursWidget({
     searchQuery.trim() !== "";
 
   const currentOpenBlocks = useMemo(
-    () => openBlocksByFiliere[selectedFiliere] ?? getDefaultOpenBlocks(selectedFiliere),
+    () => openBlocksByFiliere[selectedFiliere] ?? {},
     [openBlocksByFiliere, selectedFiliere]
   );
 
-  const isBlockOpen = (id: string) => {
-    if (hasActiveSearchOrFilter) {
-      return filteredOpenOverrides[id] ?? true;
-    }
-    return Boolean(currentOpenBlocks[id]);
-  };
+  // Tout est replié par défaut : l'étudiant clique sur la banque qu'il souhaite consulter
+  const isBlockOpen = (id: string) => Boolean(currentOpenBlocks[id]);
 
   const toggleBlock = (id: string) => {
-    if (hasActiveSearchOrFilter) {
-      setFilteredOpenOverrides((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
-      return;
-    }
     setOpenBlocksByFiliere((prev) => {
-      const base = prev[selectedFiliere] ?? getDefaultOpenBlocks(selectedFiliere);
+      const base = prev[selectedFiliere] ?? {};
       return {
         ...prev,
         [selectedFiliere]: { ...base, [id]: !base[id] },
@@ -583,20 +548,20 @@ export function ConcoursWidget({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto my-4 font-sans">
-      {/* 1. En-tête Prestigieux Dynamique par Filière */}
-      <div className="relative rounded-3xl bg-white/75 dark:bg-[#0d1322]/85 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_20px_50px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-7 sm:p-10 mb-5 text-center overflow-hidden">
-        <div className="pointer-events-none absolute -top-16 -left-16 w-72 h-72 rounded-full bg-purple-300/30 dark:bg-purple-900/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-indigo-300/25 dark:bg-indigo-900/20 blur-3xl" />
+    <div className="w-full max-w-5xl mx-auto my-2 sm:my-4 font-sans">
+      {/* 1. En-tête Prestigieux Dynamique par Filière (compact & calme) */}
+      <div className="relative rounded-2xl sm:rounded-3xl bg-white/75 dark:bg-[#0d1322]/85 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_14px_40px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_18px_44px_rgba(0,0,0,0.45)] px-4 py-6 sm:p-8 mb-4 text-center overflow-hidden">
+        <div className="pointer-events-none absolute -top-16 -left-16 w-64 h-64 rounded-full bg-purple-300/25 dark:bg-purple-900/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-16 w-72 h-72 rounded-full bg-indigo-300/20 dark:bg-indigo-900/20 blur-3xl" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
 
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-4 py-1.5 rounded-full mb-3.5 shadow-2xs">
+          <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-3.5 py-1 rounded-full mb-2.5 shadow-2xs">
             <Trophy className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
             <span>Annales Officielles CPGE · {activeFiliereInfo.label}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white mb-2.5 tracking-tight">
+          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">
             Concours{" "}
             <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">
               {activeFiliereInfo.shortLabel}
@@ -607,14 +572,14 @@ export function ConcoursWidget({
             Épreuves strictement dédiées à votre filière {activeFiliereInfo.shortLabel} : énoncés PDF, corrigés officiels et vidéos E-Learning Physique classées session par session.
           </p>
 
-          <p className="text-[11px] font-bold text-purple-700/90 dark:text-purple-300/90 mt-3 tracking-wide">
+          <p className="text-[11px] font-bold text-purple-700/90 dark:text-purple-300/90 mt-2.5 tracking-wide">
             {activeFiliereInfo.subtitle}
           </p>
         </div>
       </div>
 
       {/* 1 bis. SÉLECTEUR DE FILIÈRE CPGE (Single-Row Accessible Tablist) */}
-      <div className="bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200/90 dark:border-purple-500/25 shadow-xs p-2 sm:p-2.5 mb-5">
+      <div className="bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200/90 dark:border-purple-500/25 shadow-xs p-2 sm:p-2.5 mb-4">
         <div className="flex items-center gap-2 px-2 pb-1.5 sm:pb-2 border-b border-slate-100 dark:border-slate-800/80 mb-1.5">
           <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
           <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -738,210 +703,249 @@ export function ConcoursWidget({
 
       {/* ── TABPANEL DE LA FILIÈRE SÉLECTIONNÉE ── */}
       <div role="tabpanel" aria-labelledby={`filiere-tab-${selectedFiliere}`}>
-        {/* 2. Barre de Statistiques (Dynamique pour la Filière active) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200 dark:border-slate-800 divide-x divide-slate-100 dark:divide-slate-800 shadow-xs mb-5">
-          <div className="p-4 sm:p-5 text-center">
-            <div className="text-2xl sm:text-3xl font-extrabold text-purple-700 dark:text-purple-400">
+        {/* 2. Barre de Statistiques Compacte (Grille 2x2 propre sur mobile, 4 colonnes sur PC) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mb-4 overflow-hidden">
+          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center border-r border-b sm:border-b-0 border-slate-100 dark:border-slate-800">
+            <div className="text-xl sm:text-2xl font-extrabold text-purple-700 dark:text-purple-400">
               {stats.concours}
             </div>
-            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">
+            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
               Banques {selectedFiliere}
             </div>
           </div>
-          <div className="p-4 sm:p-5 text-center">
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center sm:border-r border-b sm:border-b-0 border-slate-100 dark:border-slate-800">
+            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
               {stats.sujets}
             </div>
-            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">
+            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
               Énoncés PDF
             </div>
           </div>
-          <div className="p-4 sm:p-5 text-center">
-            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
+          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center border-r border-slate-100 dark:border-slate-800">
+            <div className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
               {stats.corriges}
             </div>
-            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">
+            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
               Corrigés PDF
             </div>
           </div>
-          <div className="p-4 sm:p-5 text-center">
-            <div className="text-2xl sm:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">
+          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center">
+            <div className="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
               {stats.videos}
             </div>
-            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">
+            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
               Vidéos Intégrées
             </div>
           </div>
         </div>
 
-        {/* 3. Contrôles : Recherche, Matière, Banques & Thèmes */}
-        <div className="py-3 space-y-3.5 mb-2">
-          {/* Barre de Recherche + Filtres Rapides Matière / Vidéo */}
-          <div className="flex flex-col md:flex-row gap-2.5">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+        {/* 3. Barre de Filtrage Minimaliste (Recherche + 3 Listes Déroulantes Élégantes) */}
+        <div className="bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200/90 dark:border-slate-800 p-3 sm:p-3.5 shadow-xs mb-4 space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
+            {/* Champ Recherche */}
+            <div className="relative sm:col-span-2 lg:col-span-4 min-w-0">
+              <label htmlFor="concours-search-input" className="sr-only">
+                Rechercher une épreuve en {activeFiliereInfo.shortLabel}
+              </label>
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-500 dark:text-purple-400" />
               <input
+                id="concours-search-input"
                 type="text"
-                placeholder={`Rechercher en ${activeFiliereInfo.shortLabel} (ex: 2019, induction, RMN, Rosetta, Michelson, Poiseuille)...`}
+                placeholder={`Rechercher en ${activeFiliereInfo.shortLabel} (2019, induction, RMN...)`}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setFilteredOpenOverrides({});
+                  collapseCurrentFiliere();
                 }}
-                className="w-full pl-11 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d18] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#0d1322] focus:border-purple-600 dark:focus:border-purple-400 focus:ring-3 focus:ring-purple-600/15 transition-all outline-hidden shadow-2xs"
+                className="w-full h-[2.625rem] pl-10 pr-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#090d18] text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#0d1322] focus:border-purple-600 dark:focus:border-purple-400 focus:ring-3 focus:ring-purple-600/15 transition-all outline-hidden"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => {
                     setSearchQuery("");
-                    setFilteredOpenOverrides({});
+                    collapseCurrentFiliere();
                   }}
                   aria-label="Effacer la recherche"
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* Filtre Matière / Vidéo */}
-            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-              {(
-                [
-                  { id: "all", label: "Tout", icon: Layers, count: stats.totalEpreuves },
-                  { id: "physique", label: "Physique", icon: Atom, count: stats.physiqueCount },
-                  { id: "chimie", label: "Chimie", icon: FlaskConical, count: stats.chimieCount },
-                  {
-                    id: "videos",
-                    label: "Avec Vidéo",
-                    icon: Video,
-                    count: stats.epreuvesWithVideoCount,
-                  },
-                ] as const
-              ).map((m) => {
-                if (m.id !== "all" && m.count === 0) return null;
-                const Icon = m.icon;
-                const isAct = activeMatiere === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveMatiere(m.id);
-                      setFilteredOpenOverrides({});
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                      isAct
-                        ? m.id === "videos"
-                          ? "bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/25"
-                          : "bg-slate-900 dark:bg-purple-600 text-white border-slate-900 dark:border-purple-600 shadow-xs"
-                        : "bg-white dark:bg-[#0d1322] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40"
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{m.label}</span>
-                    <span
-                      className={`text-[10px] font-mono px-1.5 rounded-md ${
-                        isAct
-                          ? "bg-white/20 text-white"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
-                      }`}
-                    >
-                      {m.count}
-                    </span>
-                  </button>
-                );
-              })}
+            {/* Liste déroulante : Banque de Concours */}
+            <div className="concours-select-wrap lg:col-span-3">
+              <label htmlFor="concours-bank-select" className="sr-only">
+                Banque de concours
+              </label>
+              <select
+                id="concours-bank-select"
+                name="banque"
+                value={effectiveFilter}
+                data-active={effectiveFilter !== "all"}
+                onChange={(e) => {
+                  setActiveFilter(e.target.value);
+                  collapseCurrentFiliere();
+                }}
+                className="concours-select"
+              >
+                {filterOptions.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.id === "all"
+                      ? `Banque : Toutes (${f.count})`
+                      : `${f.label} (${f.count})`}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="concours-select-chevron w-4 h-4" aria-hidden="true" />
+            </div>
+
+            {/* Liste déroulante : Matière */}
+            <div className="concours-select-wrap lg:col-span-2">
+              <label htmlFor="concours-matiere-select" className="sr-only">
+                Matière
+              </label>
+              <select
+                id="concours-matiere-select"
+                name="matiere"
+                value={activeMatiere}
+                data-active={activeMatiere !== "all"}
+                onChange={(e) => {
+                  setActiveMatiere(e.target.value as MatiereFilter);
+                  collapseCurrentFiliere();
+                }}
+                className="concours-select"
+              >
+                <option value="all">Matière : Tout ({stats.totalEpreuves})</option>
+                {stats.physiqueCount > 0 && (
+                  <option value="physique">Physique ({stats.physiqueCount})</option>
+                )}
+                {stats.chimieCount > 0 && (
+                  <option value="chimie">Chimie ({stats.chimieCount})</option>
+                )}
+              </select>
+              <ChevronDown className="concours-select-chevron w-4 h-4" aria-hidden="true" />
+            </div>
+
+            {/* Liste déroulante : Thème / Module CPGE */}
+            <div className="concours-select-wrap sm:col-span-2 lg:col-span-3">
+              <label htmlFor="concours-theme-select" className="sr-only">
+                Thème ou module du programme
+              </label>
+              <select
+                id="concours-theme-select"
+                name="theme"
+                value={activeTheme}
+                data-active={activeTheme !== "all"}
+                onChange={(e) => {
+                  setActiveTheme(e.target.value);
+                  collapseCurrentFiliere();
+                }}
+                className="concours-select"
+              >
+                {THEMES_MODULES.map((thm) => {
+                  const count = thm.id === "all" ? stats.totalEpreuves : themeCounts[thm.id] || 0;
+                  if (thm.id !== "all" && count === 0) return null;
+                  return (
+                    <option key={thm.id} value={thm.id}>
+                      {thm.id === "all"
+                        ? "Thème : Tous les modules"
+                        : `${thm.icon} ${thm.label} (${count})`}
+                    </option>
+                  );
+                })}
+              </select>
+              <ChevronDown className="concours-select-chevron w-4 h-4" aria-hidden="true" />
             </div>
           </div>
 
-          {/* Filtres par Banque de Concours (uniquement les banques de la filière active) */}
-          <div className="flex flex-wrap items-center gap-2">
-            {filterOptions.map((f) => (
+          {/* Bandeau discret des filtres actifs (visible UNIQUEMENT lorsqu'un filtre est appliqué) */}
+          {hasActiveSearchOrFilter && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+              <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-1">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                  <span>
+                    {filteredBlocks.reduce((acc, b) => acc + b.sujets.length, 0)} résultat
+                    {filteredBlocks.reduce((acc, b) => acc + b.sujets.length, 0) > 1 ? "s" : ""}
+                  </span>
+                </span>
+
+                {effectiveFilter !== "all" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveFilter("all");
+                      collapseCurrentFiliere();
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-200 border border-purple-200/80 dark:border-purple-500/30 font-semibold text-[11px] hover:bg-purple-100 dark:hover:bg-purple-900/60 cursor-pointer"
+                  >
+                    <span>{filterOptions.find((f) => f.id === effectiveFilter)?.label}</span>
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+
+                {activeMatiere !== "all" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMatiere("all");
+                      collapseCurrentFiliere();
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-200 border border-indigo-200/80 dark:border-indigo-500/30 font-semibold text-[11px] hover:bg-indigo-100 dark:hover:bg-indigo-900/60 cursor-pointer"
+                  >
+                    <span>{activeMatiere === "physique" ? "Physique" : "Chimie"}</span>
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+
+                {activeTheme !== "all" && themeMap[activeTheme] && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTheme("all");
+                      collapseCurrentFiliere();
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-200 border border-purple-200/80 dark:border-purple-500/30 font-semibold text-[11px] hover:bg-purple-100 dark:hover:bg-purple-900/60 cursor-pointer"
+                  >
+                    <span>
+                      {themeMap[activeTheme].icon} {themeMap[activeTheme].label}
+                    </span>
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+
+                {searchQuery.trim() !== "" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      collapseCurrentFiliere();
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold text-[11px] hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                  >
+                    <span>« {searchQuery.trim()} »</span>
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
               <button
-                key={f.id}
                 type="button"
                 onClick={() => {
-                  setActiveFilter(f.id);
-                  setFilteredOpenOverrides({});
+                  setActiveFilter("all");
+                  setActiveMatiere("all");
+                  setActiveTheme("all");
+                  setSearchQuery("");
+                  collapseCurrentFiliere();
                 }}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl border transition-all duration-200 cursor-pointer ${
-                  effectiveFilter === f.id
-                    ? "bg-purple-700 dark:bg-purple-600 text-white border-purple-700 dark:border-purple-600 shadow-md shadow-purple-700/20"
-                    : "bg-white dark:bg-[#0d1322] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:border-purple-200 dark:hover:border-purple-500/40 hover:text-purple-700 dark:hover:text-purple-300"
-                }`}
+                className="text-[11px] font-bold text-purple-700 dark:text-purple-400 hover:underline shrink-0 cursor-pointer"
               >
-                <span>{f.label}</span>
-                <span
-                  className={`text-[10px] font-mono font-bold px-1.5 rounded-md ${
-                    effectiveFilter === f.id
-                      ? "bg-white/20 text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  {f.count}
-                </span>
+                Tout réinitialiser
               </button>
-            ))}
-          </div>
-
-          {/* Filtre par Thèmes / Modules CPGE */}
-          <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Filter className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>Filtrer par thème ({activeFiliereInfo.shortLabel}) :</span>
-              </span>
-              {activeTheme !== "all" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTheme("all");
-                    setFilteredOpenOverrides({});
-                  }}
-                  className="text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-purple-400 hover:underline cursor-pointer"
-                >
-                  Réinitialiser le thème
-                </button>
-              )}
             </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              {THEMES_MODULES.map((thm) => {
-                const count = thm.id === "all" ? stats.totalEpreuves : themeCounts[thm.id] || 0;
-                if (thm.id !== "all" && count === 0) return null;
-                const isActive = activeTheme === thm.id;
-                return (
-                  <button
-                    key={thm.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveTheme(thm.id);
-                      setFilteredOpenOverrides({});
-                    }}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${
-                      isActive
-                        ? "bg-purple-700 dark:bg-purple-600 text-white border-purple-700 shadow-sm shadow-purple-700/30 font-bold"
-                        : "bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/50 hover:bg-purple-50/50 dark:hover:bg-purple-950/40"
-                    }`}
-                  >
-                    <span>{thm.icon}</span>
-                    <span>{thm.label}</span>
-                    <span
-                      className={`ml-0.5 px-1.5 py-0.2 rounded-md text-[10px] font-mono font-bold ${
-                        isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* 4. Liste des Blocs Concours de la Filière Active */}
@@ -958,7 +962,7 @@ export function ConcoursWidget({
                   setActiveMatiere("all");
                   setActiveTheme("all");
                   setSearchQuery("");
-                  setFilteredOpenOverrides({});
+                  collapseCurrentFiliere();
                 }}
                 className="px-4 py-2 text-xs font-bold rounded-xl bg-purple-600 text-white shadow-xs cursor-pointer"
               >
@@ -988,48 +992,53 @@ export function ConcoursWidget({
                   {/* Header de bloc */}
                   <div
                     onClick={() => toggleBlock(block.id)}
-                    className="flex items-center gap-4 p-5 sm:p-6 cursor-pointer select-none hover:bg-purple-50/40 dark:hover:bg-purple-950/20 transition-colors"
+                    className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-5 cursor-pointer select-none hover:bg-purple-50/40 dark:hover:bg-purple-950/20 transition-colors"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-500/30 flex items-center justify-center text-2xl shrink-0 shadow-2xs">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-500/30 flex items-center justify-center text-xl sm:text-2xl shrink-0 shadow-2xs">
                       {block.icon}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
                           {block.titre}
                         </h3>
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30">
+                        <span className="shrink-0 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30">
                           {selectedFiliere}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5 min-w-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
                         <span className="truncate">{block.meta}</span>
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                       {blockVideoCount > 0 && (
-                        <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/30">
+                        <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/30 whitespace-nowrap">
                           <Play className="w-3 h-3 fill-current" />
-                          <span>{blockVideoCount} vidéos</span>
+                          <span>
+                            {blockVideoCount} {blockVideoCount > 1 ? "vidéos" : "vidéo"}
+                          </span>
                         </span>
                       )}
 
-                      <span className="hidden sm:inline-block text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30">
-                        {block.sujets.length} Épreuves
+                      <span className="inline-flex items-center text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30 whitespace-nowrap">
+                        <span>{block.sujets.length}</span>
+                        <span className="hidden sm:inline ml-1">
+                          {block.sujets.length > 1 ? "Épreuves" : "Épreuve"}
+                        </span>
                       </span>
 
                       {isTeacherView && (
                         <div
-                          className="flex items-center gap-1.5"
+                          className="flex items-center gap-1"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
                             type="button"
                             onClick={() => openAddEpreuve(block.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors shadow-2xs cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors shadow-2xs cursor-pointer"
                             title="Ajouter une nouvelle épreuve à ce concours"
                           >
                             <PlusCircle className="w-3.5 h-3.5" />
@@ -1055,7 +1064,7 @@ export function ConcoursWidget({
                       )}
 
                       <ChevronDown
-                        className={`w-5 h-5 text-purple-600 dark:text-purple-400 transition-transform duration-200 ${
+                        className={`w-5 h-5 text-purple-600 dark:text-purple-400 transition-transform duration-200 shrink-0 ${
                           isOpen ? "rotate-180" : ""
                         }`}
                       />
@@ -1064,11 +1073,11 @@ export function ConcoursWidget({
 
                   {/* Contenu Dépliable par Session / Année */}
                   {isOpen && (
-                    <div className="border-t border-slate-100 dark:border-slate-800/80 divide-y divide-slate-100 dark:divide-slate-800/80 bg-slate-50/30 dark:bg-[#070b14]/40">
+                    <div className="border-t border-slate-100 dark:border-slate-800/80 divide-y divide-slate-100 dark:divide-slate-800/80 bg-slate-50/40 dark:bg-[#070b14]/40">
                       {sortedYears.map((annee) => (
-                        <div key={annee} className="p-4 sm:p-5 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-bold text-purple-800 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/30 px-2.5 py-0.5 rounded-md min-w-[56px] text-center">
+                        <div key={annee} className="p-3 sm:p-5 space-y-2.5 sm:space-y-3">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <span className="text-xs font-bold text-purple-800 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/30 px-2.5 py-0.5 rounded-md min-w-[52px] text-center">
                               {annee}
                             </span>
                             <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
@@ -1077,21 +1086,111 @@ export function ConcoursWidget({
                             </span>
                           </div>
 
-                          <div className="space-y-2.5 pt-1 pl-0 sm:pl-2">
+                          <div className="space-y-2.5">
                             {yearsMap[annee].map((epreuve, idx) => {
                               const isChimie = (epreuve.matiere || "").toLowerCase() === "chimie";
                               const isOral =
                                 (epreuve.matiere || "").toLowerCase().includes("oral") ||
                                 (epreuve.matiere || "").toLowerCase().includes("méthod");
 
+                              const hasEnonce = Boolean(epreuve.enonce && epreuve.enonce.trim() !== "");
+                              const corrigesList =
+                                epreuve.corriges && epreuve.corriges.length > 0
+                                  ? epreuve.corriges
+                                  : epreuve.correction && epreuve.correction.trim() !== ""
+                                  ? [{ id: "legacy-c", titre: "Corrigé", url: epreuve.correction }]
+                                  : [];
+                              const videosList =
+                                epreuve.videos && epreuve.videos.length > 0
+                                  ? epreuve.videos
+                                  : epreuve.video
+                                  ? [{ id: "legacy-v", title: epreuve.label, url: epreuve.video }]
+                                  : [];
+
+                              const pdfCount = (hasEnonce ? 1 : 0) + corrigesList.length;
+                              const videoCount = videosList.length;
+                              const totalActions = pdfCount + videoCount;
+                              const hasVideoPlaylist = videoCount >= 2 && pdfCount > 0;
+                              const isCompactActions =
+                                totalActions <= 3 && !hasVideoPlaylist && !isTeacherView;
+                              const hasBodyContent = Boolean(
+                                epreuve.description ||
+                                  (epreuve.themes && epreuve.themes.length > 0)
+                              );
+
+                              const renderPdfButtons = () => (
+                                <>
+                                  {hasEnonce && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        onOpenPdf(
+                                          epreuve.enonce,
+                                          `${block.titre} ${annee} (${selectedFiliere}) — ${epreuve.label} (Énoncé)`
+                                        )
+                                      }
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-semibold rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer whitespace-nowrap"
+                                    >
+                                      <FileText className="w-3.5 h-3.5 shrink-0" />
+                                      <span>Énoncé</span>
+                                    </button>
+                                  )}
+
+                                  {corrigesList.map((corr, cIdx) => (
+                                    <button
+                                      key={corr.id || cIdx}
+                                      type="button"
+                                      onClick={() =>
+                                        onOpenPdf(
+                                          corr.url,
+                                          `${block.titre} ${annee} (${selectedFiliere}) — ${epreuve.label} (${corr.titre})`
+                                        )
+                                      }
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer whitespace-nowrap max-w-full"
+                                      title={corr.titre}
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                      <span className="truncate max-w-[140px]">
+                                        {corr.titre || `Corrigé P.${cIdx + 1}`}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </>
+                              );
+
+                              const renderVideoButtons = () =>
+                                videosList.map((vid, vIdx) => (
+                                  <button
+                                    key={vid.id || vIdx}
+                                    type="button"
+                                    onClick={() =>
+                                      onOpenVideo(
+                                        vid.url,
+                                        `${block.titre} ${annee} (${selectedFiliere}) — ${vid.title}`
+                                      )
+                                    }
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-semibold rounded-lg bg-purple-100/90 hover:bg-purple-200 dark:bg-purple-950/70 dark:hover:bg-purple-900/80 text-purple-800 dark:text-purple-200 border border-purple-300/90 dark:border-purple-500/40 transition-colors cursor-pointer whitespace-nowrap max-w-full"
+                                    title={vid.title}
+                                  >
+                                    <Play className="w-3.5 h-3.5 fill-purple-700 dark:fill-purple-300 text-purple-700 dark:text-purple-300 shrink-0" />
+                                    <span className="truncate max-w-[180px]">
+                                      {videosList.length > 1
+                                        ? `Vidéo ${vIdx + 1}/${videosList.length}`
+                                        : "Corrigé Vidéo"}
+                                      {vid.duration ? ` · ${vid.duration}` : ""}
+                                    </span>
+                                  </button>
+                                ));
+
                               return (
-                                <div
+                                <article
                                   key={epreuve.id || idx}
-                                  className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3.5 rounded-xl bg-white dark:bg-[#0d1322] border border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40 transition-all shadow-2xs group"
+                                  data-compact-actions={isCompactActions ? "true" : "false"}
+                                  className="epreuve-card p-3.5 sm:p-4 rounded-xl bg-white dark:bg-[#0d1322] border border-slate-200/90 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40 transition-colors shadow-2xs"
                                 >
-                                  {/* Colonne Gauche : Titre, Badges, Description, Thèmes */}
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
+                                  {/* Région 1 : En-tête de l'épreuve */}
+                                  <header className="flex items-start justify-between gap-2">
+                                    <div className="flex items-center flex-wrap gap-2 min-w-0">
                                       <span
                                         className={`w-2 h-2 rounded-full shrink-0 ${
                                           isChimie
@@ -1101,11 +1200,11 @@ export function ConcoursWidget({
                                             : "bg-purple-500"
                                         }`}
                                       />
-                                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                                      <h4 className="text-[13px] sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug break-words">
                                         {epreuve.label}
-                                      </span>
+                                      </h4>
                                       <span
-                                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                                        className={`shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-bold border ${
                                           isChimie
                                             ? "bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200/80 dark:border-teal-500/30"
                                             : isOral
@@ -1117,136 +1216,8 @@ export function ConcoursWidget({
                                       </span>
                                     </div>
 
-                                    {epreuve.description && (
-                                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed pl-4">
-                                        {epreuve.description}
-                                      </p>
-                                    )}
-
-                                    {epreuve.themes && epreuve.themes.length > 0 && (
-                                      <div className="flex flex-wrap items-center gap-1.5 mt-2 pl-4">
-                                        {epreuve.themes.map((thId) => {
-                                          const thInfo = themeMap[thId];
-                                          if (!thInfo) return null;
-                                          return (
-                                            <button
-                                              key={thId}
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setActiveTheme(thId);
-                                              }}
-                                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30 hover:bg-purple-100 hover:border-purple-400 transition-colors cursor-pointer"
-                                              title={`Filtrer par le module ${thInfo.label}`}
-                                            >
-                                              <span>{thInfo.icon}</span>
-                                              <span>{thInfo.label}</span>
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Colonne Droite : Boutons Énoncé, Corrigés & Vidéos E-Learning Physique */}
-                                  <div className="flex items-center gap-2 shrink-0 flex-wrap pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800">
-                                    {/* Bouton Énoncé PDF */}
-                                    {epreuve.enonce && epreuve.enonce.trim() !== "" && (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          onOpenPdf(
-                                            epreuve.enonce,
-                                            `${block.titre} ${annee} (${selectedFiliere}) — ${epreuve.label} (Énoncé)`
-                                          )
-                                        }
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-all cursor-pointer shadow-2xs"
-                                      >
-                                        <FileText className="w-3.5 h-3.5" />
-                                        <span>Énoncé</span>
-                                      </button>
-                                    )}
-
-                                    {/* Boutons Corrigés PDF */}
-                                    {epreuve.corriges && epreuve.corriges.length > 0 ? (
-                                      epreuve.corriges.map((corr, cIdx) => (
-                                        <button
-                                          key={corr.id || cIdx}
-                                          type="button"
-                                          onClick={() =>
-                                            onOpenPdf(
-                                              corr.url,
-                                              `${block.titre} ${annee} (${selectedFiliere}) — ${epreuve.label} (${corr.titre})`
-                                            )
-                                          }
-                                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all cursor-pointer shadow-2xs"
-                                          title={corr.titre}
-                                        >
-                                          <CheckCircle2 className="w-3.5 h-3.5" />
-                                          <span className="truncate max-w-[130px]">
-                                            {corr.titre || `Corrigé P.${cIdx + 1}`}
-                                          </span>
-                                        </button>
-                                      ))
-                                    ) : epreuve.correction && epreuve.correction.trim() !== "" ? (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          onOpenPdf(
-                                            epreuve.correction,
-                                            `${block.titre} ${annee} (${selectedFiliere}) — ${epreuve.label} (Corrigé)`
-                                          )
-                                        }
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all cursor-pointer shadow-2xs"
-                                      >
-                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                        <span>Corrigé</span>
-                                      </button>
-                                    ) : null}
-
-                                    {/* Vidéos E-Learning Physique associées exactement à cette épreuve */}
-                                    {epreuve.videos && epreuve.videos.length > 0 ? (
-                                      epreuve.videos.map((vid, vIdx) => (
-                                        <button
-                                          key={vid.id || vIdx}
-                                          type="button"
-                                          onClick={() =>
-                                            onOpenVideo(
-                                              vid.url,
-                                              `${block.titre} ${annee} (${selectedFiliere}) — ${vid.title}`
-                                            )
-                                          }
-                                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/70 dark:hover:bg-purple-900/80 text-purple-800 dark:text-purple-200 border border-purple-300 dark:border-purple-500/40 transition-all cursor-pointer shadow-2xs"
-                                          title={vid.title}
-                                        >
-                                          <Play className="w-3.5 h-3.5 fill-purple-700 dark:fill-purple-300 text-purple-700 dark:text-purple-300 shrink-0" />
-                                          <span className="truncate max-w-[175px]">
-                                            {epreuve.videos!.length > 1
-                                              ? `Vidéo ${vIdx + 1}/${epreuve.videos!.length}`
-                                              : "Corrigé Vidéo"}
-                                            {vid.duration ? ` · ${vid.duration}` : ""}
-                                          </span>
-                                        </button>
-                                      ))
-                                    ) : epreuve.video ? (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          onOpenVideo(
-                                            epreuve.video!,
-                                            `${block.titre} ${annee} (${selectedFiliere}) — ${epreuve.label}`
-                                          )
-                                        }
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/70 dark:hover:bg-purple-900/80 text-purple-800 dark:text-purple-200 border border-purple-300 dark:border-purple-500/40 transition-all cursor-pointer shadow-2xs"
-                                      >
-                                        <Play className="w-3.5 h-3.5 fill-purple-700 dark:fill-purple-300 text-purple-700 dark:text-purple-300" />
-                                        <span>Corrigé Vidéo</span>
-                                      </button>
-                                    ) : null}
-
-                                    {/* Boutons Enseignant / Admin */}
                                     {isTeacherView && (
-                                      <div className="flex items-center gap-1 pl-2 border-l border-slate-200 dark:border-slate-800">
+                                      <div className="flex items-center gap-1 shrink-0">
                                         <button
                                           type="button"
                                           onClick={() => openEditEpreuve(block.id, epreuve)}
@@ -1273,8 +1244,72 @@ export function ConcoursWidget({
                                         </button>
                                       </div>
                                     )}
-                                  </div>
-                                </div>
+                                  </header>
+
+                                  {/* Région 2 : Description & Modules du programme */}
+                                  {hasBodyContent && (
+                                    <div className="epreuve-body space-y-2 pl-0 sm:pl-4">
+                                      {epreuve.description && (
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                                          {epreuve.description}
+                                        </p>
+                                      )}
+
+                                      {epreuve.themes && epreuve.themes.length > 0 && (
+                                        <div className="flex flex-wrap items-center gap-1.5">
+                                          {epreuve.themes.map((thId) => {
+                                            const thInfo = themeMap[thId];
+                                            if (!thInfo) return null;
+                                            return (
+                                              <button
+                                                key={thId}
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setActiveTheme(thId);
+                                                  collapseCurrentFiliere();
+                                                }}
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100/90 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300 dark:hover:bg-purple-950/60 dark:hover:text-purple-200 transition-colors cursor-pointer whitespace-nowrap"
+                                                title={`Filtrer par le module ${thInfo.label}`}
+                                              >
+                                                <span aria-hidden="true">{thInfo.icon}</span>
+                                                <span>{thInfo.label}</span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Région 3 : Pied de carte — Documents PDF & Vidéos E-Learning Physique */}
+                                  {totalActions > 0 && (
+                                    <footer>
+                                      {hasVideoPlaylist ? (
+                                        <>
+                                          <div className="flex flex-wrap items-center gap-2">
+                                            {renderPdfButtons()}
+                                          </div>
+                                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700/80 dark:text-purple-300/80 mr-0.5">
+                                              Vidéos :
+                                            </span>
+                                            {renderVideoButtons()}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div
+                                          className={`flex flex-wrap items-center gap-2 ${
+                                            isCompactActions ? "sm:justify-end" : ""
+                                          }`}
+                                        >
+                                          {renderPdfButtons()}
+                                          {renderVideoButtons()}
+                                        </div>
+                                      )}
+                                    </footer>
+                                  )}
+                                </article>
                               );
                             })}
                           </div>

@@ -728,5 +728,260 @@ html, body {
   border-radius: 999px;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   CONCOURS CPGE — LISTES DÉROULANTES MINIMALISTES (BRANDED SELECT)
+   ═══════════════════════════════════════════════════════════ */
+.concours-select-wrap {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+.concours-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 2.625rem;
+  padding: 0 2.25rem 0 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.concours-select:hover {
+  border-color: #c4b5fd;
+  background-color: #ffffff;
+}
+
+.concours-select:focus-visible {
+  outline: none;
+  border-color: #7c3aed;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgb(124 58 237 / 0.15);
+}
+
+.concours-select[data-active="true"] {
+  border-color: #7c3aed;
+  background-color: #f5f3ff;
+  color: #5b21b6;
+}
+
+.dark .concours-select {
+  border-color: #1e293b;
+  background-color: #090d18;
+  color: #e2e8f0;
+}
+
+.dark .concours-select:hover {
+  border-color: rgb(168 85 247 / 0.45);
+  background-color: #0d1322;
+}
+
+.dark .concours-select:focus-visible {
+  border-color: #a855f7;
+  background-color: #0d1322;
+  box-shadow: 0 0 0 3px rgb(168 85 247 / 0.22);
+}
+
+.dark .concours-select[data-active="true"] {
+  border-color: rgb(168 85 247 / 0.7);
+  background-color: rgb(59 7 100 / 0.45);
+  color: #e9d5ff;
+}
+
+.concours-select-chevron {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #64748b;
+}
+
+.dark .concours-select-chevron {
+  color: #94a3b8;
+}
+
+/* Amélioration progressive desktop uniquement : préserve le sélecteur natif sur iOS/Android tactiles */
+@media (pointer: fine) {
+  @supports (appearance: base-select) {
+    .concours-select,
+    .concours-select::picker(select) {
+      appearance: base-select;
+    }
+
+    .concours-select {
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem 0 0.875rem;
+    }
+
+    .concours-select-chevron {
+      display: none;
+    }
+
+    .concours-select::picker-icon {
+      margin-inline-start: auto;
+      padding-inline-start: 0.5rem;
+      color: #7c3aed;
+      transition: rotate 0.18s ease;
+    }
+
+    .dark .concours-select::picker-icon {
+      color: #c084fc;
+    }
+
+    .concours-select:open::picker-icon {
+      rotate: 180deg;
+    }
+
+    .concours-select::picker(select) {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.875rem;
+      background-color: #ffffff;
+      color: #0f172a;
+      padding: 0.375rem;
+      margin-block-start: 0.375rem;
+      box-shadow: 0 18px 40px rgb(15 23 42 / 0.14);
+      max-block-size: 20rem;
+      min-inline-size: anchor-size(width);
+    }
+
+    .dark .concours-select::picker(select) {
+      border-color: rgb(139 92 246 / 0.35);
+      background-color: #0d1322;
+      color: #f1f5f9;
+      box-shadow: 0 20px 44px rgb(0 0 0 / 0.6);
+    }
+
+    .concours-select option {
+      padding: 0.5rem 0.625rem;
+      border-radius: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #1e293b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .concours-select option:hover,
+    .concours-select option:focus-visible {
+      background-color: #f5f3ff;
+      color: #5b21b6;
+    }
+
+    .concours-select option:checked {
+      background-color: #ede9fe;
+      color: #5b21b6;
+      font-weight: 700;
+    }
+
+    .concours-select option::checkmark {
+      color: #7c3aed;
+      font-weight: 700;
+    }
+
+    .dark .concours-select option {
+      color: #e2e8f0;
+    }
+
+    .dark .concours-select option:hover,
+    .dark .concours-select option:focus-visible {
+      background-color: rgb(88 28 135 / 0.4);
+      color: #f3e8ff;
+    }
+
+    .dark .concours-select option:checked {
+      background-color: rgb(109 40 217 / 0.35);
+      color: #e9d5ff;
+      font-weight: 700;
+    }
+
+    .dark .concours-select option::checkmark {
+      color: #c084fc;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONCOURS CPGE — CARTE ÉPREUVE RESPONSIVE (CONTAINER QUERY)
+   ═══════════════════════════════════════════════════════════ */
+.epreuve-card {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-columns: auto;
+  row-gap: 0.5rem;
+  column-gap: 1.25rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.epreuve-card > header,
+.epreuve-card > .epreuve-body,
+.epreuve-card > footer {
+  grid-column: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.epreuve-card > footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.625rem;
+  margin-top: 0.125rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.dark .epreuve-card > footer {
+  border-top-color: rgb(30 41 59 / 0.85);
+}
+
+/* Sur carte large (>= 640px) et uniquement pour les cartes compactes (<= 3 actions sans playlist vidéo) :
+   @container cible uniquement les enfants directs de la carte (conteneur), plaçant le footer en colonne 2 implicite */
+@container (min-width: 640px) {
+  .epreuve-card[data-compact-actions="true"] > header {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .epreuve-card[data-compact-actions="true"] > .epreuve-body {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .epreuve-card[data-compact-actions="true"] > footer {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+    width: auto;
+    max-width: 24rem;
+    align-items: flex-end;
+    padding-top: 0;
+    margin-top: 0;
+    border-top: 0;
+  }
+
+  .epreuve-card[data-compact-actions="true"]:has(> .epreuve-body) > footer {
+    grid-row: 1 / span 2;
+  }
+}
+
+
 
 
