@@ -2034,18 +2034,12 @@ export function CoursesWidget({
         };
   }, [activeModule, activeCoursesData, allChapters.length, selectedNiveau]);
 
-  // Par défaut : premier chapitre ouvert
-  const [openChapterIds, setOpenChapterIds] = useState<Set<string>>(() => {
-    if (selectedNiveau === "sup") return new Set(["elec-sup-ch1"]);
-    return new Set(["elec-spe-ch1"]);
-  });
+  // Par défaut : tous les chapitres sont repliés à l'entrée sur la plateforme (demande utilisateur)
+  const [openChapterIds, setOpenChapterIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
-    if (selectedNiveau === "sup") {
-      setOpenChapterIds(new Set(["elec-sup-ch1"]));
-    } else if (selectedNiveau === "spe") {
-      setOpenChapterIds(new Set(["elec-spe-ch1"]));
-    }
+    // Garder les chapitres repliés lors d'un basculement de niveau
+    setOpenChapterIds(new Set());
   }, [selectedNiveau]);
 
   const toggleChapter = (id: string) => {
@@ -3025,14 +3019,14 @@ export function CoursesWidget({
               <button
                 type="button"
                 onClick={() => setOpenChapterIds(new Set(filteredChapters.map((c) => c.id)))}
-                className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-purple-100 dark:hover:bg-purple-950/60 hover:text-purple-700 dark:hover:text-purple-300 transition-colors cursor-pointer"
+                className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:border-purple-300 dark:hover:border-purple-500 hover:text-purple-700 dark:hover:text-purple-300 shadow-2xs transition-all cursor-pointer"
               >
                 Tout déplier
               </button>
               <button
                 type="button"
                 onClick={() => setOpenChapterIds(new Set())}
-                className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-purple-100 dark:hover:bg-purple-950/60 hover:text-purple-700 dark:hover:text-purple-300 transition-colors cursor-pointer"
+                className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:border-purple-300 dark:hover:border-purple-500 hover:text-purple-700 dark:hover:text-purple-300 shadow-2xs transition-all cursor-pointer"
               >
                 Tout replier
               </button>
@@ -3097,12 +3091,12 @@ export function CoursesWidget({
                 onClick={() => toggleChapter(chapter.id)}
                 className="flex items-center gap-4 p-5 sm:p-6 cursor-pointer select-none hover:bg-purple-50/30 dark:hover:bg-purple-950/20 transition-colors"
               >
-                {/* Numéro de Chapitre dans Cercle Foncé */}
+                {/* Numéro de Chapitre dans Écusson Prestigieux */}
                 <div
-                  className={`w-11 h-11 rounded-xl flex items-center justify-center font-extrabold text-lg shrink-0 transition-all ${
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center font-extrabold text-base shrink-0 transition-all ${
                     isOpen
-                      ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
-                      : "bg-slate-900 dark:bg-purple-950 text-white border border-purple-200/80 dark:border-purple-500/30"
+                      ? "bg-gradient-to-br from-purple-700 via-purple-800 to-indigo-900 text-white shadow-md shadow-purple-900/30 ring-2 ring-purple-400/40"
+                      : "bg-gradient-to-br from-slate-900 to-purple-950 text-white border border-purple-300/40 dark:border-purple-500/30 shadow-2xs"
                   }`}
                 >
                   {chapter.num}

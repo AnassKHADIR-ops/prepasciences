@@ -211,7 +211,7 @@ function EddamsPortal() {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium transition-colors">
-              Professeur Agrégé de Physique-Chimie · CPGE (MPSI / PCSI / TSI · MP / PSI / PC / TSI / PT)
+              Professeur Agrégé de Physique-Chimie · Toutes Filières CPGE (MPSI, PCSI, TSI · MP, PSI, PC, TSI, PT)
             </p>
           </div>
 

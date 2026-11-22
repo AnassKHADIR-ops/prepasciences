@@ -94,7 +94,7 @@ export function ReferencesWidget({ onOpenPdf }: ReferencesWidgetProps) {
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-4 py-1.5 rounded-full mb-3 shadow-2xs">
             <BookmarkCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            Bibliothèque de Référence CPGE MP / MP*
+            Bibliothèque de Référence Toutes Filières CPGE
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-2 text-slate-900 dark:text-white">
@@ -105,7 +105,7 @@ export function ReferencesWidget({ onOpenPdf }: ReferencesWidgetProps) {
           </h2>
 
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-            Ouvrages majeurs de la filière MP classés par collections reconnues : Tout-en-un Dunod, Pérez, Précis Bréal, H-Prépa, Nathan, Lumbroso, Flammes, Grécias, Garing et Belin Sup. Cliquez sur un livre pour l&apos;ouvrir dans la liseuse PDF.
+            Ouvrages majeurs des filières scientifiques CPGE classés par collections reconnues : Tout-en-un Dunod, Pérez, Précis Bréal, H-Prépa, Nathan, Lumbroso, Flammes, Grécias, Garing et Belin Sup. Cliquez sur un livre pour l&apos;ouvrir dans la liseuse PDF.
           </p>
 
           <div className="flex items-center gap-3 mt-4 flex-wrap">

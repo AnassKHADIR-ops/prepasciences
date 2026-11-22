@@ -102,14 +102,14 @@ export const Stage2Teachers = forwardRef<HTMLDivElement>(function Stage2Teachers
               </div>
             </div>
 
-            {/* Filière enseignée badge */}
+            {/* Filières enseignées badge */}
             <div className="pt-2 border-t border-white/10">
               <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1.5">
-                Filière enseignée actuellement :
+                Filières préparées :
               </span>
               <div className="flex flex-wrap gap-2">
                 <span className="px-3 py-1 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-200 text-xs font-mono font-bold">
-                  MP / MP* 2ème année
+                  Toutes les filières CPGE
                 </span>
               </div>
             </div>
@@ -200,14 +200,11 @@ export const Stage2Teachers = forwardRef<HTMLDivElement>(function Stage2Teachers
             {/* Filières enseignées badges */}
             <div className="pt-2 border-t border-white/10">
               <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1.5">
-                Filières enseignées actuellement :
+                Filières préparées :
               </span>
               <div className="flex flex-wrap gap-2">
                 <span className="px-3 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 text-xs font-mono font-bold">
-                  Filière TSI 2e année
-                </span>
-                <span className="px-3 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 text-xs font-mono font-bold">
-                  MP / MP* 2e année
+                  Toutes les filières CPGE
                 </span>
               </div>
             </div>

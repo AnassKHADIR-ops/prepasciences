@@ -52,7 +52,7 @@ export default function Footer({ variant = "light" }: FooterProps) {
             </a>
 
             <p className={`text-sm max-w-md leading-relaxed ${isLight ? "text-slate-600" : "text-slate-300 font-light"}`}>
-              Plateforme académique d&apos;élite pour étudiants en CPGE 2e année (TSI 2e, MP / MP* 2e, CNC &amp; France). Dirigée par <strong>Prof. Anass Khadir</strong> (Professeur Agrégé de Mathématiques — CPGE ERRAZI El Jadida) et <strong>Prof. Hassan Eddams</strong> (Professeur Agrégé de Physique-Chimie — CPGE Lycée Moulay Abdellah- Safi).
+              Plateforme académique d&apos;élite pour étudiants de toutes les filières CPGE (MP, PC, PSI, TSI, CNC &amp; France). Dirigée par <strong>Prof. Anass Khadir</strong> (Professeur Agrégé de Mathématiques — CPGE ERRAZI El Jadida) et <strong>Prof. Hassan Eddams</strong> (Professeur Agrégé de Physique-Chimie — CPGE Lycée Moulay Abdellah- Safi).
             </p>
 
             <div className={`flex items-center gap-4 text-xs font-mono pt-1 ${isLight ? "text-slate-500" : "text-slate-400"}`}>

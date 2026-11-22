@@ -88,7 +88,7 @@ export const Stage4Pricing = forwardRef<HTMLDivElement>(function Stage4Pricing(_
             <div>
               <h3 className="text-lg sm:text-xl font-extrabold text-white">Formule Maths Seule</h3>
               <p className="text-xs text-slate-300 mt-0.5">
-                Filière TSI 2e année & MP / MP* 2e année.
+                Toutes les filières CPGE.
               </p>
             </div>
 
@@ -226,7 +226,7 @@ export const Stage4Pricing = forwardRef<HTMLDivElement>(function Stage4Pricing(_
             <div>
               <h3 className="text-lg sm:text-xl font-extrabold text-white">Formule Physique Seule</h3>
               <p className="text-xs text-slate-300 mt-0.5">
-                Filière MP / MP* 2e année.
+                Toutes les filières CPGE.
               </p>
             </div>
 

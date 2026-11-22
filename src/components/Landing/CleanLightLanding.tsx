@@ -320,10 +320,7 @@ export function CleanLightLanding() {
                     Filières préparées :
                   </span>
                   <span className="px-2.5 py-0.5 rounded-lg bg-purple-50 border border-purple-200 text-purple-800 text-xs font-mono font-bold shadow-2xs">
-                    MPSI / PCSI / TSI
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-lg bg-purple-100 border border-purple-300 text-purple-900 text-xs font-mono font-bold shadow-2xs">
-                    MP / PSI / TSI
+                    Toutes les filières CPGE
                   </span>
                 </div>
 
@@ -494,13 +491,7 @@ export function CleanLightLanding() {
                     Filières préparées :
                   </span>
                   <span className="px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-950 text-xs font-mono font-bold shadow-2xs">
-                    TSI 2e année
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-lg bg-amber-100 border border-amber-300 text-amber-950 text-xs font-mono font-bold shadow-2xs">
-                    MP / PSI / TSI
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-medium">
-                    ECS / ECT
+                    Toutes les filières CPGE
                   </span>
                 </div>
 
@@ -773,7 +764,7 @@ export function CleanLightLanding() {
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Formule Maths Seule</h3>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  Filière TSI 2e année &amp; MP / MP* 2e année.
+                  Toutes les filières CPGE (MP, PC, PSI, TSI...).
                 </p>
               </div>
 
@@ -920,7 +911,7 @@ export function CleanLightLanding() {
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Formule Physique Seule</h3>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  Filière MP / MP* 2ème année.
+                  Toutes les filières CPGE (MP, PC, PSI, TSI...).
                 </p>
               </div>
 
