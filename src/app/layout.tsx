@@ -15,7 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#FFFFFF",
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F4F1E6" },
+    { media: "(prefers-color-scheme: dark)", color: "#161513" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
@@ -24,7 +28,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://prepasciences.ma"),
   title: "Prépasciences | Plateforme d'Élite pour Étudiants en CPGE",
   description:
-    "Accompagnement hebdomadaire d'excellence en Mathématiques et Physique-Chimie avec deux professeurs agrégés d'État en CPGE au Maroc (TSI 2e, MP/MP* 2e, CNC & concours français).",
+    "Accompagnement hebdomadaire d'excellence en Mathématiques et Physique-Chimie avec deux professeurs agrégés d'État pour toutes les filières CPGE au Maroc et en France.",
   keywords: [
     "CPGE Maroc",
     "Concours National Commun",
@@ -58,7 +62,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Prépasciences | L'Excellence en CPGE Scientifique",
     description:
-      "Encadrement d'élite en Mathématiques et Physique-Chimie pour CPGE TSI & MP/MP*.",
+      "Encadrement d'élite en Mathématiques et Physique-Chimie pour toutes les filières CPGE.",
     images: ["/og-image.jpg"],
   },
   icons: {
@@ -117,7 +121,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#FFFDF9] text-[#17142D]">
+      <body className="min-h-screen bg-[#F4F1E6] text-[#1D1D1F] dark:bg-[#161513] dark:text-[#F5F3EC]">
         <Providers>{children}</Providers>
       </body>
     </html>

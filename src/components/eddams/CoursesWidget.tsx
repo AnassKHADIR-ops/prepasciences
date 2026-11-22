@@ -32,6 +32,12 @@ import {
   Cloud,
   RefreshCw,
   AlertTriangle,
+  Compass,
+  Film,
+  PenLine,
+  Info,
+  SlidersHorizontal,
+  Award,
 } from "lucide-react";
 import { getDriveImageUrls, extractDriveFileId, getYoutubeThumbnailCandidates, getYoutubeThumbnail } from "@/lib/driveUtils";
 import { useCourses } from "@/context/CoursesContext";
@@ -466,7 +472,7 @@ export function getChapterConcoursVideos(
   return finalResult;
 }
 
-// ── BANDEAU MAJESTUEUX : POLYCOPIÉ DE COURS OFFICIEL (EN HAUT DU CHAPITRE) ──
+// ── BANDEAU ÉDITORIAL : POLYCOPIÉ DE COURS OFFICIEL (EN HAUT DU CHAPITRE) ──
 function ChapterOfficialPdfBanner({
   pdf,
   chapterTitre,
@@ -479,56 +485,52 @@ function ChapterOfficialPdfBanner({
   onOpenPdf: (url: string, title: string) => void;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-900/10 via-indigo-900/10 to-transparent dark:from-purple-950/50 dark:via-indigo-950/35 dark:to-[#0d1322] border-2 border-purple-200/90 dark:border-purple-500/40 p-4 sm:p-5 shadow-sm transition-all hover:shadow-md">
-      <div className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full bg-purple-500/15 blur-2xl" />
-
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Côté Gauche : Icône Polycopié + Titres + Note Pédagogique */}
-        <div className="flex items-start gap-3.5 sm:gap-4 flex-1 min-w-0">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800 text-white flex items-center justify-center shrink-0 shadow-lg shadow-purple-600/25 border border-white/20">
-            <FileText className="w-6 h-6 sm:w-7 sm:h-7" />
+    <div className="rounded-2xl bg-white dark:bg-[#1F1E1B] border border-black/10 dark:border-white/10 p-5 sm:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          <div className="ui-icon-tile w-12 h-12 rounded-xl shrink-0">
+            <FileText className="w-5 h-5" strokeWidth={1.6} />
           </div>
 
-          <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex-1 min-w-0 space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
-                <BookOpen className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                <span>Polycopié de Cours Officiel · Pr. Hassan EDDAMS</span>
+              <span className="ui-pill text-[11px] font-semibold text-[#1D1D1F] dark:text-[#F5F3EC]">
+                <BookOpen className="w-3 h-3 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
+                <span>Polycopié Officiel · Pr. Hassan EDDAMS</span>
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
-                <span>Multi-Filières CPGE (MP · PSI · PC · TSI)</span>
+              <span className="text-[11px] text-[#6E6A63] dark:text-[#9A9488] font-medium">
+                Toutes filières CPGE (MP · PSI · PC · TSI)
               </span>
             </div>
 
-            <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug">
+            <h4 className="text-base sm:text-lg font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-tight leading-snug">
               {pdf.titre}
             </h4>
 
             {pdf.sous && (
-              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+              <p className="text-xs text-[#57534E] dark:text-[#B8B2A6]">
                 {pdf.sous}
               </p>
             )}
 
-            {/* Note pédagogique explicite du professeur */}
-            <div className="mt-2 p-2.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/70 dark:border-purple-500/20 text-[11px] sm:text-xs text-purple-900 dark:text-purple-200 leading-relaxed font-medium flex items-start gap-2">
-              <span className="text-sm shrink-0">📌</span>
+            <div className="mt-2.5 p-3 rounded-xl bg-[#F4F1E6] dark:bg-[#282622] border border-black/8 dark:border-white/10 text-xs text-[#57534E] dark:text-[#B8B2A6] leading-relaxed flex items-start gap-2">
+              <Info className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977] mt-0.5 shrink-0" strokeWidth={1.6} />
               <span>
-                <strong>Repères Filières du Professeur :</strong> Dans ce polycopié complet, le professeur signale directement dans le cours les paragraphes et compléments exigibles selon votre filière ({selectedFiliere === "ALL" ? "MP, PSI, PC, TSI" : `filière active : ${selectedFiliere}`}).
+                <strong className="text-[#1D1D1F] dark:text-[#F5F3EC] font-semibold">Repères filières :</strong>{" "}
+                Dans ce polycopié complet, le professeur signale les paragraphes et compléments exigibles selon votre filière ({selectedFiliere === "ALL" ? "MP, PSI, PC, TSI" : `filière active : ${selectedFiliere}`}).
               </span>
             </div>
           </div>
         </div>
 
-        {/* Côté Droit : Bouton d'accès au document PDF */}
-        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-purple-100 dark:border-slate-800">
+        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-black/10 dark:border-white/10">
           <button
             type="button"
             onClick={() => onOpenPdf(pdf.url, `${pdf.titre} — ${chapterTitre}`)}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-600/25 transition-all hover:scale-[1.02] cursor-pointer"
+            className="ui-btn-primary w-full sm:w-auto px-5 py-2.5 text-xs sm:text-sm"
           >
-            <FileText className="w-4 h-4" />
-            <span>Consulter le Polycopié (PDF)</span>
+            <FileText className="w-4 h-4" strokeWidth={1.6} />
+            <span>Consulter le PDF</span>
           </button>
         </div>
       </div>
@@ -2544,172 +2546,149 @@ export function CoursesWidget({
       )}
 
       {/* ================================================================= */}
-      {/* CAS 1 : PAS DE NIVEAU SÉLECTIONNÉ => AFFICHAGE DES 2 CARTES 3D    */}
+      {/* CAS 1 : SÉLECTION DE PROMOTION (SUP / SPÉ) — MINIMALISME APPLE    */}
       {/* ================================================================= */}
       {selectedNiveau === null ? (
-        <div className="space-y-8 animate-fadeIn">
-          {/* En-tête Prestigieux du Portail Cours */}
-          <div className="relative rounded-3xl bg-white/70 dark:bg-[#0d1322]/80 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_20px_50px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-6 sm:p-10 text-center overflow-hidden">
-            <div className="pointer-events-none absolute -top-16 -left-16 w-72 h-72 rounded-full bg-purple-300/30 dark:bg-purple-900/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-indigo-300/25 dark:bg-indigo-900/20 blur-3xl" />
-            <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-white/60 dark:bg-purple-950/20 blur-2xl" />
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
-
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-3.5 sm:px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-2xs">
-                <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                Pôle d'Excellence Physique-Chimie CPGE
-              </div>
-
-              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-2.5 sm:mb-3 tracking-tight">
-                Cours & <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">Travaux Dirigés</span>
-              </h2>
-
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-                Veuillez sélectionner votre promotion ci-dessous pour accéder directement aux polycopiés complets, fiches de synthèse, séries de TD avec corrigés rédigés et séances vidéo adaptés à votre programme officiel.
-              </p>
+        <div className="space-y-10 py-4 animate-fadeIn">
+          {/* En-tête Éditorial Épuré directement sur le fond beige */}
+          <div className="text-center max-w-2xl mx-auto space-y-4">
+            <div className="ui-eyebrow">
+              <BookOpen className="w-3.5 h-3.5 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
+              <span>Pôle Physique-Chimie CPGE</span>
             </div>
+
+            <h2 className="text-3xl sm:text-5xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-[-0.03em]">
+              Cours &amp; Travaux Dirigés
+            </h2>
+
+            <p className="text-sm sm:text-base text-[#57534E] dark:text-[#B8B2A6] leading-relaxed">
+              Sélectionnez votre promotion pour accéder aux polycopiés officiels, fiches de synthèse, séries de TD corrigées et séances vidéo.
+            </p>
           </div>
 
-          {/* Les Deux Cartes : 1ère Année SUP (MPSI/PCSI/TSI) & 2ème Année SPÉ (MP/PSI/TSI) */}
+          {/* Deux Cartes Sobres & Symétriques (1ère Année Sup / 2ème Année Spé) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            {/* ── CARTE 1 : SUP (MPSI / PCSI / TSI) ── */}
-            <div
+            {/* ── CARTE 1 : SUP (1ère Année CPGE) ── */}
+            <article
               onClick={() => handleLevelChange("sup")}
-              className="group relative cursor-pointer rounded-3xl bg-white/80 dark:bg-[#0c101e]/85 backdrop-blur-xl border border-slate-200/90 dark:border-purple-500/30 hover:border-purple-500/70 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_rgba(124,58,237,0.18)] hover:-translate-y-1.5 overflow-hidden text-left"
+              className="ui-card ui-card-hover group cursor-pointer p-7 sm:p-9 flex flex-col justify-between text-left"
             >
-              {/* Effet Halo Décoratif */}
-              <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-purple-400/15 dark:bg-purple-600/15 blur-3xl group-hover:bg-purple-400/25 transition-all" />
-
               <div>
-                {/* Badge promotion */}
-                <div className="flex items-center justify-between gap-2 mb-5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
-                    <span>⚛️</span>
-                    <span>1ère Année CPGE · SUP (MPSI / PCSI / TSI)</span>
+                <div className="flex items-center justify-between gap-2 mb-6">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.09em] text-[#7A5230] dark:text-[#D4A977]">
+                    <Atom className="w-3.5 h-3.5" strokeWidth={1.6} />
+                    <span>1ère Année · Sup</span>
                   </span>
-                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                  <span className="ui-pill text-[11px]">
                     5 Modules · 22 Chapitres
                   </span>
                 </div>
 
-                {/* Titre & Sous-titre */}
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-purple-500/30 shrink-0 group-hover:scale-110 transition-transform">
-                    ⚛️
+                <div className="flex items-start gap-4 mb-5">
+                  <div className="ui-icon-tile w-12 h-12 rounded-xl shrink-0 group-hover:scale-105">
+                    <Atom className="w-5 h-5" strokeWidth={1.6} />
                   </div>
                   <div>
-                    <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    <h3 className="text-2xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-[-0.02em]">
                       MPSI / PCSI / TSI
                     </h3>
-                    <p className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-400">
-                      Fondements & Consolidation Méthodologique
+                    <p className="text-xs sm:text-sm font-medium text-[#57534E] dark:text-[#B8B2A6] mt-0.5">
+                      Fondements &amp; Consolidation Méthodologique
                     </p>
                   </div>
                 </div>
 
-                {/* Description du programme */}
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 font-medium">
-                  Programme officiel de Sup : Électronique dans l&apos;ARQS, Thermodynamique, Mécanique du Point, Optique Géométrique, Électrostatique & Magnétostatique.
+                <p className="text-sm text-[#57534E] dark:text-[#B8B2A6] leading-relaxed mb-6">
+                  Programme officiel de Sup : Électronique dans l&apos;ARQS, Thermodynamique, Mécanique du Point, Optique Géométrique, Électrostatique &amp; Magnétostatique.
                 </p>
 
-                {/* Points forts */}
-                <ul className="space-y-2.5 mb-6 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <ul className="space-y-2.5 mb-7 text-xs sm:text-sm text-[#57534E] dark:text-[#B8B2A6]">
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977] mt-0.5 shrink-0" strokeWidth={1.75} />
                     <span>Polycopiés de cours officiels rédigés par Pr. H. Eddams</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Séries de TD complètes avec corrigés rédigés détaillés</span>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977] mt-0.5 shrink-0" strokeWidth={1.75} />
+                    <span>Séries de TD complètes avec corrigés détaillés</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Fiches méthodologiques & formulaires synthétiques CPGE</span>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977] mt-0.5 shrink-0" strokeWidth={1.75} />
+                    <span>Fiches méthodologiques et formulaires synthétiques</span>
                   </li>
                 </ul>
               </div>
 
-              {/* Bouton d'entrée */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="pt-5 border-t border-black/10 dark:border-white/10">
                 <button
                   type="button"
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center justify-center gap-2 shadow-md shadow-purple-600/25 transition-all group-hover:gap-3 cursor-pointer"
+                  className="ui-btn-primary w-full py-3.5 px-5 text-xs sm:text-sm"
                 >
-                  <span>Accéder aux cours MPSI / PCSI / TSI</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  <span>Accéder aux cours Sup</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={1.6} />
                 </button>
               </div>
-            </div>
+            </article>
 
-            {/* ── CARTE 2 : SPÉ (MP / PSI / TSI) ── */}
-            <div
+            {/* ── CARTE 2 : SPÉ (2ème Année CPGE) ── */}
+            <article
               onClick={() => handleLevelChange("spe")}
-              className="group relative cursor-pointer rounded-3xl bg-white/80 dark:bg-[#0c101e]/85 backdrop-blur-xl border border-slate-200/90 dark:border-purple-500/30 hover:border-indigo-500/70 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_rgba(99,102,241,0.18)] hover:-translate-y-1.5 overflow-hidden text-left"
+              className="ui-card ui-card-hover group cursor-pointer p-7 sm:p-9 flex flex-col justify-between text-left"
             >
-              {/* Effet Halo Décoratif */}
-              <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-indigo-400/15 dark:bg-indigo-600/15 blur-3xl group-hover:bg-indigo-400/25 transition-all" />
-
               <div>
-                {/* Badge promotion */}
-                <div className="flex items-center justify-between gap-2 mb-5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
-                    <span>⚡</span>
-                    <span>2ème Année CPGE · SPÉ (MP / PSI / TSI)</span>
+                <div className="flex items-center justify-between gap-2 mb-6">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.09em] text-[#7A5230] dark:text-[#D4A977]">
+                    <Compass className="w-3.5 h-3.5" strokeWidth={1.6} />
+                    <span>2ème Année · Spé</span>
                   </span>
-                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                    6 Modules · Séances & Vidéos
+                  <span className="ui-pill text-[11px]">
+                    6 Modules · Séances &amp; Vidéos
                   </span>
                 </div>
 
-                {/* Titre & Sous-titre */}
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-indigo-500/30 shrink-0 group-hover:scale-110 transition-transform">
-                    ⚡
+                <div className="flex items-start gap-4 mb-5">
+                  <div className="ui-icon-tile w-12 h-12 rounded-xl shrink-0 group-hover:scale-105">
+                    <Compass className="w-5 h-5" strokeWidth={1.6} />
                   </div>
                   <div>
-                    <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      MP / PSI / TSI
+                    <h3 className="text-2xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-[-0.02em]">
+                      MP / PSI / PC / TSI
                     </h3>
-                    <p className="text-xs sm:text-sm font-semibold text-indigo-700 dark:text-indigo-400">
-                      Approfondissement & Préparation Concours
+                    <p className="text-xs sm:text-sm font-medium text-[#57534E] dark:text-[#B8B2A6] mt-0.5">
+                      Approfondissement &amp; Préparation Concours
                     </p>
                   </div>
                 </div>
 
-                {/* Description du programme */}
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 font-medium">
-                  Programme officiel de Spé : Électronique & Numérisation, Électromagnétisme & Ondes, Thermodynamique & Diffusion, Optique Ondulatoire, Physique Quantique.
+                <p className="text-sm text-[#57534E] dark:text-[#B8B2A6] leading-relaxed mb-6">
+                  Programme officiel de Spé : Électronique &amp; Numérisation, Électromagnétisme &amp; Ondes, Thermodynamique &amp; Diffusion, Optique Ondulatoire, Physique Quantique.
                 </p>
 
-                {/* Points forts */}
-                <ul className="space-y-2.5 mb-6 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Séances de cours interactives avec Replays Vidéo HD</span>
+                <ul className="space-y-2.5 mb-7 text-xs sm:text-sm text-[#57534E] dark:text-[#B8B2A6]">
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977] mt-0.5 shrink-0" strokeWidth={1.75} />
+                    <span>Séances de cours structurées avec replays vidéo HD</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977] mt-0.5 shrink-0" strokeWidth={1.75} />
                     <span>Polycopiés de cours officiels rédigés par Pr. H. Eddams</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Préparation ciblée aux concours : CNC, CCINP, Mines, Centrale, X-ENS</span>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977] mt-0.5 shrink-0" strokeWidth={1.75} />
+                    <span>Préparation ciblée : CNC, CCINP, Mines, Centrale, X-ENS</span>
                   </li>
                 </ul>
               </div>
 
-              {/* Bouton d'entrée */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="pt-5 border-t border-black/10 dark:border-white/10">
                 <button
                   type="button"
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex items-center justify-center gap-2 shadow-md shadow-indigo-600/25 transition-all group-hover:gap-3 cursor-pointer"
+                  className="ui-btn-primary w-full py-3.5 px-5 text-xs sm:text-sm"
                 >
-                  <span>Accéder aux cours MP / PSI / TSI</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  <span>Accéder aux cours Spé</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={1.6} />
                 </button>
               </div>
-            </div>
+            </article>
           </div>
         </div>
       ) : (
@@ -2718,150 +2697,105 @@ export function CoursesWidget({
         /* ================================================================= */
         <div className="space-y-6 animate-fadeIn">
           {/* Barre de Bascule & Navigation Sup / Spé */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-white/80 dark:bg-[#0d1322]/80 backdrop-blur-xl border border-slate-200/90 dark:border-purple-500/25 shadow-xs">
+          <div className="ui-card flex flex-wrap items-center justify-between gap-3 p-3">
             <button
               type="button"
               onClick={() => handleLevelChange(null)}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full text-[#57534E] dark:text-[#B8B2A6] hover:text-[#1D1D1F] dark:hover:text-[#F5F3EC] hover:bg-[#F4F1E6] dark:hover:bg-[#282622] transition-colors cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Changer de promotion (Sup / Spé)</span>
+              <ChevronLeft className="w-4 h-4" strokeWidth={1.6} />
+              <span>Changer de promotion</span>
             </button>
 
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
+            <div className="ui-segmented">
               <button
                 type="button"
                 onClick={() => handleLevelChange("sup")}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                  selectedNiveau === "sup"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
+                data-active={selectedNiveau === "sup"}
+                className="ui-segment"
               >
-                <span>⚛️</span>
-                <span>MPSI / PCSI / TSI (Sup)</span>
+                <Atom className="w-3.5 h-3.5" strokeWidth={1.6} />
+                <span>Sup (1ère année)</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleLevelChange("spe")}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                  selectedNiveau === "spe"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
+                data-active={selectedNiveau === "spe"}
+                className="ui-segment"
               >
-                <span>⚡</span>
-                <span>MP / PSI / TSI (Spé)</span>
+                <Compass className="w-3.5 h-3.5" strokeWidth={1.6} />
+                <span>Spé (2ème année)</span>
               </button>
             </div>
           </div>
 
-          {/* 1. En-tête Prestigieux Lumineux Dynamique */}
-          <div className="relative rounded-3xl bg-white/70 dark:bg-[#0d1322]/80 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_20px_50px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-5 sm:p-10 text-center overflow-hidden">
-            <div className="pointer-events-none absolute -top-16 -left-16 w-72 h-72 rounded-full bg-purple-300/30 dark:bg-purple-900/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-indigo-300/25 dark:bg-indigo-900/20 blur-3xl" />
-            <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-white/60 dark:bg-purple-950/20 blur-2xl" />
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
-
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-3.5 sm:px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-2xs">
-                <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+          {/* 1. En-tête Éditorial Sobre */}
+          <div className="text-center max-w-2xl mx-auto py-4 space-y-3">
+            <div className="ui-eyebrow">
+              <BookOpen className="w-3.5 h-3.5 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
+              <span>
                 {selectedNiveau === "sup"
-                  ? "Programme Physique-Chimie CPGE · 1ère Année (MPSI / PCSI / TSI)"
-                  : "Programme Physique-Chimie CPGE · 2ème Année (MP / PSI / TSI)"}
-              </div>
-
-              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-2.5 sm:mb-3 tracking-tight">
-                Cours & <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">Travaux Dirigés</span>
-                <span className="block text-xl sm:text-2xl text-purple-600 dark:text-purple-400 mt-1 font-bold">
-                  {selectedNiveau === "sup" ? "MPSI / PCSI / TSI (Sup)" : "MP / PSI / TSI (Spé)"}
-                </span>
-              </h2>
-
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed font-medium">
-                {selectedNiveau === "sup"
-                  ? "Syllabus officiel 1ère année : polycopiés de cours officiels, fiches méthodologiques, séries de TD et corrigés détaillés rédigés par Pr. Hassan EDDAMS."
-                  : "Syllabus officiel Spé : séances de cours avec replays vidéo, séries d'entraînement avec corrigés rédigés et fiches de synthèse."}
-              </p>
-
-              <div className="flex items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-5 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
-                  {selectedNiveau === "sup" ? "Syllabus MPSI / PCSI / TSI" : "Syllabus Spé MP / PSI / TSI"}
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
-                  {selectedNiveau === "sup" ? "5 Modules · 22 Chapitres" : "Séances & Fiches de Synthèse"}
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/80 dark:border-purple-500/20 text-slate-700 dark:text-slate-300 shadow-2xs">
-                  {selectedNiveau === "sup" ? "TD & Corrigés Détaillés" : "Entraînement Concours"}
-                </span>
-              </div>
+                  ? "Programme CPGE · 1ère Année (MPSI / PCSI / TSI)"
+                  : "Programme CPGE · 2ème Année (MP / PSI / PC / TSI)"}
+              </span>
             </div>
+
+            <h2 className="text-3xl sm:text-4xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-[-0.03em]">
+              Cours &amp; Travaux Dirigés
+            </h2>
+
+            <p className="text-xs sm:text-sm text-[#57534E] dark:text-[#B8B2A6] leading-relaxed">
+              {selectedNiveau === "sup"
+                ? "Syllabus officiel 1ère année : polycopiés de cours, fiches méthodologiques, séries de TD et corrigés détaillés."
+                : "Syllabus officiel 2ème année : polycopiés, séances avec replays vidéo, séries d'entraînement et fiches de synthèse."}
+            </p>
           </div>
 
-          {/* 1 bis. Barre de Bascule Filières CPGE (PSI / MP / PC / TSI) & Mode de Vue */}
-          <div className="bg-white/90 dark:bg-[#0d1322]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-purple-500/25 p-3.5 sm:p-4 shadow-xs mb-5 flex flex-col md:flex-row md:items-center justify-between gap-3">
-            {/* Sélecteur de Filière */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span>🎯</span>
-                <span>Filière CPGE :</span>
+          {/* 1 bis. Barre Filières CPGE & Mode de Vue */}
+          <div className="ui-card p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-xs font-medium text-[#57534E] dark:text-[#B8B2A6] flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5" strokeWidth={1.6} />
+                <span>Filière :</span>
               </span>
 
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+              <div className="ui-segmented">
                 {(["PSI", "MP", "PC", "TSI", "ALL"] as const).map((fil) => {
                   const isSel = selectedFiliere === fil;
-                  const label = fil === "ALL" ? "Toutes filières" : fil;
+                  const label = fil === "ALL" ? "Toutes" : fil;
                   return (
                     <button
                       key={fil}
                       type="button"
                       onClick={() => setSelectedFiliere(fil)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                        isSel
-                          ? "bg-purple-600 text-white shadow-xs"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                      }`}
+                      data-active={isSel}
+                      className="ui-segment"
                     >
                       {label}
                     </button>
                   );
                 })}
               </div>
-
-              <span className="text-[11px] text-purple-700 dark:text-purple-300 font-semibold hidden lg:inline">
-                {selectedFiliere === "PSI" && "✨ Mode PSI : Tronc commun (partagé avec MP) + Spécificités (Navier-Stokes, Poiseuille, bilans)"}
-                {selectedFiliere === "MP" && "✨ Mode MP : Tronc commun + Spécificités (Physique quantique, Boltzmann)"}
-                {selectedFiliere === "PC" && "✨ Mode PC : Tronc commun + Spécificités (Mécanique des fluides & Chimie)"}
-                {selectedFiliere === "TSI" && "✨ Mode TSI : Programme officiel des Sciences Physiques"}
-                {selectedFiliere === "ALL" && "✨ Mode Global : Toutes les filières CPGE"}
-              </span>
             </div>
 
-            {/* Bascule Vue par Chapitre vs Catalogue Vidéothèque */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 self-end md:self-auto shrink-0">
+            <div className="ui-segmented self-start lg:self-auto shrink-0">
               <button
                 type="button"
                 onClick={() => setCourseViewMode("chapitres")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  courseViewMode === "chapitres"
-                    ? "bg-white dark:bg-purple-950 text-purple-700 dark:text-purple-200 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
+                data-active={courseViewMode === "chapitres"}
+                className="ui-segment"
               >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>Vue par Chapitre (PDF + Vidéos)</span>
+                <BookOpen className="w-3.5 h-3.5" strokeWidth={1.6} />
+                <span>Par chapitre</span>
               </button>
               <button
                 type="button"
                 onClick={() => setCourseViewMode("videotheque")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  courseViewMode === "videotheque"
-                    ? "bg-white dark:bg-purple-950 text-purple-700 dark:text-purple-200 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
+                data-active={courseViewMode === "videotheque"}
+                className="ui-segment"
               >
-                <PlayCircle className="w-3.5 h-3.5" />
-                <span>Vidéothèque Complète</span>
+                <PlayCircle className="w-3.5 h-3.5" strokeWidth={1.6} />
+                <span>Vidéothèque</span>
               </button>
             </div>
           </div>
@@ -2875,83 +2809,79 @@ export function CoursesWidget({
           ) : (
             <>
               {/* 2. Filtres par Module & Recherche */}
-      <div className="bg-white/90 dark:bg-[#0d1322]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-purple-500/25 p-4 sm:p-5 shadow-xs mb-6 space-y-3.5">
-        {/* Ligne 1 : Liste Déroulante des Modules + Actions Déplier/Replier */}
+      <div className="ui-card p-4 sm:p-5 space-y-3.5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Menu Déroulant (Liste Déroulante) Ergonomique */}
           <div className="relative flex-1" ref={moduleDropdownRef}>
             <div className="flex items-center gap-2">
               <div className="relative flex-1 max-w-xl">
                 <button
                   type="button"
                   onClick={() => setIsModuleDropdownOpen((prev) => !prev)}
-                  className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-purple-500/30 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/90 dark:hover:bg-slate-900 text-slate-900 dark:text-white transition-all cursor-pointer shadow-2xs text-left"
+                  className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border border-black/20 dark:border-white/20 bg-[#F9F7F1] hover:bg-white dark:bg-[#1A1916] dark:hover:bg-[#282622] text-[#1D1D1F] dark:text-[#F5F3EC] transition-colors cursor-pointer text-left"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-xl shrink-0 p-1 rounded-lg bg-white dark:bg-slate-800 shadow-2xs border border-slate-200 dark:border-slate-700">
-                      {currentModuleItem.icon}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="ui-icon-tile w-8 h-8 rounded-lg shrink-0">
+                      <Layers className="w-4 h-4" strokeWidth={1.6} />
                     </span>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-[10px] uppercase tracking-wider text-purple-700 dark:text-purple-300 font-bold">
-                        Module de Cours CPGE
+                      <span className="text-[10px] uppercase tracking-[0.09em] text-[#6E6A63] dark:text-[#9A9488] font-semibold">
+                        Module de cours
                       </span>
-                      <span className="text-xs sm:text-sm font-extrabold truncate">
+                      <span className="text-xs sm:text-sm font-semibold truncate">
                         {currentModuleItem.titre}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
+                    <span className="ui-pill text-[11px]">
                       {currentModuleItem.count} chapitres
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                        isModuleDropdownOpen ? "rotate-180 text-purple-600 dark:text-purple-400" : ""
+                      className={`w-4 h-4 text-[#6E6A63] transition-transform duration-200 ${
+                        isModuleDropdownOpen ? "rotate-180 text-[#1D1D1F] dark:text-[#F5F3EC]" : ""
                       }`}
+                      strokeWidth={1.6}
                     />
                   </div>
                 </button>
 
-                {/* Popover de la Liste Déroulante */}
                 {isModuleDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-full max-h-80 overflow-y-auto rounded-2xl border border-slate-200 dark:border-purple-500/40 bg-white dark:bg-[#0c1224] p-1.5 shadow-2xl z-40 divide-y divide-slate-100 dark:divide-slate-800/80 animate-fadeIn">
-                    {/* Option : Tous les modules */}
+                  <div className="absolute top-full left-0 mt-2 w-full max-h-80 overflow-y-auto rounded-2xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#1F1E1B] p-1.5 shadow-xl z-40 divide-y divide-black/6 dark:divide-white/8 animate-fadeIn">
                     <button
                       type="button"
                       onClick={() => {
                         setActiveModule("all");
                         setIsModuleDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-colors cursor-pointer ${
                         activeModule === "all"
-                          ? "bg-purple-600 text-white font-bold shadow-xs"
-                          : "hover:bg-purple-50 dark:hover:bg-purple-950/50 text-slate-800 dark:text-slate-200"
+                          ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513] font-semibold"
+                          : "hover:bg-[#F4F1E6] dark:hover:bg-[#282622] text-[#1D1D1F] dark:text-[#F5F3EC]"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-lg shrink-0">📚</span>
+                        <BookOpen className="w-4 h-4 shrink-0" strokeWidth={1.6} />
                         <div className="text-left min-w-0">
-                          <div className="font-bold">Tous les modules</div>
-                          <div className={`text-[10px] truncate ${activeModule === "all" ? "text-purple-100" : "text-slate-400"}`}>
+                          <div className="font-semibold">Tous les modules</div>
+                          <div className={`text-[10px] truncate ${activeModule === "all" ? "opacity-75" : "text-[#6E6A63] dark:text-[#9A9488]"}`}>
                             {selectedNiveau === "sup"
-                              ? "Voir l'intégralité du syllabus officiel MPSI / PCSI / TSI"
-                              : "Voir l'intégralité du syllabus officiel Spé MP / PSI / TSI"}
+                              ? "Intégralité du syllabus 1ère année CPGE"
+                              : "Intégralité du syllabus 2ème année CPGE"}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                        <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full ${
                           activeModule === "all"
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                            ? "bg-white/15"
+                            : "bg-[#F4F1E6] dark:bg-[#282622] text-[#57534E] dark:text-[#B8B2A6]"
                         }`}>
                           {allChapters.length} chap.
                         </span>
-                        {activeModule === "all" && <Check className="w-4 h-4 text-white" />}
+                        {activeModule === "all" && <Check className="w-4 h-4" strokeWidth={1.75} />}
                       </div>
                     </button>
 
-                    {/* Liste des modules */}
                     {activeCoursesData.map((m) => {
                       const isSelected = activeModule === m.id;
                       const chCount = m.chapitres?.length || 0;
@@ -2963,30 +2893,30 @@ export function CoursesWidget({
                             setActiveModule(m.id);
                             setIsModuleDropdownOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-colors cursor-pointer ${
                             isSelected
-                              ? "bg-purple-600 text-white font-bold shadow-xs"
-                              : "hover:bg-purple-50 dark:hover:bg-purple-950/50 text-slate-800 dark:text-slate-200"
+                              ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513] font-semibold"
+                              : "hover:bg-[#F4F1E6] dark:hover:bg-[#282622] text-[#1D1D1F] dark:text-[#F5F3EC]"
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-lg shrink-0">{m.icon || "⚛️"}</span>
+                            <Layers className="w-4 h-4 shrink-0 opacity-75" strokeWidth={1.6} />
                             <div className="text-left min-w-0">
-                              <div className="font-bold truncate">{m.titre}</div>
-                              <div className={`text-[10px] truncate max-w-sm ${isSelected ? "text-purple-100" : "text-slate-400"}`}>
+                              <div className="font-semibold truncate">{m.titre}</div>
+                              <div className={`text-[10px] truncate max-w-sm ${isSelected ? "opacity-75" : "text-[#6E6A63] dark:text-[#9A9488]"}`}>
                                 {m.description || "Module CPGE"}
                               </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                            <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${
+                            <span className={`text-[11px] px-2 py-0.5 rounded-full ${
                               isSelected
-                                ? "bg-white/20 text-white"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                                ? "bg-white/15"
+                                : "bg-[#F4F1E6] dark:bg-[#282622] text-[#57534E] dark:text-[#B8B2A6]"
                             }`}>
                               {chCount} chap.
                             </span>
-                            {isSelected && <Check className="w-4 h-4 text-white" />}
+                            {isSelected && <Check className="w-4 h-4" strokeWidth={1.75} />}
                           </div>
                         </button>
                       );
@@ -2995,38 +2925,37 @@ export function CoursesWidget({
                 )}
               </div>
 
-              {/* Bouton rapide "Tous les modules" si un filtre est actif */}
               {activeModule !== "all" && (
                 <button
                   type="button"
                   onClick={() => setActiveModule("all")}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                  title="Réinitialiser et afficher tous les modules"
+                  className="ui-btn-secondary hidden sm:inline-flex px-3 py-2 text-xs"
+                  title="Afficher tous les modules"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3.5 h-3.5" strokeWidth={1.6} />
                   <span>Tout afficher</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Boutons d'action Déplier / Replier & Compteur */}
-          <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60 dark:border-slate-800/80">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              <strong className="text-slate-900 dark:text-white font-bold">{filteredChapters.length}</strong> {filteredChapters.length > 1 ? "chapitres affichés" : "chapitre affiché"}
+          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-black/8 dark:border-white/8">
+            <span className="text-xs text-[#6E6A63] dark:text-[#9A9488]">
+              <strong className="text-[#1D1D1F] dark:text-[#F5F3EC] font-semibold">{filteredChapters.length}</strong>{" "}
+              {filteredChapters.length > 1 ? "chapitres" : "chapitre"}
             </span>
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setOpenChapterIds(new Set(filteredChapters.map((c) => c.id)))}
-                className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:border-purple-300 dark:hover:border-purple-500 hover:text-purple-700 dark:hover:text-purple-300 shadow-2xs transition-all cursor-pointer"
+                className="ui-btn-secondary px-3.5 py-1.5 text-xs"
               >
                 Tout déplier
               </button>
               <button
                 type="button"
                 onClick={() => setOpenChapterIds(new Set())}
-                className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:border-purple-300 dark:hover:border-purple-500 hover:text-purple-700 dark:hover:text-purple-300 shadow-2xs transition-all cursor-pointer"
+                className="ui-btn-secondary px-3.5 py-1.5 text-xs"
               >
                 Tout replier
               </button>
@@ -3036,27 +2965,28 @@ export function CoursesWidget({
 
         {/* Barre de Recherche */}
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6A63]" strokeWidth={1.6} />
           <input
             type="text"
-            placeholder="Rechercher un chapitre, concept ou formule (ex: Maxwell, Navier-Stokes, Fourier, Pourbaix)..."
+            placeholder="Rechercher un chapitre, concept ou formule (Maxwell, Fourier, Pourbaix...)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#090d18] text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#0d1322] focus:border-purple-600 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-600/15 transition-all outline-hidden shadow-2xs"
+            className="ui-input pl-10 pr-10 py-2.5 text-xs sm:text-sm"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#6E6A63] hover:text-[#1D1D1F] dark:hover:text-[#F5F3EC] cursor-pointer"
+              aria-label="Effacer la recherche"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" strokeWidth={1.6} />
             </button>
           )}
         </div>
       </div>
 
-      {/* 3. Liste des Chapitres avec la Mise en Page Exacte du Site de Référence */}
-      <div className="space-y-5">
+      {/* 3. Liste des Chapitres */}
+      <div className="space-y-3.5">
         {filteredChapters.map((chapter) => {
           const isOpen = openChapterIds.has(chapter.id);
           const seances = chapter.cours || [];
@@ -3078,67 +3008,70 @@ export function CoursesWidget({
                   handleDropOnChapter(chapter, draggedVideo.isConcours);
                 }
               }}
-              className={`bg-white dark:bg-[#0d1322] rounded-2xl border transition-all duration-200 overflow-hidden ${
+              className={`ui-card overflow-hidden ${
                 dragOverVideo?.chapterId === chapter.id && dragOverVideo.isChapterDropZone
-                  ? "border-emerald-500 ring-4 ring-emerald-400/40 shadow-xl scale-[1.005]"
+                  ? "border-[#2E6F4E] ring-2 ring-[#2E6F4E]/30"
                   : isOpen
-                  ? "border-purple-300 dark:border-purple-500/50 shadow-md dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
-                  : "border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700"
+                  ? "border-black/25 dark:border-white/25 shadow-sm"
+                  : "hover:border-black/25 dark:hover:border-white/25"
               }`}
             >
               {/* Header de Chapitre (Clic pour déplier/replier) */}
               <div
                 onClick={() => toggleChapter(chapter.id)}
-                className="flex items-center gap-4 p-5 sm:p-6 cursor-pointer select-none hover:bg-purple-50/30 dark:hover:bg-purple-950/20 transition-colors"
+                className="flex items-center gap-4 p-4 sm:p-5 cursor-pointer select-none hover:bg-[#F9F7F1] dark:hover:bg-[#252320] transition-colors"
               >
-                {/* Numéro de Chapitre dans Écusson Prestigieux */}
+                {/* Numéro de Chapitre */}
                 <div
-                  className={`w-11 h-11 rounded-xl flex items-center justify-center font-extrabold text-base shrink-0 transition-all ${
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-sm shrink-0 transition-colors ${
                     isOpen
-                      ? "bg-gradient-to-br from-purple-700 via-purple-800 to-indigo-900 text-white shadow-md shadow-purple-900/30 ring-2 ring-purple-400/40"
-                      : "bg-gradient-to-br from-slate-900 to-purple-950 text-white border border-purple-300/40 dark:border-purple-500/30 shadow-2xs"
+                      ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513]"
+                      : "bg-[#F4F1E6] dark:bg-[#282622] text-[#1D1D1F] dark:text-[#F5F3EC] border border-black/10 dark:border-white/10"
                   }`}
                 >
                   {chapter.num}
                 </div>
 
-                {/* Info Chapitre : Titre + Description + Badges de contenu */}
+                {/* Info Chapitre : Titre + Description + Compteurs Minimalistes */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug">
+                  <h3 className="text-base sm:text-[17px] font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-tight leading-snug">
                     {chapter.titre}
                   </h3>
                   {chapter.description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                    <p className="text-xs text-[#57534E] dark:text-[#B8B2A6] line-clamp-1 mt-0.5">
                       {chapter.description}
                     </p>
                   )}
 
-                  {/* Résumé du contenu sous forme de Badges (comme dans le site de référence) */}
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/20">
-                      📘 {seances.length} cours
+                    <span className="ui-pill text-[11px]">
+                      <BookOpen className="w-3 h-3 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
+                      <span>{seances.length} cours</span>
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/20">
-                      📑 {fiches.length} fiches
+                    <span className="ui-pill text-[11px]">
+                      <FileText className="w-3 h-3 text-[#57534E] dark:text-[#B8B2A6]" strokeWidth={1.6} />
+                      <span>{fiches.length} fiches</span>
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-500/20">
-                      ✍️ {tds.length} TD/DL
+                    <span className="ui-pill text-[11px]">
+                      <PenLine className="w-3 h-3 text-[#57534E] dark:text-[#B8B2A6]" strokeWidth={1.6} />
+                      <span>{tds.length} TD/DL</span>
                     </span>
                     {videoCount > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-500/20">
-                        🎥 {videoCount} vidéos 🔒
+                      <span className="ui-pill text-[11px]">
+                        <PlayCircle className="w-3 h-3 text-[#1D1D1F] dark:text-[#F5F3EC]" strokeWidth={1.6} />
+                        <span>{videoCount} vidéos</span>
+                        <Lock className="w-2.5 h-2.5 text-[#6E6A63]" strokeWidth={1.6} />
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Étiquette Module à Droite & Flèche */}
+                {/* Étiquette Module & Chevron */}
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="hidden sm:inline-block text-xs font-bold px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30">
+                  <span className="hidden sm:inline-block text-[11px] font-medium px-3 py-1 rounded-full bg-[#EFE7D9] dark:bg-[#282622] text-[#7A5230] dark:text-[#D4A977]">
                     {chapter.moduleName || chapter.badge}
                   </span>
 
-                  {/* Actions directes enseignant sur le chapitre */}
                   {isTeacherView && (
                     <button
                       type="button"
@@ -3148,19 +3081,21 @@ export function CoursesWidget({
                           removeChapter(chapter.moduleId, chapter.id);
                         }
                       }}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-lg text-[#6E6A63] hover:text-[#9B2C2C] hover:bg-red-500/10 transition-colors cursor-pointer"
                       title="Supprimer ce chapitre entier"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" strokeWidth={1.6} />
                     </button>
                   )}
 
                   <div
-                    className={`w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-transform duration-300 ${
-                      isOpen ? "rotate-180 bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300" : ""
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                      isOpen
+                        ? "rotate-180 bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513]"
+                        : "bg-[#F4F1E6] dark:bg-[#282622] text-[#57534E] dark:text-[#B8B2A6]"
                     }`}
                   >
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-4 h-4" strokeWidth={1.6} />
                   </div>
                 </div>
               </div>
@@ -3174,20 +3109,20 @@ export function CoursesWidget({
                     e.stopPropagation();
                     handleDropOnChapter(chapter, draggedVideo.isConcours);
                   }}
-                  className={`mx-5 mb-4 p-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-copy select-none ${
+                  className={`mx-5 mb-4 p-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 text-xs font-medium transition-all cursor-copy select-none ${
                     dragOverVideo?.chapterId === chapter.id && dragOverVideo.isChapterDropZone
-                      ? "bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-300 scale-[1.01]"
-                      : "bg-purple-500/10 border-purple-400/50 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20"
+                      ? "bg-[#2E6F4E]/15 border-[#2E6F4E] text-[#2E6F4E]"
+                      : "bg-[#F4F1E6] dark:bg-[#282622] border-black/25 dark:border-white/25 text-[#1D1D1F] dark:text-[#F5F3EC]"
                   }`}
                 >
-                  <ArrowRightLeft className="w-4 h-4 animate-pulse text-emerald-500" />
+                  <ArrowRightLeft className="w-4 h-4" strokeWidth={1.6} />
                   <span>
                     Déposer ici pour transférer « {draggedVideo.videoItem.titre} » dans ce chapitre ({chapter.titre})
                   </span>
                 </div>
               )}
 
-              {/* Contenu Déplié : Polycopié officiel en haut, Séances de cours, Extraits de concours en parallèle, puis Fiches et TDs */}
+              {/* Contenu Déplié */}
               {isOpen && (() => {
                 const chapterPdf = getChapterOfficialPdf(chapter);
                 const courseVideos = getChapterCourseVideos(chapter, selectedFiliere);
@@ -3198,8 +3133,8 @@ export function CoursesWidget({
                 const displayedConcoursVideos = isConcoursExpanded ? concoursVideos : concoursVideos.slice(0, 6);
 
                 return (
-                  <div className="border-t border-slate-100 dark:border-slate-800/80 bg-[#f8faff] dark:bg-[#090d18]/60 p-5 sm:p-7 space-y-7">
-                    {/* ── 1. EN HAUT : POLYCOPIÉ DE COURS OFFICIEL (STYLE & PRÉSENTABLE) ── */}
+                  <div className="border-t border-black/8 dark:border-white/8 bg-[#F9F7F1] dark:bg-[#1A1916] p-5 sm:p-7 space-y-7">
+                    {/* 1. Polycopié de cours officiel */}
                     <ChapterOfficialPdfBanner
                       pdf={chapterPdf}
                       chapterTitre={chapter.titre}
@@ -3207,41 +3142,41 @@ export function CoursesWidget({
                       onOpenPdf={onOpenPdf}
                     />
 
-                    {/* ── 2. JUSTE EN BAS : SÉANCES & REPLAYS VIDÉO DU COURS ── */}
+                    {/* 2. Séances & Replays Vidéo */}
                     <div className="space-y-3.5">
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                      <div className="flex items-center justify-between pb-2.5 border-b border-black/10 dark:border-white/10">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-                            🎬 SÉANCES DE COURS & REPLAYS VIDÉO
+                          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#1D1D1F] dark:text-[#F5F3EC] flex items-center gap-2">
+                            <Film className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
+                            <span>Séances de cours &amp; replays vidéo</span>
                           </span>
                           {selectedFiliere !== "ALL" && (
-                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                              · Programme {selectedFiliere} (Tronc commun + Spécificités)
+                            <span className="text-[11px] text-[#6E6A63] dark:text-[#9A9488]">
+                              · Programme {selectedFiliere}
                             </span>
                           )}
                         </div>
 
-                        {/* Boutons Enseignant/Admin pour ajouter directement une vidéo ou restaurer les vidéos masquées */}
                         {isTeacherView && (
                           <div className="flex items-center gap-2 flex-wrap">
                             {chapter.hiddenVideoIds && chapter.hiddenVideoIds.length > 0 && (
                               <button
                                 type="button"
                                 onClick={() => restoreVideos(chapter.moduleId || activeModule, chapter.id, false)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 transition-colors cursor-pointer shadow-xs"
-                                title="Rétablir les vidéos du catalogue Prépasciences masquées"
+                                className="ui-btn-secondary px-3 py-1 text-xs"
+                                title="Rétablir les vidéos masquées"
                               >
-                                <RotateCcw className="w-3.5 h-3.5" />
+                                <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.6} />
                                 <span>Restaurer ({chapter.hiddenVideoIds.length})</span>
                               </button>
                             )}
                             <button
                               type="button"
                               onClick={() => openAddSession(chapter)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors cursor-pointer shadow-xs"
+                              className="ui-btn-primary px-3.5 py-1.5 text-xs"
                             >
-                              <PlusCircle className="w-3.5 h-3.5" />
-                              <span>+ Séance / Vidéo</span>
+                              <PlusCircle className="w-3.5 h-3.5" strokeWidth={1.6} />
+                              <span>Ajouter une séance</span>
                             </button>
                           </div>
                         )}
@@ -3302,13 +3237,13 @@ export function CoursesWidget({
                           ))}
                         </div>
                       ) : (
-                        <div className="p-4 text-center rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200/70 dark:border-purple-500/20 text-xs text-purple-900 dark:text-purple-300">
+                        <div className="p-4 text-center rounded-xl bg-white dark:bg-[#1F1E1B] border border-dashed border-black/15 dark:border-white/15 text-xs text-[#57534E] dark:text-[#B8B2A6]">
                           {selectedFiliere === "PSI" && chapter.id.includes("quantique") ? (
                             <span>
-                              ℹ️ La Physique Quantique est spécifique aux filières MP et PC (hors programme pour la filière PSI).
+                              La Physique Quantique est spécifique aux filières MP et PC (hors programme PSI).
                             </span>
                           ) : (
-                            <span>Aucune séance vidéo théorique enregistrée pour ce filtre de filière.</span>
+                            <span>Aucune séance vidéo enregistrée pour ce filtre de filière.</span>
                           )}
                         </div>
                       )}
@@ -3318,29 +3253,30 @@ export function CoursesWidget({
                           <button
                             type="button"
                             onClick={() => toggleExpandVideos(chapter.id)}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30 transition-all cursor-pointer shadow-2xs"
+                            className="ui-btn-secondary px-4 py-2 text-xs"
                           >
                             <span>
                               {isVideosExpanded
                                 ? "Afficher moins"
-                                : "Afficher l'intégralité des séances de cours"}
+                                : "Afficher toutes les séances de cours"}
                             </span>
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isVideosExpanded ? "rotate-180" : ""}`} />
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isVideosExpanded ? "rotate-180" : ""}`} strokeWidth={1.6} />
                           </button>
                         </div>
                       )}
                     </div>
 
-                    {/* ── 3. NOUVELLE RUBRIQUE : EXTRAITS DE CONCOURS & PROBLÈMES TYPES (TRAVAIL EN PARALLÈLE DU COURS) ── */}
+                    {/* 3. Extraits de concours & problèmes types */}
                     {concoursVideos.length > 0 && (
                       <div className="space-y-3.5 pt-2">
-                        <div className="flex items-center justify-between pb-2 border-b border-amber-200/80 dark:border-amber-500/30">
+                        <div className="flex items-center justify-between pb-2.5 border-b border-black/10 dark:border-white/10">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                              🎯 EXTRAITS DE CONCOURS & PROBLÈMES TYPES
+                            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#7A5230] dark:text-[#D4A977] flex items-center gap-2">
+                              <Award className="w-4 h-4" strokeWidth={1.6} />
+                              <span>Extraits de concours &amp; problèmes types</span>
                             </span>
-                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                              · Annales écrites & Oraux X-ENS · Mines-Ponts · Centrale-Supélec · CCINP
+                            <span className="text-[11px] text-[#6E6A63] dark:text-[#9A9488]">
+                              · X-ENS · Mines-Ponts · Centrale-Supélec · CCINP
                             </span>
                           </div>
 
@@ -3348,11 +3284,11 @@ export function CoursesWidget({
                             <button
                               type="button"
                               onClick={() => restoreVideos(chapter.moduleId || activeModule, chapter.id, true)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition-colors cursor-pointer shadow-xs"
+                              className="ui-btn-secondary px-3 py-1 text-xs"
                               title="Rétablir les extraits de concours masqués"
                             >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                              <span>Restaurer concours ({chapter.hiddenConcoursVideoIds.length})</span>
+                              <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.6} />
+                              <span>Restaurer ({chapter.hiddenConcoursVideoIds.length})</span>
                             </button>
                           )}
                         </div>
