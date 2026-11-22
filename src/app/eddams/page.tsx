@@ -176,11 +176,15 @@ function EddamsPortal() {
         </div>
       )}
 
-      {/* 1. Navbar Professionnelle conforme à la maquette (Logo H. Eddams, Thème Naturel/Sombre, Nom Utilisateur, Déconnexion) */}
+      {/* 1. Navbar Professionnelle (Logo H. Eddams, Switch 1ère/2ème année, Mode Nuit, Profil) */}
       <EddamsNavbar
         activeTab={activeSection || "portail"}
         theme={theme}
         onToggleTheme={toggleTheme}
+        activeNiveau={niveauParam}
+        onSelectNiveau={(lvl) => {
+          router.push(`/eddams?rubrique=cours&niveau=${lvl}`);
+        }}
       />
 
       {/* 2. Contenu Dynamique */}
@@ -224,7 +228,7 @@ function EddamsPortal() {
 
       {/* CAS B : Contenu de la section sélectionnée (Historique navigateur natif) */}
       {activeSection !== null && (
-        <main className="relative z-10 flex-1 px-4 sm:px-6 py-8 animate-fadeIn">
+        <main className="relative z-10 flex-1 px-4 sm:px-6 py-4 sm:py-5 animate-fadeIn">
           {activeSection === "concours" && (
             <ConcoursWidget
               onOpenPdf={handleOpenPdf}

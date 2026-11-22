@@ -11,9 +11,17 @@ interface EddamsNavbarProps {
   activeTab?: "portail" | "cours" | "concours" | "references" | "dashboard";
   theme: "light" | "dark";
   onToggleTheme: () => void;
+  activeNiveau?: "sup" | "spe" | null;
+  onSelectNiveau?: (niveau: "sup" | "spe") => void;
 }
 
-export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: EddamsNavbarProps) {
+export function EddamsNavbar({
+  activeTab = "portail",
+  theme,
+  onToggleTheme,
+  activeNiveau = null,
+  onSelectNiveau,
+}: EddamsNavbarProps) {
   const router = useRouter();
   const { currentUser, isTeacher, isAdmin, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -162,8 +170,54 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
           </nav>
         </div>
 
-        {/* ── Droite : Bascule Mode Naturel / Sombre + Nom Utilisateur + Déconnexion ── */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+        {/* ── Droite : Switch 1ère / 2ème année + Mode Nuit + Profil + Déconnexion ── */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Switch compact 1ère année / 2ème année (juste à côté du mode nuit) */}
+          {activeTab === "cours" && onSelectNiveau && (
+            <div
+              role="group"
+              aria-label="Choisir l'année CPGE"
+              className={`hidden md:inline-flex items-center p-0.5 rounded-full border transition-colors ${
+                theme === "dark"
+                  ? "bg-slate-900/90 border-purple-500/30"
+                  : "bg-white/90 border-purple-200/80 shadow-2xs"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => onSelectNiveau("sup")}
+                aria-pressed={activeNiveau === "sup"}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                  activeNiveau === "sup"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : theme === "dark"
+                    ? "text-slate-300 hover:text-white"
+                    : "text-slate-600 hover:text-purple-800"
+                }`}
+                title="1ère année CPGE (Sup)"
+              >
+                <span>⚛️</span>
+                <span>1ère année</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectNiveau("spe")}
+                aria-pressed={activeNiveau === "spe"}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                  activeNiveau === "spe"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : theme === "dark"
+                    ? "text-slate-300 hover:text-white"
+                    : "text-slate-600 hover:text-purple-800"
+                }`}
+                title="2ème année CPGE (Spé)"
+              >
+                <span>⚡</span>
+                <span>2ème année</span>
+              </button>
+            </div>
+          )}
+
           {/* Bouton de bascule Mode Naturel (Clair) <-> Mode Sombre */}
           <button
             type="button"
@@ -171,7 +225,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               theme === "dark"
                 ? "bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-white/10 shadow-xs"
-                : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/90 shadow-2xs"
+                : "bg-white/90 hover:bg-purple-100/70 text-purple-800 border border-purple-200/80 shadow-2xs"
             }`}
             title={
               theme === "dark"
@@ -183,7 +237,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
             {theme === "dark" ? (
               <Sun className="w-4 h-4 text-amber-400" />
             ) : (
-              <Moon className="w-4 h-4 text-slate-700" />
+              <Moon className="w-4 h-4 text-purple-800" />
             )}
           </button>
 
@@ -278,6 +332,58 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
           </button>
         </div>
       </div>
+
+      {/* Barre compacte mobile 1ère / 2ème année (visible < md sur l'onglet Cours) */}
+      {activeTab === "cours" && onSelectNiveau && (
+        <div
+          className={`md:hidden border-t px-4 py-1.5 flex items-center justify-center ${
+            theme === "dark"
+              ? "bg-[#090e1c]/95 border-purple-500/20"
+              : "bg-[#F4F1E6]/95 border-purple-200/50"
+          }`}
+        >
+          <div
+            role="group"
+            aria-label="Choisir l'année CPGE"
+            className={`inline-flex items-center p-0.5 rounded-full border ${
+              theme === "dark"
+                ? "bg-slate-900 border-purple-500/30"
+                : "bg-white border-purple-200/80"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => onSelectNiveau("sup")}
+              aria-pressed={activeNiveau === "sup"}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                activeNiveau === "sup"
+                  ? "bg-purple-600 text-white shadow-xs"
+                  : theme === "dark"
+                  ? "text-slate-300"
+                  : "text-slate-600"
+              }`}
+            >
+              <span>⚛️</span>
+              <span>1ère année</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectNiveau("spe")}
+              aria-pressed={activeNiveau === "spe"}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                activeNiveau === "spe"
+                  ? "bg-purple-600 text-white shadow-xs"
+                  : theme === "dark"
+                  ? "text-slate-300"
+                  : "text-slate-600"
+              }`}
+            >
+              <span>⚡</span>
+              <span>2ème année</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Menu Mobile Déroulant (< lg) ── */}
       {mobileMenuOpen && (
