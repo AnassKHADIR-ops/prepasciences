@@ -3,8 +3,6 @@
 import React, {
   useState,
   useMemo,
-  useEffect,
-  useRef,
   useCallback,
   useSyncExternalStore,
 } from "react";
@@ -32,7 +30,6 @@ import {
   Trash2,
   PlusCircle,
   Eye,
-  GraduationCap,
   SlidersHorizontal,
   RotateCcw,
 } from "lucide-react";
@@ -103,36 +100,6 @@ export function ConcoursWidget({
     }));
   }, [selectedFiliere]);
 
-  const tablistRef = useRef<HTMLDivElement | null>(null);
-  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-
-  // Fallback IntersectionObserver pour les fondus de défilement des onglets quand scroll-driven animations ne sont pas supportés
-  useEffect(() => {
-    const scroller = tablistRef.current;
-    if (!scroller || typeof window === "undefined") return;
-    if (typeof CSS !== "undefined" && CSS.supports("animation-timeline", "scroll()")) return;
-
-    const first = scroller.firstElementChild;
-    const last = scroller.lastElementChild;
-    if (!first || !last) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const { target, intersectionRatio } of entries) {
-          scroller.classList.toggle(
-            target === first ? "more-start" : "more-end",
-            intersectionRatio < 1
-          );
-        }
-      },
-      { root: scroller, threshold: 1, rootMargin: "1px" }
-    );
-
-    observer.observe(first);
-    observer.observe(last);
-    return () => observer.disconnect();
-  }, []);
-
   const refreshConcours = useCallback(() => {
     setConcoursData(getConcoursDB());
   }, []);
@@ -148,31 +115,9 @@ export function ConcoursWidget({
         [fil]: {},
       }));
       onSelectFiliere?.(fil);
-
-      const tabEl = tabRefs.current[fil];
-      if (tabEl) {
-        tabEl.scrollIntoView({ block: "nearest", inline: "nearest" });
-      }
     },
     [onSelectFiliere]
   );
-
-  // Navigation clavier WAI-ARIA sur la barre d'onglets Filières (selection follows focus)
-  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
-    const count = FILIERES_CONCOURS.length;
-    let nextIndex: number | null = null;
-    if (e.key === "ArrowRight") nextIndex = (currentIndex + 1) % count;
-    else if (e.key === "ArrowLeft") nextIndex = (currentIndex - 1 + count) % count;
-    else if (e.key === "Home") nextIndex = 0;
-    else if (e.key === "End") nextIndex = count - 1;
-
-    if (nextIndex !== null) {
-      e.preventDefault();
-      const targetFil = FILIERES_CONCOURS[nextIndex].id;
-      handleSelectFiliere(targetFil);
-      tabRefs.current[targetFil]?.focus();
-    }
-  };
 
   const activeFiliereInfo = useMemo(
     () => FILIERES_CONCOURS.find((f) => f.id === selectedFiliere) || FILIERES_CONCOURS[0],
@@ -550,95 +495,47 @@ export function ConcoursWidget({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto my-2 sm:my-4 font-sans">
-      {/* 1. En-tête Prestigieux Dynamique par Filière (compact & calme) */}
-      <div className="relative rounded-2xl sm:rounded-3xl bg-white/75 dark:bg-[#0d1322]/85 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_14px_40px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_18px_44px_rgba(0,0,0,0.45)] px-4 py-6 sm:p-8 mb-4 text-center overflow-hidden">
-        <div className="pointer-events-none absolute -top-16 -left-16 w-64 h-64 rounded-full bg-purple-300/25 dark:bg-purple-900/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -right-16 w-72 h-72 rounded-full bg-indigo-300/20 dark:bg-indigo-900/20 blur-3xl" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
-
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-3.5 py-1 rounded-full mb-2.5 shadow-2xs">
-            <Trophy className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-            <span>Annales Officielles CPGE · {activeFiliereInfo.label}</span>
+    <div className="w-full max-w-5xl mx-auto font-sans space-y-4">
+      {/* 1. Bandeau compact & prestigieux avec compteurs discrets sur une seule ligne */}
+      <div className="rounded-2xl bg-white/85 dark:bg-[#0d1322]/85 border border-purple-200/70 dark:border-purple-500/25 px-5 py-3.5 sm:px-6 sm:py-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-purple-100/80 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/30 flex items-center justify-center shrink-0">
+            <Trophy className="w-4 h-4 text-purple-700 dark:text-purple-300" />
           </div>
-
-          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             Concours{" "}
             <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">
               {activeFiliereInfo.shortLabel}
             </span>
           </h2>
-
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-            Épreuves strictement dédiées à votre filière {activeFiliereInfo.shortLabel} : énoncés PDF, corrigés officiels et vidéos E-Learning Physique classées session par session.
-          </p>
-
-          <p className="text-[11px] font-bold text-purple-700/90 dark:text-purple-300/90 mt-2.5 tracking-wide">
-            {activeFiliereInfo.subtitle}
-          </p>
-        </div>
-      </div>
-
-      {/* 1 bis. SÉLECTEUR DE FILIÈRE CPGE (Single-Row Accessible Tablist) */}
-      <div className="bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200/90 dark:border-purple-500/25 shadow-xs p-2 sm:p-2.5 mb-4">
-        <div className="flex items-center gap-2 px-2 pb-1.5 sm:pb-2 border-b border-slate-100 dark:border-slate-800/80 mb-1.5">
-          <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            Choisissez votre filière CPGE :
-          </span>
-          <span className="ml-auto hidden sm:inline-block text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            Affichage strictement filtré (zéro hors-filière)
-          </span>
         </div>
 
-        <div
-          ref={tablistRef}
-          role="tablist"
-          aria-label="Filières CPGE"
-          className="filiere-tablist gap-1.5 pb-0.5"
-        >
-          {FILIERES_CONCOURS.map((fil, idx) => {
-            const isSelected = selectedFiliere === fil.id;
-            const totalForFil = filiereTotals[fil.id] || 0;
-            return (
-              <button
-                key={fil.id}
-                ref={(el) => {
-                  tabRefs.current[fil.id] = el;
-                }}
-                id={`filiere-tab-${fil.id}`}
-                type="button"
-                role="tab"
-                aria-selected={isSelected}
-                tabIndex={isSelected ? 0 : -1}
-                onClick={() => handleSelectFiliere(fil.id)}
-                onKeyDown={(e) => handleTabKeyDown(e, idx)}
-                className={`filiere-tab flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors cursor-pointer whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 ${
-                  isSelected
-                    ? "bg-purple-50 dark:bg-purple-950/70 text-purple-800 dark:text-purple-200"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:text-slate-900 dark:hover:text-white"
-                }`}
-              >
-                <span>{fil.shortLabel}</span>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                    isSelected
-                      ? "bg-purple-600 text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  {totalForFil}
-                </span>
-              </button>
-            );
-          })}
+        {/* Synthèse compacte sans boîte géante */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-[11px] font-bold">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-100/80 dark:bg-purple-950/70 text-purple-800 dark:text-purple-200 border border-purple-200/80 dark:border-purple-500/30">
+            <span>🏛️</span>
+            <span>{stats.concours} banques</span>
+          </span>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
+            <span>📄</span>
+            <span>{stats.sujets} sujets</span>
+          </span>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-500/30">
+            <span>✅</span>
+            <span>{stats.corriges} corrigés</span>
+          </span>
+          {stats.videos > 0 && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/30">
+              <span>🎥</span>
+              <span>{stats.videos} vidéos</span>
+            </span>
+          )}
         </div>
       </div>
 
       {/* ── BARRE D'ADMINISTRATION ENSEIGNANT / ADMIN ── */}
       {(activeIsTeacher || activeIsAdmin) && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-950/90 text-white border border-purple-500/30 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-purple-950/90 text-white border border-purple-500/30 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-200">
               <Sparkles className="w-5 h-5 text-purple-300 animate-pulse" />
@@ -703,81 +600,35 @@ export function ConcoursWidget({
         </div>
       )}
 
-      {/* ── TABPANEL DE LA FILIÈRE SÉLECTIONNÉE ── */}
-      <div role="tabpanel" aria-labelledby={`filiere-tab-${selectedFiliere}`}>
-        {/* 2. Barre de Statistiques Compacte (Grille 2x2 propre sur mobile, 4 colonnes sur PC) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mb-4 overflow-hidden">
-          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center border-r border-b sm:border-b-0 border-slate-100 dark:border-slate-800">
-            <div className="text-xl sm:text-2xl font-extrabold text-purple-700 dark:text-purple-400">
-              {stats.concours}
-            </div>
-            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
-              Banques {selectedFiliere}
-            </div>
-          </div>
-          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center sm:border-r border-b sm:border-b-0 border-slate-100 dark:border-slate-800">
-            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
-              {stats.sujets}
-            </div>
-            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
-              Énoncés PDF
-            </div>
-          </div>
-          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center border-r border-slate-100 dark:border-slate-800">
-            <div className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-              {stats.corriges}
-            </div>
-            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
-              Corrigés PDF
-            </div>
-          </div>
-          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center">
-            <div className="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
-              {stats.videos}
-            </div>
-            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
-              Vidéos Intégrées
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Barre de Filtrage Minimaliste (Recherche + 3 Listes Déroulantes Élégantes) */}
-        <div className="bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200/90 dark:border-slate-800 p-3 sm:p-3.5 shadow-xs mb-4 space-y-2.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
-            {/* Champ Recherche */}
-            <div className="relative sm:col-span-2 lg:col-span-4 min-w-0">
-              <label htmlFor="concours-search-input" className="sr-only">
-                Rechercher une épreuve en {activeFiliereInfo.shortLabel}
+      {/* 2. Barre Unifiée de Filtrage : 4 Listes Déroulantes Organisées + Recherche */}
+      <div>
+        <div className="bg-white/95 dark:bg-[#0d1322] rounded-2xl border border-purple-200/70 dark:border-purple-500/25 p-3 sm:p-3.5 shadow-xs mb-4 space-y-2.5">
+          {/* Ligne 1 : 4 Listes Déroulantes (Filière, Banque, Matière, Thème) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 items-center">
+            {/* Liste déroulante 1 : Filière CPGE */}
+            <div className="concours-select-wrap">
+              <label htmlFor="concours-filiere-select" className="sr-only">
+                Filière CPGE
               </label>
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-500 dark:text-purple-400" />
-              <input
-                id="concours-search-input"
-                type="text"
-                placeholder={`Rechercher en ${activeFiliereInfo.shortLabel} (2019, induction, RMN...)`}
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  collapseCurrentFiliere();
-                }}
-                className="w-full h-[2.625rem] pl-10 pr-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#090d18] text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#0d1322] focus:border-purple-600 dark:focus:border-purple-400 focus:ring-3 focus:ring-purple-600/15 transition-all outline-hidden"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    collapseCurrentFiliere();
-                  }}
-                  aria-label="Effacer la recherche"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+              <select
+                id="concours-filiere-select"
+                name="filiere"
+                value={selectedFiliere}
+                data-active="true"
+                onChange={(e) => handleSelectFiliere(e.target.value as FiliereConcours)}
+                className="concours-select"
+              >
+                {FILIERES_CONCOURS.map((fil) => (
+                  <option key={fil.id} value={fil.id}>
+                    {`🎓 Filière : ${fil.shortLabel} (${filiereTotals[fil.id] || 0})`}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="concours-select-chevron w-4 h-4" aria-hidden="true" />
             </div>
 
-            {/* Liste déroulante : Banque de Concours */}
-            <div className="concours-select-wrap lg:col-span-3">
+            {/* Liste déroulante 2 : Banque de Concours */}
+            <div className="concours-select-wrap">
               <label htmlFor="concours-bank-select" className="sr-only">
                 Banque de concours
               </label>
@@ -795,7 +646,7 @@ export function ConcoursWidget({
                 {filterOptions.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.id === "all"
-                      ? `Banque : Toutes (${f.count})`
+                      ? `🏛️ Banque : Toutes (${f.count})`
                       : `${f.label} (${f.count})`}
                   </option>
                 ))}
@@ -803,8 +654,8 @@ export function ConcoursWidget({
               <ChevronDown className="concours-select-chevron w-4 h-4" aria-hidden="true" />
             </div>
 
-            {/* Liste déroulante : Matière */}
-            <div className="concours-select-wrap lg:col-span-2">
+            {/* Liste déroulante 3 : Matière */}
+            <div className="concours-select-wrap">
               <label htmlFor="concours-matiere-select" className="sr-only">
                 Matière
               </label>
@@ -819,19 +670,19 @@ export function ConcoursWidget({
                 }}
                 className="concours-select"
               >
-                <option value="all">Matière : Tout ({stats.totalEpreuves})</option>
+                <option value="all">📚 Matière : Tout ({stats.totalEpreuves})</option>
                 {stats.physiqueCount > 0 && (
-                  <option value="physique">Physique ({stats.physiqueCount})</option>
+                  <option value="physique">⚛️ Physique ({stats.physiqueCount})</option>
                 )}
                 {stats.chimieCount > 0 && (
-                  <option value="chimie">Chimie ({stats.chimieCount})</option>
+                  <option value="chimie">🧪 Chimie ({stats.chimieCount})</option>
                 )}
               </select>
               <ChevronDown className="concours-select-chevron w-4 h-4" aria-hidden="true" />
             </div>
 
-            {/* Liste déroulante : Thème / Module CPGE */}
-            <div className="concours-select-wrap sm:col-span-2 lg:col-span-3">
+            {/* Liste déroulante 4 : Thème / Module CPGE */}
+            <div className="concours-select-wrap">
               <label htmlFor="concours-theme-select" className="sr-only">
                 Thème ou module du programme
               </label>
@@ -852,7 +703,7 @@ export function ConcoursWidget({
                   return (
                     <option key={thm.id} value={thm.id}>
                       {thm.id === "all"
-                        ? "Thème : Tous les modules"
+                        ? "🧭 Thème : Tous les modules"
                         : `${thm.icon} ${thm.label} (${count})`}
                     </option>
                   );
@@ -860,6 +711,38 @@ export function ConcoursWidget({
               </select>
               <ChevronDown className="concours-select-chevron w-4 h-4" aria-hidden="true" />
             </div>
+          </div>
+
+          {/* Ligne 2 : Champ Recherche */}
+          <div className="relative min-w-0">
+            <label htmlFor="concours-search-input" className="sr-only">
+              Rechercher une épreuve en {activeFiliereInfo.shortLabel}
+            </label>
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-500 dark:text-purple-400" />
+            <input
+              id="concours-search-input"
+              type="text"
+              placeholder={`Rechercher une épreuve en ${activeFiliereInfo.shortLabel} (ex: 2023, induction, optique, RMN...)`}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                collapseCurrentFiliere();
+              }}
+              className="w-full h-[2.5rem] pl-10 pr-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#090d18] text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#0d1322] focus:border-purple-600 dark:focus:border-purple-400 focus:ring-3 focus:ring-purple-600/15 transition-all outline-hidden"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  collapseCurrentFiliere();
+                }}
+                aria-label="Effacer la recherche"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Bandeau discret des filtres actifs (visible UNIQUEMENT lorsqu'un filtre est appliqué) */}
