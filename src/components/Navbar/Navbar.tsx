@@ -124,8 +124,8 @@ export default function Navbar() {
       ref={navContainerRef}
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled || activePole || mobileMenuOpen
-          ? "bg-[#F4F1E6]/92 backdrop-blur-xl border-b border-black/10 py-2.5"
-          : "bg-[#F4F1E6]/80 backdrop-blur-md border-b border-black/8 py-3.5"
+          ? "bg-[#F4F1E6]/95 backdrop-blur-xl border-b border-purple-200/70 shadow-xs py-2.5"
+          : "bg-[#F4F1E6]/85 backdrop-blur-md border-b border-purple-200/50 py-3.5"
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 relative w-full">
@@ -153,12 +153,12 @@ export default function Navbar() {
               className="w-full h-full object-contain"
             />
           </div>
-          <span className="font-semibold text-lg sm:text-xl tracking-tight text-[#1D1D1F] transition-colors leading-none">
-            PrépaSciences
+          <span className="font-black text-xl sm:text-2xl tracking-tight text-[#4C1D95] transition-colors leading-none">
+            PRÉPASCIENCES
           </span>
         </Link>
 
-        {/* DESKTOP NAV ITEMS MINIMALISTES */}
+        {/* DESKTOP NAV ITEMS DYNAMIQUES AVEC INDICATEUR MAUVE GLISSANT */}
         <nav
           className="hidden lg:flex items-center space-x-1 xl:space-x-2"
           aria-label="Navigation principale"
@@ -172,15 +172,15 @@ export default function Navbar() {
                 onClick={(e) => handleNavClick(e, item.id, item.href)}
                 className={`relative px-3.5 py-2 text-sm transition-colors duration-200 ${
                   isActive
-                    ? "font-semibold text-[#1D1D1F]"
-                    : "font-medium text-[#57534E] hover:text-[#1D1D1F]"
+                    ? "font-bold text-purple-950"
+                    : "font-medium text-slate-700 hover:text-purple-900"
                 }`}
               >
                 <span>{item.label}</span>
                 {isActive && (
                   <motion.div
                     layoutId="activeNavIndicator"
-                    className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-[#1D1D1F] rounded-full"
+                    className="absolute bottom-0 left-3 right-3 h-0.5 bg-purple-700 rounded-full"
                     transition={{
                       type: "spring",
                       stiffness: 400,
@@ -193,14 +193,14 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* DESKTOP ACTIONS DROITE : BOUTON APPLE OBSIDIAN */}
+        {/* DESKTOP ACTIONS DROITE : EXACT BOUTON VIOLET DU MOCKUP */}
         <div className="hidden lg:flex items-center gap-3">
           <Link
             href="/espace-candidats"
-            className="ui-btn-primary group px-5 py-2.5 text-xs sm:text-sm"
+            className="group inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-bold text-white bg-purple-800 hover:bg-purple-900 rounded-xl shadow-xs hover:shadow transition-all duration-200 active:scale-98"
           >
             <span>Accéder à la plateforme</span>
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.6} />
+            <ArrowRight className="h-4 w-4 text-white group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
 

@@ -26,15 +26,17 @@ export function CleanLightLanding() {
   const [activePlanMobile, setActivePlanMobile] = useState<"double" | "maths" | "pc">("double");
 
   return (
-    <div className="w-full bg-[#F4F1E6] text-[#1D1D1F]">
+    <div className="w-full bg-[#F4F1E6] text-[#17142D]">
 
       {/* ========================================================================= */}
-      {/* 1. HERO SECTION ÉDITORIALE (WARM BEIGE & APPLE MINIMALISME)               */}
+      {/* 1. HERO SECTION HAUTE ÉDITION (INSPIRÉE DE L'AFFICHE HEC / MAJOR PRÉPA)    */}
       {/* ========================================================================= */}
       <section 
         id="hero"
         className="relative pt-6 sm:pt-12 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
       >
+        {/* Lueur d'ambiance très douce en arrière-plan (Pêche poudrée & lavande douce HEC) */}
+        <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[550px] bg-gradient-to-b from-[#FCEEE6]/80 via-[#F7E7E2]/50 to-transparent rounded-full blur-3xl -z-10" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           

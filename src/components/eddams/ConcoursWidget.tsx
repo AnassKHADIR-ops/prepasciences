@@ -551,35 +551,44 @@ export function ConcoursWidget({
 
   return (
     <div className="w-full max-w-5xl mx-auto my-2 sm:my-4 font-sans">
-      {/* 1. En-tête Éditorial Épuré */}
-      <div className="text-center max-w-2xl mx-auto py-4 sm:py-6 mb-4 space-y-3">
-        <div className="ui-eyebrow">
-          <Trophy className="w-3.5 h-3.5 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
-          <span>Annales Officielles CPGE · {activeFiliereInfo.label}</span>
+      {/* 1. En-tête Prestigieux Dynamique par Filière (compact & calme) */}
+      <div className="relative rounded-2xl sm:rounded-3xl bg-white/75 dark:bg-[#0d1322]/85 backdrop-blur-2xl border border-white/80 dark:border-purple-500/25 shadow-[0_14px_40px_rgba(124,58,237,0.06),0_1px_2px_rgba(255,255,255,0.95)_inset] dark:shadow-[0_18px_44px_rgba(0,0,0,0.45)] px-4 py-6 sm:p-8 mb-4 text-center overflow-hidden">
+        <div className="pointer-events-none absolute -top-16 -left-16 w-64 h-64 rounded-full bg-purple-300/25 dark:bg-purple-900/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-16 w-72 h-72 rounded-full bg-indigo-300/20 dark:bg-indigo-900/20 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white dark:via-purple-400/30 to-transparent" />
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-purple-800 dark:text-purple-300 bg-white/85 dark:bg-purple-950/60 backdrop-blur-md border border-purple-200/90 dark:border-purple-500/30 px-3.5 py-1 rounded-full mb-2.5 shadow-2xs">
+            <Trophy className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            <span>Annales Officielles CPGE · {activeFiliereInfo.label}</span>
+          </div>
+
+          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">
+            Concours{" "}
+            <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">
+              {activeFiliereInfo.shortLabel}
+            </span>
+          </h2>
+
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
+            Épreuves strictement dédiées à votre filière {activeFiliereInfo.shortLabel} : énoncés PDF, corrigés officiels et vidéos E-Learning Physique classées session par session.
+          </p>
+
+          <p className="text-[11px] font-bold text-purple-700/90 dark:text-purple-300/90 mt-2.5 tracking-wide">
+            {activeFiliereInfo.subtitle}
+          </p>
         </div>
-
-        <h2 className="text-3xl sm:text-4xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-[-0.03em]">
-          Concours {activeFiliereInfo.shortLabel}
-        </h2>
-
-        <p className="text-xs sm:text-sm text-[#57534E] dark:text-[#B8B2A6] leading-relaxed">
-          Épreuves dédiées à la filière {activeFiliereInfo.shortLabel} : énoncés PDF, corrigés officiels et vidéos classées session par session.
-        </p>
-
-        <p className="text-xs font-medium text-[#7A5230] dark:text-[#D4A977]">
-          {activeFiliereInfo.subtitle}
-        </p>
       </div>
 
-      {/* 1 bis. SÉLECTEUR DE FILIÈRE CPGE */}
-      <div className="ui-card p-2.5 mb-4">
-        <div className="flex items-center gap-2 px-2 pb-2 border-b border-black/8 dark:border-white/8 mb-2">
-          <GraduationCap className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977] shrink-0" strokeWidth={1.6} />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#57534E] dark:text-[#B8B2A6]">
-            Filière CPGE
+      {/* 1 bis. SÉLECTEUR DE FILIÈRE CPGE (Single-Row Accessible Tablist) */}
+      <div className="bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200/90 dark:border-purple-500/25 shadow-xs p-2 sm:p-2.5 mb-4">
+        <div className="flex items-center gap-2 px-2 pb-1.5 sm:pb-2 border-b border-slate-100 dark:border-slate-800/80 mb-1.5">
+          <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            Choisissez votre filière CPGE :
           </span>
-          <span className="ml-auto hidden sm:inline-block text-[11px] text-[#6E6A63] dark:text-[#9A9488]">
-            Affichage strictement filtré
+          <span className="ml-auto hidden sm:inline-block text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            Affichage strictement filtré (zéro hors-filière)
           </span>
         </div>
 
@@ -605,18 +614,18 @@ export function ConcoursWidget({
                 tabIndex={isSelected ? 0 : -1}
                 onClick={() => handleSelectFiliere(fil.id)}
                 onKeyDown={(e) => handleTabKeyDown(e, idx)}
-                className={`filiere-tab flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors cursor-pointer whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1D1D1F] dark:focus-visible:outline-[#F5F3EC] ${
+                className={`filiere-tab flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors cursor-pointer whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 ${
                   isSelected
-                    ? "bg-[#F4F1E6] dark:bg-[#282622] text-[#1D1D1F] dark:text-[#F5F3EC] font-semibold"
-                    : "text-[#57534E] dark:text-[#B8B2A6] hover:bg-[#F9F7F1] dark:hover:bg-[#252320] hover:text-[#1D1D1F] dark:hover:text-[#F5F3EC]"
+                    ? "bg-purple-50 dark:bg-purple-950/70 text-purple-800 dark:text-purple-200"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
                 <span>{fil.shortLabel}</span>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold ${
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                     isSelected
-                      ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513]"
-                      : "bg-[#ECE7D8] dark:bg-[#282622] text-[#57534E] dark:text-[#B8B2A6]"
+                      ? "bg-purple-600 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                   }`}
                 >
                   {totalForFil}
@@ -696,51 +705,51 @@ export function ConcoursWidget({
 
       {/* ── TABPANEL DE LA FILIÈRE SÉLECTIONNÉE ── */}
       <div role="tabpanel" aria-labelledby={`filiere-tab-${selectedFiliere}`}>
-        {/* 2. Barre de Statistiques Compacte */}
-        <div className="ui-card grid grid-cols-2 sm:grid-cols-4 mb-4 overflow-hidden">
-          <div className="py-3.5 px-2 sm:py-4 sm:px-4 text-center border-r border-b sm:border-b-0 border-black/8 dark:border-white/8">
-            <div className="text-xl sm:text-2xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC]">
+        {/* 2. Barre de Statistiques Compacte (Grille 2x2 propre sur mobile, 4 colonnes sur PC) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mb-4 overflow-hidden">
+          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center border-r border-b sm:border-b-0 border-slate-100 dark:border-slate-800">
+            <div className="text-xl sm:text-2xl font-extrabold text-purple-700 dark:text-purple-400">
               {stats.concours}
             </div>
-            <div className="text-[10px] sm:text-[11px] font-medium text-[#6E6A63] dark:text-[#9A9488] uppercase tracking-[0.08em] mt-0.5">
+            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
               Banques {selectedFiliere}
             </div>
           </div>
-          <div className="py-3.5 px-2 sm:py-4 sm:px-4 text-center sm:border-r border-b sm:border-b-0 border-black/8 dark:border-white/8">
-            <div className="text-xl sm:text-2xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC]">
+          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center sm:border-r border-b sm:border-b-0 border-slate-100 dark:border-slate-800">
+            <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
               {stats.sujets}
             </div>
-            <div className="text-[10px] sm:text-[11px] font-medium text-[#6E6A63] dark:text-[#9A9488] uppercase tracking-[0.08em] mt-0.5">
+            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
               Énoncés PDF
             </div>
           </div>
-          <div className="py-3.5 px-2 sm:py-4 sm:px-4 text-center border-r border-black/8 dark:border-white/8">
-            <div className="text-xl sm:text-2xl font-semibold text-[#7A5230] dark:text-[#D4A977]">
+          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center border-r border-slate-100 dark:border-slate-800">
+            <div className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
               {stats.corriges}
             </div>
-            <div className="text-[10px] sm:text-[11px] font-medium text-[#6E6A63] dark:text-[#9A9488] uppercase tracking-[0.08em] mt-0.5">
+            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
               Corrigés PDF
             </div>
           </div>
-          <div className="py-3.5 px-2 sm:py-4 sm:px-4 text-center">
-            <div className="text-xl sm:text-2xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC]">
+          <div className="py-3 px-2 sm:py-4 sm:px-4 text-center">
+            <div className="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
               {stats.videos}
             </div>
-            <div className="text-[10px] sm:text-[11px] font-medium text-[#6E6A63] dark:text-[#9A9488] uppercase tracking-[0.08em] mt-0.5">
-              Vidéos
+            <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+              Vidéos Intégrées
             </div>
           </div>
         </div>
 
-        {/* 3. Barre de Filtrage Minimaliste */}
-        <div className="ui-card p-3 sm:p-3.5 mb-4 space-y-2.5">
+        {/* 3. Barre de Filtrage Minimaliste (Recherche + 3 Listes Déroulantes Élégantes) */}
+        <div className="bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200/90 dark:border-slate-800 p-3 sm:p-3.5 shadow-xs mb-4 space-y-2.5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
             {/* Champ Recherche */}
             <div className="relative sm:col-span-2 lg:col-span-4 min-w-0">
               <label htmlFor="concours-search-input" className="sr-only">
                 Rechercher une épreuve en {activeFiliereInfo.shortLabel}
               </label>
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6A63]" strokeWidth={1.6} />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-500 dark:text-purple-400" />
               <input
                 id="concours-search-input"
                 type="text"
@@ -750,7 +759,7 @@ export function ConcoursWidget({
                   setSearchQuery(e.target.value);
                   collapseCurrentFiliere();
                 }}
-                className="ui-input h-[2.625rem] pl-10 pr-9 text-[13px]"
+                className="w-full h-[2.625rem] pl-10 pr-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#090d18] text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#0d1322] focus:border-purple-600 dark:focus:border-purple-400 focus:ring-3 focus:ring-purple-600/15 transition-all outline-hidden"
               />
               {searchQuery && (
                 <button
@@ -980,44 +989,45 @@ export function ConcoursWidget({
               return (
                 <div
                   key={block.id}
-                  className="ui-card overflow-hidden hover:border-black/25 dark:hover:border-white/25"
+                  className="bg-white dark:bg-[#0d1322] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden transition-all duration-200 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-500/50"
                 >
                   {/* Header de bloc */}
                   <div
                     onClick={() => toggleBlock(block.id)}
-                    className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 cursor-pointer select-none hover:bg-[#F9F7F1] dark:hover:bg-[#252320] transition-colors"
+                    className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-5 cursor-pointer select-none hover:bg-purple-50/40 dark:hover:bg-purple-950/20 transition-colors"
                   >
-                    <div className="ui-icon-tile w-10 h-10 sm:w-11 sm:h-11 rounded-xl shrink-0">
-                      <Trophy className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-500/30 flex items-center justify-center text-xl sm:text-2xl shrink-0 shadow-2xs">
+                      {block.icon}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
-                        <h3 className="text-base sm:text-[17px] font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-tight truncate">
+                        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
                           {block.titre}
                         </h3>
-                        <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#EFE7D9] dark:bg-[#282622] text-[#7A5230] dark:text-[#D4A977]">
+                        <span className="shrink-0 px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30">
                           {selectedFiliere}
                         </span>
                       </div>
-                      <p className="text-[11px] sm:text-xs text-[#57534E] dark:text-[#B8B2A6] mt-0.5 truncate">
-                        {block.meta}
+                      <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5 min-w-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+                        <span className="truncate">{block.meta}</span>
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                       {blockVideoCount > 0 && (
-                        <span className="ui-pill hidden md:inline-flex text-[11px] whitespace-nowrap">
-                          <Play className="w-3 h-3" strokeWidth={1.6} />
+                        <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/30 whitespace-nowrap">
+                          <Play className="w-3 h-3 fill-current" />
                           <span>
                             {blockVideoCount} {blockVideoCount > 1 ? "vidéos" : "vidéo"}
                           </span>
                         </span>
                       )}
 
-                      <span className="ui-pill text-[11px] font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] whitespace-nowrap">
+                      <span className="inline-flex items-center text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30 whitespace-nowrap">
                         <span>{block.sujets.length}</span>
-                        <span className="hidden sm:inline">
+                        <span className="hidden sm:inline ml-1">
                           {block.sujets.length > 1 ? "Épreuves" : "Épreuve"}
                         </span>
                       </span>
@@ -1055,28 +1065,24 @@ export function ConcoursWidget({
                         </div>
                       )}
 
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 ${
-                          isOpen
-                            ? "rotate-180 bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513]"
-                            : "bg-[#F4F1E6] dark:bg-[#282622] text-[#57534E] dark:text-[#B8B2A6]"
+                      <ChevronDown
+                        className={`w-5 h-5 text-purple-600 dark:text-purple-400 transition-transform duration-200 shrink-0 ${
+                          isOpen ? "rotate-180" : ""
                         }`}
-                      >
-                        <ChevronDown className="w-4 h-4" strokeWidth={1.6} />
-                      </div>
+                      />
                     </div>
                   </div>
 
                   {/* Contenu Dépliable par Session / Année */}
                   {isOpen && (
-                    <div className="border-t border-black/8 dark:border-white/8 divide-y divide-black/8 dark:divide-white/8 bg-[#F9F7F1] dark:bg-[#1A1916]">
+                    <div className="border-t border-slate-100 dark:border-slate-800/80 divide-y divide-slate-100 dark:divide-slate-800/80 bg-slate-50/40 dark:bg-[#070b14]/40">
                       {sortedYears.map((annee) => (
-                        <div key={annee} className="p-3.5 sm:p-5 space-y-3">
+                        <div key={annee} className="p-3 sm:p-5 space-y-2.5 sm:space-y-3">
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                            <span className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] bg-[#EFE7D9] dark:bg-[#282622] px-2.5 py-0.5 rounded-full min-w-[52px] text-center">
+                            <span className="text-xs font-bold text-purple-800 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/30 px-2.5 py-0.5 rounded-md min-w-[52px] text-center">
                               {annee}
                             </span>
-                            <span className="text-xs font-medium text-[#57534E] dark:text-[#B8B2A6]">
+                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                               {/^\d{4}$/.test(annee) ? `Session ${annee}` : annee} · Filière{" "}
                               {activeFiliereInfo.shortLabel}
                             </span>
@@ -1125,9 +1131,9 @@ export function ConcoursWidget({
                                           `${block.titre} ${annee} (${selectedFiliere}) — ${epreuve.label} (Énoncé)`
                                         )
                                       }
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-medium rounded-full bg-[#F4F1E6] dark:bg-[#282622] text-[#1D1D1F] dark:text-[#F5F3EC] border border-black/15 dark:border-white/15 hover:bg-[#E5DFCE] dark:hover:bg-[#322F2A] transition-colors cursor-pointer whitespace-nowrap"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-semibold rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors cursor-pointer whitespace-nowrap"
                                     >
-                                      <FileText className="w-3.5 h-3.5 shrink-0" strokeWidth={1.6} />
+                                      <FileText className="w-3.5 h-3.5 shrink-0" />
                                       <span>Énoncé</span>
                                     </button>
                                   )}
@@ -1142,10 +1148,10 @@ export function ConcoursWidget({
                                           `${block.titre} ${annee} (${selectedFiliere}) — ${epreuve.label} (${corr.titre})`
                                         )
                                       }
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-medium rounded-full bg-[#EFE7D9] dark:bg-[#282622] text-[#7A5230] dark:text-[#D4A977] border border-[#7A5230]/20 dark:border-[#D4A977]/25 hover:bg-[#E6D9C3] dark:hover:bg-[#322F2A] transition-colors cursor-pointer whitespace-nowrap max-w-full"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer whitespace-nowrap max-w-full"
                                       title={corr.titre}
                                     >
-                                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" strokeWidth={1.6} />
+                                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                                       <span className="truncate max-w-[140px]">
                                         {corr.titre || `Corrigé P.${cIdx + 1}`}
                                       </span>
@@ -1165,10 +1171,10 @@ export function ConcoursWidget({
                                         `${block.titre} ${annee} (${selectedFiliere}) — ${vid.title}`
                                       )
                                     }
-                                    className="ui-btn-primary px-3.5 py-1.5 min-h-[32px] text-xs whitespace-nowrap max-w-full"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-semibold rounded-lg bg-purple-100/90 hover:bg-purple-200 dark:bg-purple-950/70 dark:hover:bg-purple-900/80 text-purple-800 dark:text-purple-200 border border-purple-300/90 dark:border-purple-500/40 transition-colors cursor-pointer whitespace-nowrap max-w-full"
                                     title={vid.title}
                                   >
-                                    <Play className="w-3 h-3 shrink-0" strokeWidth={1.75} />
+                                    <Play className="w-3.5 h-3.5 fill-purple-700 dark:fill-purple-300 text-purple-700 dark:text-purple-300 shrink-0" />
                                     <span className="truncate max-w-[180px]">
                                       {videosList.length > 1
                                         ? `Vidéo ${vIdx + 1}/${videosList.length}`
@@ -1182,7 +1188,7 @@ export function ConcoursWidget({
                                 <article
                                   key={epreuve.id || idx}
                                   data-compact-actions={isCompactActions ? "true" : "false"}
-                                  className="epreuve-card p-3.5 sm:p-4 rounded-xl bg-white dark:bg-[#1F1E1B] border border-black/10 dark:border-white/10 hover:border-black/25 dark:hover:border-white/25 transition-colors"
+                                  className="epreuve-card p-3.5 sm:p-4 rounded-xl bg-white dark:bg-[#0d1322] border border-slate-200/90 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40 transition-colors shadow-2xs"
                                 >
                                   {/* Région 1 : En-tête de l'épreuve */}
                                   <header className="flex items-start justify-between gap-2">

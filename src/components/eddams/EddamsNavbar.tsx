@@ -4,19 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  BookOpen,
-  BookmarkCheck,
-  Compass,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Moon,
-  Sun,
-  Trophy,
-  User,
-  X,
-} from "lucide-react";
+import { Moon, Sun, LogOut, LayoutDashboard, User, Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 interface EddamsNavbarProps {
@@ -38,6 +26,7 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
   const activeTeacher = isMounted && (isTeacher || isAdmin);
   const activeUser = isMounted ? currentUser : null;
 
+  // Nom d'affichage et initiales
   const displayName = activeUser?.fullName?.trim() || "Invité";
   const firstName = activeUser?.fullName ? activeUser.fullName.split(" ")[0] : "Invité";
 
@@ -50,87 +39,173 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
 
   const initials = activeTeacher ? "HE" : getInitials(displayName);
 
-  const navLinkClass = (isActive: boolean) =>
-    `px-3.5 py-1.5 rounded-full text-xs transition-colors ${
-      isActive
-        ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513] font-semibold"
-        : "text-[#57534E] dark:text-[#B8B2A6] hover:text-[#1D1D1F] dark:hover:text-[#F5F3EC] hover:bg-black/5 dark:hover:bg-white/8 font-medium"
-    }`;
-
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#F4F1E6]/85 dark:bg-[#161513]/85 border-b border-black/10 dark:border-white/10 transition-colors">
+    <header
+      className={`sticky top-0 z-50 backdrop-blur-md transition-colors duration-200 border-b ${
+        theme === "dark"
+          ? "bg-[#090e1c]/95 border-purple-500/20 text-slate-200"
+          : "bg-[#F4F1E6]/92 border-purple-200/60 shadow-xs text-slate-800"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Gauche : Logo & Navigation */}
-        <div className="flex items-center gap-3 sm:gap-8 min-w-0">
+        {/* ── Gauche : Logo Officiel Physique-Chimie & Titre ── */}
+        <div className="flex items-center gap-2 sm:gap-6 min-w-0">
           <Link
             href="/eddams"
-            className="flex items-center gap-2.5 shrink-0 focus:outline-hidden"
+            className="flex items-center gap-2.5 sm:gap-3 group shrink-0 focus:outline-hidden"
           >
-            <div className="w-9 h-9 rounded-xl overflow-hidden border border-black/10 dark:border-white/15 bg-white dark:bg-[#1F1E1B] flex items-center justify-center p-0.5">
+            {/* Logo Officiel Physique-Chimie (Atome 3D) */}
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-2xl overflow-hidden shadow-md shadow-purple-500/25 group-hover:scale-105 transition-transform shrink-0 border border-purple-500/30 bg-white dark:bg-slate-900 flex items-center justify-center p-0.5">
               <Image
                 src="/logo-pc.webp"
                 alt="Logo Physique-Chimie H. Eddams"
-                width={36}
-                height={36}
-                className="w-full h-full object-cover rounded-lg"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover rounded-xl"
                 priority
               />
             </div>
 
             <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-sm sm:text-base leading-tight tracking-tight text-[#1D1D1F] dark:text-[#F5F3EC] truncate">
+              <span
+                className={`font-black text-xs sm:text-base leading-tight tracking-tight truncate ${
+                  theme === "dark" ? "text-white" : "text-slate-900"
+                }`}
+              >
                 H. Eddams
               </span>
-              <span className="font-medium text-[9px] tracking-[0.12em] uppercase text-[#6E6A63] dark:text-[#9A9488] hidden sm:inline-block truncate">
-                Toutes Filières CPGE
+              <span className="font-bold text-[8px] sm:text-[9px] tracking-wider uppercase text-slate-400 hidden xs:inline-block sm:inline-block truncate">
+                CPGE MP · PSI · PC · TSI · PT
               </span>
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1" aria-label="Navigation portail">
-            <Link href="/eddams" className={navLinkClass(activeTab === "portail")}>
+          {/* Navigation Liens (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-1 text-xs font-semibold">
+            <Link
+              href="/eddams"
+              className={`px-3 py-1.5 rounded-xl transition-all ${
+                activeTab === "portail"
+                  ? theme === "dark"
+                    ? "bg-purple-950/70 border border-purple-500/40 text-purple-300 font-bold"
+                    : "bg-purple-100/80 border border-purple-300/80 text-purple-800 font-bold shadow-2xs"
+                  : theme === "dark"
+                  ? "text-slate-400 hover:text-white hover:bg-white/5"
+                  : "text-slate-600 hover:text-purple-900 hover:bg-purple-100/50"
+              }`}
+            >
               Portail
             </Link>
-            <Link href="/eddams?rubrique=cours" className={navLinkClass(activeTab === "cours")}>
-              Cours &amp; TDs
+
+            <Link
+              href="/eddams?rubrique=cours"
+              className={`px-3 py-1.5 rounded-xl transition-all ${
+                activeTab === "cours"
+                  ? theme === "dark"
+                    ? "bg-purple-950/70 border border-purple-500/40 text-purple-300 font-bold"
+                    : "bg-purple-100/80 border border-purple-300/80 text-purple-800 font-bold shadow-2xs"
+                  : theme === "dark"
+                  ? "text-slate-400 hover:text-white hover:bg-white/5"
+                  : "text-slate-600 hover:text-purple-900 hover:bg-purple-100/50"
+              }`}
+            >
+              Cours & TDs
             </Link>
-            <Link href="/eddams?rubrique=concours" className={navLinkClass(activeTab === "concours")}>
+
+            <Link
+              href="/eddams?rubrique=concours"
+              className={`px-3 py-1.5 rounded-xl transition-all ${
+                activeTab === "concours"
+                  ? theme === "dark"
+                    ? "bg-purple-950/70 border border-purple-500/40 text-purple-300 font-bold"
+                    : "bg-purple-100/80 border border-purple-300/80 text-purple-800 font-bold shadow-2xs"
+                  : theme === "dark"
+                  ? "text-slate-400 hover:text-white hover:bg-white/5"
+                  : "text-slate-600 hover:text-purple-900 hover:bg-purple-100/50"
+              }`}
+            >
               Concours CPGE
             </Link>
-            <Link href="/eddams?rubrique=references" className={navLinkClass(activeTab === "references")}>
+
+            <Link
+              href="/eddams?rubrique=references"
+              className={`px-3 py-1.5 rounded-xl transition-all ${
+                activeTab === "references"
+                  ? theme === "dark"
+                    ? "bg-purple-950/70 border border-purple-500/40 text-purple-300 font-bold"
+                    : "bg-purple-100/80 border border-purple-300/80 text-purple-800 font-bold shadow-2xs"
+                  : theme === "dark"
+                  ? "text-slate-400 hover:text-white hover:bg-white/5"
+                  : "text-slate-600 hover:text-purple-900 hover:bg-purple-100/50"
+              }`}
+            >
               Références
             </Link>
+
             {activeTeacher && (
               <Link
                 href="/dashboard-prof"
-                className={`${navLinkClass(activeTab === "dashboard")} inline-flex items-center gap-1.5`}
+                className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                  activeTab === "dashboard"
+                    ? theme === "dark"
+                      ? "bg-purple-600 text-white font-black shadow-md shadow-purple-950/60"
+                      : "bg-purple-700 text-white font-black shadow-md shadow-purple-600/20"
+                    : theme === "dark"
+                    ? "text-purple-300 hover:text-white hover:bg-purple-950/50"
+                    : "text-purple-700 hover:bg-purple-100/60"
+                }`}
               >
-                <LayoutDashboard className="w-3.5 h-3.5" strokeWidth={1.6} />
+                <LayoutDashboard className="w-3.5 h-3.5" />
                 <span>Tableau de bord</span>
               </Link>
             )}
           </nav>
         </div>
 
-        {/* Droite : Thème, Profil & Déconnexion */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        {/* ── Droite : Bascule Mode Naturel / Sombre + Nom Utilisateur + Déconnexion ── */}
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          {/* Bouton de bascule Mode Naturel (Clair) <-> Mode Sombre */}
           <button
             type="button"
             onClick={onToggleTheme}
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1F1E1B] border border-black/15 dark:border-white/15 text-[#1D1D1F] dark:text-[#F5F3EC] hover:bg-[#ECE7D8] dark:hover:bg-[#282622] transition-colors cursor-pointer"
-            title={theme === "dark" ? "Passer en thème clair" : "Passer en thème sombre"}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              theme === "dark"
+                ? "bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-white/10 shadow-xs"
+                : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/90 shadow-2xs"
+            }`}
+            title={
+              theme === "dark"
+                ? "Passer en Mode Naturel (Clair)"
+                : "Passer en Mode Sombre"
+            }
             aria-label="Basculer le thème"
           >
             {theme === "dark" ? (
-              <Sun className="w-4 h-4" strokeWidth={1.6} />
+              <Sun className="w-4 h-4 text-amber-400" />
             ) : (
-              <Moon className="w-4 h-4" strokeWidth={1.6} />
+              <Moon className="w-4 h-4 text-slate-700" />
             )}
           </button>
 
+          {/* Pilule Utilisateur (Professeur ou Étudiant) */}
           {activeUser ? (
-            <div className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-[#1F1E1B] border border-black/12 dark:border-white/15 text-[#1D1D1F] dark:text-[#F5F3EC]">
-              <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-[#1D1D1F] dark:bg-[#F5F3EC] text-[#FAF8F2] dark:text-[#161513] text-[11px] font-semibold">
+            <div
+              className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-xs font-bold border transition-colors ${
+                theme === "dark"
+                  ? isTeacher
+                    ? "bg-purple-950/60 border-purple-500/40 text-purple-200"
+                    : "bg-slate-900 border-white/10 text-slate-200"
+                  : isTeacher
+                  ? "bg-purple-100/80 border-purple-300/80 text-purple-950"
+                  : "bg-white/90 border-purple-200/70 text-slate-800"
+              }`}
+            >
+              {/* Cercle avec Logo ou Initiales */}
+              <div
+                className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shadow-xs shrink-0 ${
+                  isTeacher ? "border border-purple-500/40 bg-slate-900" : "bg-emerald-600 text-white font-black text-[11px]"
+                }`}
+              >
                 {isTeacher ? (
                   <Image
                     src="/logo-pc.webp"
@@ -143,20 +218,32 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
                   initials
                 )}
               </div>
-              <span className="truncate max-w-[100px] sm:max-w-[140px]">{firstName}</span>
+
+              {/* Prénom & Badge Admin */}
+              <span className="truncate max-w-[100px] sm:max-w-[140px]">
+                {firstName}
+              </span>
               {activeUser?.role === "admin" && (
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#EFE7D9] dark:bg-[#282622] text-[#7A5230] dark:text-[#D4A977]">
+                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-600 text-white shadow-2xs">
                   Admin
                 </span>
               )}
             </div>
           ) : (
-            <Link href="/connexion" className="ui-btn-secondary px-4 py-1.5 text-xs">
-              <User className="w-3.5 h-3.5" strokeWidth={1.6} />
+            <Link
+              href="/connexion"
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                theme === "dark"
+                  ? "bg-purple-950/60 border-purple-500/40 text-purple-300 hover:bg-purple-900"
+                  : "bg-purple-100/80 border-purple-300 text-purple-800 hover:bg-purple-200/80 shadow-2xs"
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
               <span>Connexion</span>
             </Link>
           )}
 
+          {/* Bouton Déconnexion */}
           {activeUser && (
             <button
               type="button"
@@ -164,82 +251,93 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
                 logout();
                 router.push("/connexion");
               }}
-              className="ui-btn-secondary px-3 py-1.5 text-xs hover:text-[#9B2C2C] dark:hover:text-[#F28B82]"
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                theme === "dark"
+                  ? "border-white/15 text-slate-300 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10"
+                  : "border-slate-300 text-slate-700 hover:text-red-600 hover:border-red-400 hover:bg-red-50"
+              }`}
               title="Se déconnecter"
             >
-              <LogOut className="w-3.5 h-3.5" strokeWidth={1.6} />
+              <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Déconnexion</span>
             </button>
           )}
 
+          {/* Bouton Hamburger Mobile (< lg) */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1F1E1B] border border-black/15 dark:border-white/15 text-[#1D1D1F] dark:text-[#F5F3EC] cursor-pointer"
+            className={`lg:hidden w-9 h-9 rounded-xl flex items-center justify-center border transition-colors cursor-pointer ${
+              theme === "dark"
+                ? "border-white/10 text-slate-300 hover:bg-slate-800"
+                : "border-slate-300 text-slate-700 hover:bg-slate-100"
+            }`}
             aria-label="Menu de navigation"
           >
-            {mobileMenuOpen ? (
-              <X className="w-4 h-4" strokeWidth={1.6} />
-            ) : (
-              <Menu className="w-4 h-4" strokeWidth={1.6} />
-            )}
+            {mobileMenuOpen ? <X className="w-4 h-4 text-purple-500" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Menu Mobile */}
+      {/* ── Menu Mobile Déroulant (< lg) ── */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-black/10 dark:border-white/10 bg-[#F4F1E6] dark:bg-[#161513] px-4 py-3 space-y-2 animate-fadeIn">
-          <div className="grid grid-cols-2 gap-2">
+        <div
+          className={`lg:hidden border-t px-4 py-3 space-y-2 animate-fadeIn transition-colors ${
+            theme === "dark"
+              ? "bg-[#0b1020] border-purple-500/20 text-slate-200"
+              : "bg-white border-slate-200 shadow-md text-slate-800"
+          }`}
+        >
+          <div className="grid grid-cols-2 gap-2 pt-1">
             <Link
               href="/eddams"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 border transition-colors ${
+              className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${
                 activeTab === "portail"
-                  ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513] border-transparent"
-                  : "bg-white dark:bg-[#1F1E1B] border-black/10 dark:border-white/10 text-[#1D1D1F] dark:text-[#F5F3EC]"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                  : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50"
               }`}
             >
-              <Compass className="w-4 h-4" strokeWidth={1.6} />
+              <span className="text-base">🏛️</span>
               <span>Portail</span>
             </Link>
 
             <Link
               href="/eddams?rubrique=cours"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 border transition-colors ${
+              className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${
                 activeTab === "cours"
-                  ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513] border-transparent"
-                  : "bg-white dark:bg-[#1F1E1B] border-black/10 dark:border-white/10 text-[#1D1D1F] dark:text-[#F5F3EC]"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                  : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50"
               }`}
             >
-              <BookOpen className="w-4 h-4" strokeWidth={1.6} />
-              <span>Cours &amp; TDs</span>
+              <span className="text-base">📚</span>
+              <span>Espace Cours</span>
             </Link>
 
             <Link
               href="/eddams?rubrique=concours"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 border transition-colors ${
+              className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${
                 activeTab === "concours"
-                  ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513] border-transparent"
-                  : "bg-white dark:bg-[#1F1E1B] border-black/10 dark:border-white/10 text-[#1D1D1F] dark:text-[#F5F3EC]"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                  : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50"
               }`}
             >
-              <Trophy className="w-4 h-4" strokeWidth={1.6} />
+              <span className="text-base">🏆</span>
               <span>Concours CPGE</span>
             </Link>
 
             <Link
               href="/eddams?rubrique=references"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 border transition-colors ${
+              className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${
                 activeTab === "references"
-                  ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513] border-transparent"
-                  : "bg-white dark:bg-[#1F1E1B] border-black/10 dark:border-white/10 text-[#1D1D1F] dark:text-[#F5F3EC]"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                  : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50"
               }`}
             >
-              <BookmarkCheck className="w-4 h-4" strokeWidth={1.6} />
+              <span className="text-base">📖</span>
               <span>Références</span>
             </Link>
           </div>
@@ -248,10 +346,10 @@ export function EddamsNavbar({ activeTab = "portail", theme, onToggleTheme }: Ed
             <Link
               href="/dashboard-prof"
               onClick={() => setMobileMenuOpen(false)}
-              className="ui-btn-primary w-full py-2.5 text-xs"
+              className="w-full mt-2 p-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-xs transition-colors"
             >
-              <LayoutDashboard className="w-4 h-4" strokeWidth={1.6} />
-              <span>Tableau de bord Professeur</span>
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Accéder au Tableau de bord Professeur</span>
             </Link>
           )}
         </div>

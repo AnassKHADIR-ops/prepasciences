@@ -35,9 +35,13 @@ export function QuickNavPill() {
       {/* Bouton Espace Candidats */}
       <Link
         href="/espace-candidats"
-        className="ui-btn-primary px-4 py-2.5 text-xs shadow-md"
+        className="group flex items-center gap-2 rounded-full border border-purple-200 bg-white/95 px-4 py-2.5 text-xs font-bold text-slate-900 shadow-lg shadow-purple-900/5 backdrop-blur-xl hover:border-purple-300 hover:bg-purple-50 transition-all hover:scale-105 active:scale-95"
       >
-        <GraduationCap className="h-4 w-4" strokeWidth={1.6} />
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+        </span>
+        <GraduationCap className="h-4 w-4 text-purple-700 group-hover:rotate-12 transition-transform" />
         <span className="hidden sm:inline">Espace Candidats</span>
       </Link>
 
@@ -46,9 +50,9 @@ export function QuickNavPill() {
         type="button"
         onClick={scrollToTop}
         aria-label="Remonter en haut de page"
-        className="ui-btn-secondary h-10 w-10 shadow-md"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-lg backdrop-blur-xl hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 transition-all hover:scale-105 active:scale-95 cursor-pointer"
       >
-        <ArrowUp className="h-4 w-4" strokeWidth={1.6} />
+        <ArrowUp className="h-4 w-4" />
       </button>
     </aside>
   );

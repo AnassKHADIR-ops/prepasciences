@@ -89,85 +89,169 @@ export function VideothequeWidget({
   }, [filteredVideos]);
 
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-      {/* En-tête minimaliste */}
-      <div className="ui-card p-6 sm:p-8 mb-8">
+    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      {/* ── EN-TÊTE PRINCIPAL ── */}
+      <div className="bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 dark:from-[#0d1322] dark:via-[#111827] dark:to-[#0f172a] rounded-3xl border border-slate-200/90 dark:border-purple-500/20 p-6 sm:p-10 shadow-sm mb-8">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="max-w-3xl">
-            <div className="ui-eyebrow mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
-              <span>Vidéothèque Officielle CPGE</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100/80 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 text-xs font-bold font-mono tracking-wider uppercase mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              VIDÉOTHÈQUE OFFICIELLE CPGE · E-LEARNING PHYSIQUE
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-semibold text-[#1D1D1F] dark:text-[#F5F3EC] tracking-[-0.03em] leading-tight">
-              Catalogue Pédagogique &amp; Replays
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+              Catalogue Pédagogique Intégral & Replays
             </h1>
 
-            <p className="mt-2.5 text-sm text-[#57534E] dark:text-[#B8B2A6] leading-relaxed">
-              Cours et replays ordonnés par discipline, chapitre et filière selon les programmes officiels CPGE (MPSI, PCSI, MP, PSI, PC, TSI).
+            <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+              <strong className="text-purple-700 dark:text-purple-400">Catalogue complet de cours et replays</strong> ordonnés
+              par discipline, chapitre et filière selon les programmes officiels CPGE (MPSI, PCSI, MP, PSI, PC, TSI). Les ressources sont enrichies régulièrement chaque semaine.
             </p>
           </div>
 
+          {/* Bouton Programmes Officiels CPGE */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={() => setSyllabusModalOpen(true)}
-              className="ui-btn-primary px-5 py-3 text-sm"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
-              <BookOpen className="w-4 h-4" strokeWidth={1.6} />
+              <BookOpen className="w-4 h-4" />
               <span>Programmes Officiels (PDF)</span>
             </button>
           </div>
         </div>
 
-        {/* Sélecteur de filière */}
-        <div className="mt-7 pt-6 border-t border-black/10 dark:border-white/10">
+        {/* ── SÉLECTEUR DE FILIÈRE RÉVOLUTIONNAIRE ── */}
+        <div className="mt-8 pt-8 border-t border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between gap-2 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[#57534E] dark:text-[#B8B2A6] flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-[#7A5230] dark:text-[#D4A977]" strokeWidth={1.6} />
-              <span>Filière CPGE</span>
+            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <Layers className="w-4 h-4 text-purple-600" />
+              Filtrer par Filière CPGE
             </span>
-            <span className="text-xs text-[#6E6A63] dark:text-[#9A9488]">
+            <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
               Mise à jour continue
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-            {(
-              [
-                { id: "ALL", title: "Toutes filières", desc: "Intégralité du catalogue" },
-                { id: "PSI", title: "PSI / PSI*", desc: "PSI + Tronc commun MP" },
-                { id: "MP", title: "MP / MP*", desc: "MP + Tronc commun PSI" },
-                { id: "PC", title: "PC / PC*", desc: "PC + Tronc commun" },
-                { id: "TSI", title: "TSI", desc: "TSI + Tronc commun" },
-              ] as const
-            ).map((item) => {
-              const active = selectedFiliere === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setSelectedFiliere(item.id)}
-                  className={`p-3.5 rounded-xl border text-left transition-colors cursor-pointer flex flex-col justify-between ${
-                    active
-                      ? "bg-[#1D1D1F] text-[#FAF8F2] dark:bg-[#F5F3EC] dark:text-[#161513] border-transparent"
-                      : "bg-[#F9F7F1] dark:bg-[#1A1916] text-[#1D1D1F] dark:text-[#F5F3EC] border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold">{item.title}</span>
-                    {active && <CheckCircle2 className="w-4 h-4" strokeWidth={1.6} />}
-                  </div>
-                  <span
-                    className={`text-[11px] leading-snug line-clamp-1 ${
-                      active ? "opacity-75" : "text-[#6E6A63] dark:text-[#9A9488]"
-                    }`}
-                  >
-                    {item.desc}
-                  </span>
-                </button>
-              );
-            })}
+            {/* TOUTES */}
+            <button
+              type="button"
+              onClick={() => setSelectedFiliere("ALL")}
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                selectedFiliere === "ALL"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-md scale-[1.02]"
+                  : "bg-white dark:bg-[#111827] text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-bold">Toutes filières</span>
+                {selectedFiliere === "ALL" && <CheckCircle2 className="w-4 h-4 text-white" />}
+              </div>
+              <span
+                className={`text-[11px] leading-snug line-clamp-1 ${
+                  selectedFiliere === "ALL" ? "text-purple-100" : "text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                Intégralité du catalogue
+              </span>
+            </button>
+
+            {/* PSI */}
+            <button
+              type="button"
+              onClick={() => setSelectedFiliere("PSI")}
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                selectedFiliere === "PSI"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-md scale-[1.02]"
+                  : "bg-white dark:bg-[#111827] text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-bold flex items-center gap-1.5">
+                  PSI / PSI*
+                  <Award className="w-3.5 h-3.5 text-amber-400" />
+                </span>
+                {selectedFiliere === "PSI" && <CheckCircle2 className="w-4 h-4 text-white" />}
+              </div>
+              <span
+                className={`text-[11px] leading-snug line-clamp-1 ${
+                  selectedFiliere === "PSI" ? "text-purple-100" : "text-purple-600 dark:text-purple-400"
+                }`}
+              >
+                PSI + Tronc Commun MP
+              </span>
+            </button>
+
+            {/* MP */}
+            <button
+              type="button"
+              onClick={() => setSelectedFiliere("MP")}
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                selectedFiliere === "MP"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-md scale-[1.02]"
+                  : "bg-white dark:bg-[#111827] text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-bold">MP / MP*</span>
+                {selectedFiliere === "MP" && <CheckCircle2 className="w-4 h-4 text-white" />}
+              </div>
+              <span
+                className={`text-[11px] leading-snug line-clamp-1 ${
+                  selectedFiliere === "MP" ? "text-purple-100" : "text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                MP + Tronc Commun PSI
+              </span>
+            </button>
+
+            {/* PC */}
+            <button
+              type="button"
+              onClick={() => setSelectedFiliere("PC")}
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                selectedFiliere === "PC"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-md scale-[1.02]"
+                  : "bg-white dark:bg-[#111827] text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-bold">PC / PC*</span>
+                {selectedFiliere === "PC" && <CheckCircle2 className="w-4 h-4 text-white" />}
+              </div>
+              <span
+                className={`text-[11px] leading-snug line-clamp-1 ${
+                  selectedFiliere === "PC" ? "text-purple-100" : "text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                PC + Tronc Commun
+              </span>
+            </button>
+
+            {/* TSI */}
+            <button
+              type="button"
+              onClick={() => setSelectedFiliere("TSI")}
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                selectedFiliere === "TSI"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-md scale-[1.02]"
+                  : "bg-white dark:bg-[#111827] text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-bold">TSI</span>
+                {selectedFiliere === "TSI" && <CheckCircle2 className="w-4 h-4 text-white" />}
+              </div>
+              <span
+                className={`text-[11px] leading-snug line-clamp-1 ${
+                  selectedFiliere === "TSI" ? "text-purple-100" : "text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                TSI + Tronc Commun
+              </span>
+            </button>
           </div>
 
           {/* Bandeau d'explication pédagogique pour la filière sélectionnée */}
