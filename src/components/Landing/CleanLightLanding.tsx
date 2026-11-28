@@ -12,9 +12,7 @@ import {
   Check, 
   Star, 
   GraduationCap, 
-  Quote,
   Phone,
-  Trophy,
   Crown,
   ArrowRight
 } from "lucide-react";
@@ -26,17 +24,17 @@ export function CleanLightLanding() {
   const [activePlanMobile, setActivePlanMobile] = useState<"double" | "maths" | "pc">("double");
 
   return (
-    <div className="w-full bg-[#F4F1E6] text-[#17142D]">
+    <div className="w-full bg-[#F6F7FA] text-[#0F172A]">
 
       {/* ========================================================================= */}
-      {/* 1. HERO SECTION HAUTE ÉDITION (INSPIRÉE DE L'AFFICHE HEC / MAJOR PRÉPA)    */}
+      {/* 1. HERO SECTION HAUTE ÉDITION MINIMALISTE                                 */}
       {/* ========================================================================= */}
       <section 
         id="hero"
-        className="relative pt-6 sm:pt-12 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
+        className="relative pt-8 sm:pt-14 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
       >
-        {/* Lueur d'ambiance très douce en arrière-plan (Pêche poudrée & lavande douce HEC) */}
-        <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[550px] bg-gradient-to-b from-[#FCEEE6]/80 via-[#F7E7E2]/50 to-transparent rounded-full blur-3xl -z-10" />
+        {/* Lueur d'ambiance architecturale ultra-subtile (Indigo royal & Or champagne) */}
+        <div className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[540px] bg-[radial-gradient(ellipse_65%_75%_at_30%_15%,rgba(91,33,182,0.065),transparent_70%),radial-gradient(ellipse_55%_65%_at_75%_20%,rgba(198,161,91,0.085),transparent_70%)] rounded-full blur-2xl -z-10" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
@@ -47,50 +45,50 @@ export function CleanLightLanding() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-7 space-y-5 text-left"
           >
-            {/* Titre Principal Option 1 avec typographie style Apple */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold sm:font-extrabold tracking-[-0.03em] leading-[1.08] text-[#1d1d1f]">
+            {/* Titre Principal Editorial Minimaliste */}
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold sm:font-extrabold tracking-[-0.03em] leading-[1.06] text-[#0F172A]">
               <span>L&apos;excellence en </span>
-              <span className="text-purple-800">CPGE,</span>
+              <span className="text-[#5B21B6]">CPGE,</span>
               <br />
               <span>par la méthode </span>
-              <span className="text-purple-800">de nos experts.</span>
+              <span className="text-[#162A4A]">de nos experts.</span>
             </h1>
 
-            {/* Sous-titre Option 1 */}
-            <p className="text-base sm:text-lg lg:text-xl text-[#515154] font-normal max-w-xl leading-relaxed tracking-[-0.01em]">
+            {/* Sous-titre */}
+            <p className="text-base sm:text-lg lg:text-xl text-slate-600 font-normal max-w-xl leading-relaxed tracking-[-0.01em]">
               L&apos;accompagnement rigoureux de professeurs agrégés pour dominer les épreuves de Maths et de Physique-Chimie.
             </p>
 
-            {/* Deux Boutons CTA exacts du mockup */}
+            {/* Deux Boutons CTA */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-1">
               <a
                 href="#tarifs"
-                className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-white bg-purple-800 hover:bg-purple-900 transition-all duration-200 shadow-md hover:shadow-lg active:scale-98 text-sm sm:text-base group"
+                className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 sm:py-4 rounded-full font-semibold text-white bg-[#162A4A] hover:bg-[#5B21B6] transition-all duration-200 shadow-[0_8px_22px_rgba(22,42,74,0.18)] hover:shadow-[0_12px_28px_rgba(91,33,182,0.25)] active:scale-98 text-sm sm:text-base group"
               >
                 <span>Découvrir les formations</span>
                 <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
               </a>
               <a
                 href="#syllabus"
-                className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-bold text-purple-900 bg-white border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all duration-200 shadow-2xs text-sm sm:text-base group"
+                className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 sm:py-4 rounded-full font-semibold text-[#162A4A] bg-white border border-slate-200/90 hover:border-[#5B21B6]/40 hover:bg-[#F3EEFD]/40 transition-all duration-200 shadow-2xs text-sm sm:text-base group"
               >
                 <span>Explorer les ressources</span>
-                <ArrowRight className="w-4 h-4 text-purple-900 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 text-[#5B21B6] group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
 
-            {/* Trait d'accentuation Orange & Liste des Filières exacts du mockup */}
+            {/* Trait d'accentuation Or Prestige & Liste des Filières */}
             <div className="pt-2 space-y-2.5">
-              <div className="w-16 h-1.5 bg-[#F5A623] rounded-full" />
+              <div className="w-16 h-1 bg-gradient-to-r from-[#9A7828] to-[#C6A15B] rounded-full" />
               <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs sm:text-sm font-bold text-slate-700 font-mono tracking-wide">
                 <span>MP</span>
-                <span className="text-[#F5A623] text-base leading-none">•</span>
+                <span className="text-[#C6A15B] text-base leading-none">•</span>
                 <span>PSI</span>
-                <span className="text-[#F5A623] text-base leading-none">•</span>
+                <span className="text-[#C6A15B] text-base leading-none">•</span>
                 <span>TSI</span>
-                <span className="text-[#F5A623] text-base leading-none">•</span>
+                <span className="text-[#C6A15B] text-base leading-none">•</span>
                 <span>MPSI</span>
-                <span className="text-[#F5A623] text-base leading-none">•</span>
+                <span className="text-[#C6A15B] text-base leading-none">•</span>
                 <span>PCSI</span>
               </div>
             </div>
@@ -192,7 +190,7 @@ export function CleanLightLanding() {
 
       {/* LIGNE DE TRANSITION FLUIDE ET RAFFINÉE ENTRE HERO ET PROFESSEURS */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-px bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-300/80 to-transparent" />
       </div>
 
       {/* ========================================================================= */}
@@ -210,11 +208,11 @@ export function CleanLightLanding() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="text-center max-w-2xl mx-auto mb-8 sm:mb-10 space-y-2"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-3.5 py-1 text-xs font-bold text-purple-800 shadow-2xs">
-            <Award className="h-3.5 w-3.5 text-purple-600" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3.5 py-1 text-xs font-semibold text-[#162A4A] shadow-2xs">
+            <Award className="h-3.5 w-3.5 text-[#9A7828]" />
             <span className="tracking-wide">Encadrement d&apos;Élite en CPGE</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#17142D] tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] tracking-tight">
             Nos Professeurs Agrégés
           </h2>
         </motion.div>
@@ -325,7 +323,7 @@ export function CleanLightLanding() {
                 </div>
 
                 {/* Contour de Séance Professionnel */}
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF7FF] border border-purple-200/90 shadow-2xs">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
                   <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center gap-2">
                       <span className="relative flex h-2.5 w-2.5">
@@ -496,7 +494,7 @@ export function CleanLightLanding() {
                 </div>
 
                 {/* Contour de Séance Professionnel */}
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-amber-50/70 via-orange-50/40 to-amber-50/70 border border-amber-200/90 shadow-2xs">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
                   <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center gap-2">
                       <span className="relative flex h-2.5 w-2.5">
@@ -691,11 +689,11 @@ export function CleanLightLanding() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 space-y-2"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-3.5 py-1 text-xs font-bold text-purple-800 shadow-2xs">
-            <GraduationCap className="h-3.5 w-3.5 text-purple-600" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3.5 py-1 text-xs font-semibold text-[#162A4A] shadow-2xs">
+            <GraduationCap className="h-3.5 w-3.5 text-[#5B21B6]" />
             <span>Formules d&apos;Adhésion Spé 2026-2027</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#17142D] tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] tracking-tight">
             Tarifs &amp; Inscriptions
           </h2>
           <p className="text-slate-600 text-sm sm:text-base font-normal max-w-xl mx-auto">

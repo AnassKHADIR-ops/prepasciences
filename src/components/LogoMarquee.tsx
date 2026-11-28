@@ -33,7 +33,7 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
       id="syllabus"
       className={`relative py-10 sm:py-14 overflow-hidden border-t ${
         isLight 
-          ? "bg-[#FAF9F6] text-[#17142D] border-slate-200/80" 
+          ? "bg-[#EEF1F7] text-[#0F172A] border-slate-200/80" 
           : "bg-gradient-to-b from-[#0b132b] via-[#0e1838] to-[#0b132b] text-white border-white/15"
       }`}
     >
@@ -45,12 +45,12 @@ export default function LogoMarquee({ variant = "light" }: LogoMarqueeProps) {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 text-center relative z-10"
       >
         <h2 
-          className={`text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-3 ${
-            isLight ? "text-[#17142D]" : "text-white"
+          className={`font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-3 ${
+            isLight ? "text-[#0F172A]" : "text-white"
           }`}
         >
           Explorez les Cours Travaillés en{" "}
-          <span className={isLight ? "text-purple-900" : "text-[#C084FC]"}>
+          <span className={isLight ? "text-[#5B21B6]" : "text-[#C084FC]"}>
             Mathématiques &amp; Physique-Chimie
           </span>
         </h2>

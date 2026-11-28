@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect, useSyncExternalStore } from "react";
+import React, { useState, useMemo, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { PC_COURSES_DATA } from "./pcCoursesData";
 import { ChapitreItem, CourseSession, CourseExercise, CourseFiche, CorrigeItem, SessionSupportItem } from "@/types/courses";
@@ -18,12 +18,9 @@ import {
   BookOpen,
   Edit2,
   Atom,
-  Check,
-  Filter,
   ChevronLeft,
   ChevronRight,
   ArrowRight,
-  ExternalLink,
   Sparkles,
   GripVertical,
   RotateCcw,
@@ -32,8 +29,14 @@ import {
   Cloud,
   RefreshCw,
   AlertTriangle,
+  LayoutGrid,
+  List,
+  Trophy,
+  PenTool,
+  Film,
+  Bookmark,
 } from "lucide-react";
-import { getDriveImageUrls, extractDriveFileId, getYoutubeThumbnailCandidates, getYoutubeThumbnail } from "@/lib/driveUtils";
+import { getDriveImageUrls, extractDriveFileId, getYoutubeThumbnailCandidates } from "@/lib/driveUtils";
 import { useCourses } from "@/context/CoursesContext";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -42,12 +45,30 @@ import {
   FiliereCPGE,
 } from "@/data/elearningPhysiqueData";
 import { VideothequeWidget } from "./VideothequeWidget";
+import type { PdfDocOption } from "./PdfViewerModal";
 
 interface CoursesWidgetProps {
-  onOpenPdf: (url: string, title: string) => void;
+  onOpenPdf: (url: string, title: string, docs?: PdfDocOption[], initialIndex?: number) => void;
   onOpenVideo: (url: string, title: string) => void;
   initialNiveau?: "sup" | "spe" | null;
   onSelectNiveau?: (niveau: "sup" | "spe" | null) => void;
+}
+
+const MODULE_ACCENT_PALETTE = [
+  { stripe: "#162A4A", pillLight: "bg-[#EBF1F8] text-[#162A4A] border-[#162A4A]/15", pillDark: "dark:bg-blue-950/60 dark:text-blue-200 dark:border-blue-500/30" },
+  { stripe: "#5B21B6", pillLight: "bg-[#F3EEFD] text-[#4C1D95] border-[#5B21B6]/15", pillDark: "dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-500/30" },
+  { stripe: "#9A7828", pillLight: "bg-[#F8F3E6] text-[#7D601E] border-[#C6A15B]/35", pillDark: "dark:bg-amber-950/50 dark:text-amber-200 dark:border-amber-500/30" },
+  { stripe: "#1E6B47", pillLight: "bg-[#EAF5EF] text-[#1E6B47] border-[#1E6B47]/20", pillDark: "dark:bg-emerald-950/50 dark:text-emerald-200 dark:border-emerald-500/30" },
+  { stripe: "#68436E", pillLight: "bg-[#F4ECF6] text-[#5B3561] border-[#68436E]/20", pillDark: "dark:bg-fuchsia-950/50 dark:text-fuchsia-200 dark:border-fuchsia-500/30" },
+  { stripe: "#0F766E", pillLight: "bg-[#EAF6F5] text-[#0F766E] border-[#0F766E]/20", pillDark: "dark:bg-teal-950/50 dark:text-teal-200 dark:border-teal-500/30" },
+];
+
+function getModuleAccent(moduleId: string) {
+  let hash = 0;
+  for (let i = 0; i < moduleId.length; i++) {
+    hash = (hash * 31 + moduleId.charCodeAt(i)) >>> 0;
+  }
+  return MODULE_ACCENT_PALETTE[hash % MODULE_ACCENT_PALETTE.length];
 }
 
 export interface ChapterVideoItem {
@@ -115,7 +136,7 @@ function getChapterOfficialPdf(chapter: ChapitreItem & { moduleId?: string; modu
 
   // 4. Mémento / Cours Résumé Général CPGE de référence par défaut
   return {
-    url: "https://drive.google.com/file/d/1iM7YxwyBKkIDLv1SBYmfJHc7QgSNHxjf/preview",
+    url: "https://drive.google.com/file/d/1gTE1aj2ffdwHrro3-QIGcYLLnpmMlfUj/preview",
     titre: `Polycopié de Cours : ${chapter.titre}`,
     sous: "Cours de référence multi-filières CPGE · Pr. Hassan EDDAMS",
   };
@@ -298,7 +319,7 @@ export function getChapterCourseVideos(
 
   // Filtrer les vidéos masquées/retirées (notamment celles de Prépasciences)
   const hiddenIds = new Set(chapter.hiddenVideoIds || []);
-  let finalResult = result.filter((r) => !hiddenIds.has(r.id) && !hiddenIds.has(r.video));
+  const finalResult = result.filter((r) => !hiddenIds.has(r.id) && !hiddenIds.has(r.video));
 
   // Réordonner selon chapter.videoOrder (Drag & Drop)
   if (chapter.videoOrder && chapter.videoOrder.length > 0) {
@@ -451,7 +472,7 @@ export function getChapterConcoursVideos(
 
   // Filtrer les vidéos de concours masquées/retirées
   const hiddenConcoursIds = new Set(chapter.hiddenConcoursVideoIds || []);
-  let finalResult = result.filter((r) => !hiddenConcoursIds.has(r.id) && !hiddenConcoursIds.has(r.video));
+  const finalResult = result.filter((r) => !hiddenConcoursIds.has(r.id) && !hiddenConcoursIds.has(r.video));
 
   // Réordonner selon chapter.concoursVideoOrder (Drag & Drop)
   if (chapter.concoursVideoOrder && chapter.concoursVideoOrder.length > 0) {
@@ -466,7 +487,7 @@ export function getChapterConcoursVideos(
   return finalResult;
 }
 
-// ── BANDEAU MAJESTUEUX : POLYCOPIÉ DE COURS OFFICIEL (EN HAUT DU CHAPITRE) ──
+// ── BANDEAU MINIMALISTE : POLYCOPIÉ DE COURS OFFICIEL (EN HAUT DU CHAPITRE) ──
 function ChapterOfficialPdfBanner({
   pdf,
   chapterTitre,
@@ -476,59 +497,48 @@ function ChapterOfficialPdfBanner({
   pdf: { url: string; titre: string; sous: string };
   chapterTitre: string;
   selectedFiliere: FiliereCPGE | "ALL";
-  onOpenPdf: (url: string, title: string) => void;
+  onOpenPdf: (url: string, title: string, docs?: PdfDocOption[], initialIndex?: number) => void;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-900/10 via-indigo-900/10 to-transparent dark:from-purple-950/50 dark:via-indigo-950/35 dark:to-[#0d1322] border-2 border-purple-200/90 dark:border-purple-500/40 p-4 sm:p-5 shadow-sm transition-all hover:shadow-md">
-      <div className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 rounded-full bg-purple-500/15 blur-2xl" />
-
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Côté Gauche : Icône Polycopié + Titres + Note Pédagogique */}
-        <div className="flex items-start gap-3.5 sm:gap-4 flex-1 min-w-0">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800 text-white flex items-center justify-center shrink-0 shadow-lg shadow-purple-600/25 border border-white/20">
-            <FileText className="w-6 h-6 sm:w-7 sm:h-7" />
+    <div className="group relative rounded-2xl bg-white dark:bg-[#0E1525] border border-slate-200/90 dark:border-slate-800 hover:border-[#162A4A]/35 dark:hover:border-purple-500/40 px-4 py-3.5 sm:px-5 sm:py-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+        {/* Côté Gauche : Icône sobre + Titre + Repères filières */}
+        <div className="flex items-start gap-3.5 flex-1 min-w-0">
+          <div className="w-11 h-11 rounded-xl bg-[#162A4A] dark:bg-purple-900/70 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <BookOpen className="w-5 h-5" />
           </div>
 
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
-                <BookOpen className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                <span>Polycopié de Cours Officiel · Pr. Hassan EDDAMS</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#EBF1F8] dark:bg-blue-950/60 text-[#162A4A] dark:text-blue-200 border border-[#162A4A]/10 dark:border-blue-500/25">
+                Polycopié Officiel · Pr. H. Eddams
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
-                <span>Multi-Filières CPGE (MP · PSI · PC · TSI)</span>
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Repères {selectedFiliere === "ALL" ? "MP · PSI · PC · TSI" : `filière ${selectedFiliere}`} inclus
               </span>
             </div>
 
-            <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug">
+            <h4 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
               {pdf.titre}
             </h4>
 
             {pdf.sous && (
-              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
                 {pdf.sous}
               </p>
             )}
-
-            {/* Note pédagogique explicite du professeur */}
-            <div className="mt-2 p-2.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/70 dark:border-purple-500/20 text-[11px] sm:text-xs text-purple-900 dark:text-purple-200 leading-relaxed font-medium flex items-start gap-2">
-              <span className="text-sm shrink-0">📌</span>
-              <span>
-                <strong>Repères Filières du Professeur :</strong> Dans ce polycopié complet, le professeur signale directement dans le cours les paragraphes et compléments exigibles selon votre filière ({selectedFiliere === "ALL" ? "MP, PSI, PC, TSI" : `filière active : ${selectedFiliere}`}).
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Côté Droit : Bouton d'accès au document PDF */}
-        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-purple-100 dark:border-slate-800">
+        {/* Côté Droit : Bouton PDF sobre & net */}
+        <div className="flex items-center justify-end shrink-0">
           <button
             type="button"
             onClick={() => onOpenPdf(pdf.url, `${pdf.titre} — ${chapterTitre}`)}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-600/25 transition-all hover:scale-[1.02] cursor-pointer"
+            className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#162A4A] hover:bg-[#5B21B6] dark:bg-purple-600 dark:hover:bg-purple-500 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer"
           >
-            <FileText className="w-4 h-4" />
-            <span>Consulter le Polycopié (PDF)</span>
+            <FileText className="w-3.5 h-3.5" />
+            <span>Consulter le polycopié</span>
           </button>
         </div>
       </div>
@@ -536,12 +546,12 @@ function ChapterOfficialPdfBanner({
   );
 }
 
-// ── CARTE VIDÉO UNIFIÉE (JUSTE EN BAS DU POLYCOPIÉ) ──
+// ── CARTE VIDÉO UNIFIÉE (GRILLE OU LISTE COMPACTE + TIROIR MULTI-PDF FLUIDE) ──
 function UnifiedChapterVideoCard({
   vid,
   index,
-  totalCount,
   chapTitre,
+  viewMode = "grid",
   onOpenPdf,
   onOpenVideo,
   isTeacherView,
@@ -561,7 +571,8 @@ function UnifiedChapterVideoCard({
   index: number;
   totalCount?: number;
   chapTitre: string;
-  onOpenPdf: (url: string, title: string) => void;
+  viewMode?: "grid" | "list";
+  onOpenPdf: (url: string, title: string, docs?: PdfDocOption[], initialIndex?: number) => void;
   onOpenVideo: (url: string, title: string) => void;
   isTeacherView?: boolean;
   onEdit?: () => void;
@@ -577,7 +588,7 @@ function UnifiedChapterVideoCard({
   isDragOver?: boolean;
 }) {
   const titre = vid.titre || `Vidéo ${index + 1}`;
-  const sous = vid.sous || "Replay de cours & Résolution méthodique";
+  const sous = vid.sous || "Replay de cours & résolution méthodique";
   const videoUrl = vid.video || "";
   const attachedPdfs: SessionSupportItem[] = useMemo(() => {
     const list: SessionSupportItem[] = [];
@@ -601,9 +612,21 @@ function UnifiedChapterVideoCard({
     return list;
   }, [vid.supports, vid.support]);
 
+  const pdfDocsOptions: PdfDocOption[] = useMemo(
+    () =>
+      attachedPdfs.map((p, idx) => ({
+        label: p.titre || `Support ${idx + 1}`,
+        url: p.url,
+      })),
+    [attachedPdfs]
+  );
+
   const hasVideo = Boolean(videoUrl && videoUrl.trim() !== "");
   const hasSupport = attachedPdfs.length > 0;
+  const hasMultiplePdfs = attachedPdfs.length > 1;
   const firstSupportUrl = hasSupport ? attachedPdfs[0].url : "";
+
+  const [pdfsDrawerOpen, setPdfsDrawerOpen] = useState(false);
 
   const thumbnailCandidates = useMemo(() => {
     const list: string[] = [];
@@ -631,6 +654,202 @@ function UnifiedChapterVideoCard({
 
   const hasValidThumb = thumbnailCandidates.length > 0 && !thumbFailed;
 
+  const teacherBar = isTeacherView ? (
+    <div className="flex items-center gap-1 bg-slate-950/90 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-lg">
+      <div
+        className="cursor-grab active:cursor-grabbing p-1 rounded-lg text-purple-300 hover:text-white flex items-center gap-0.5 select-none"
+        title="Glisser-déposer pour réordonner"
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+        <span className="text-[10px] font-mono font-bold">#{index + 1}</span>
+      </div>
+      {onMoveUp && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveUp();
+          }}
+          className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          title="Déplacer précédent"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {onMoveDown && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveDown();
+          }}
+          className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          title="Déplacer suivant"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="p-1 rounded-lg text-purple-300 hover:text-white hover:bg-purple-600/60 transition-colors cursor-pointer"
+          title="Modifier cette séance"
+        >
+          <Edit2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {onTransfer && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTransfer();
+          }}
+          className="p-1 rounded-lg text-emerald-400 hover:text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+          title="Transférer vers un autre chapitre"
+        >
+          <ArrowRightLeft className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (confirm(`Confirmez-vous le retrait de la vidéo "${titre}" de ce chapitre ?`)) {
+              onDelete();
+            }
+          }}
+          className="p-1 rounded-lg text-red-400 hover:text-white hover:bg-red-600 transition-colors cursor-pointer"
+          title="Retirer cette vidéo"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  ) : null;
+
+  // ── MODE LISTE COMPACTE (style #cours-mp-w .v-list) ──
+  if (viewMode === "list") {
+    return (
+      <article
+        draggable={isTeacherView}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+        onDrop={onDrop}
+        className={`group rounded-xl bg-white dark:bg-[#0E1525] border transition-all ${
+          isDragging
+            ? "opacity-40 scale-[0.99] border-[#5B21B6] ring-2 ring-[#5B21B6]/40"
+            : isDragOver
+            ? "border-[#5B21B6] ring-2 ring-purple-400/40"
+            : "border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3.5 py-2.5">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <span className="w-7 h-7 rounded-lg bg-[#F6F7FA] dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 text-[11px] font-display font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 tabular-nums">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">
+                  {titre}
+                </h4>
+                {vid.durationFormatted && (
+                  <span className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                    {vid.durationFormatted}
+                  </span>
+                )}
+              </div>
+              {sous && (
+                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  {sous}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center flex-wrap gap-1.5 shrink-0 self-end sm:self-auto">
+            {attachedPdfs.length === 1 && (
+              <button
+                type="button"
+                onClick={() =>
+                  onOpenPdf(
+                    attachedPdfs[0].url,
+                    `${attachedPdfs[0].titre || "Support PDF"} : ${titre} — ${chapTitre}`
+                  )
+                }
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold rounded-full bg-[#EBF1F8] dark:bg-blue-950/60 text-[#162A4A] dark:text-blue-200 hover:bg-[#dce7f4] dark:hover:bg-blue-900/60 border border-[#162A4A]/15 dark:border-blue-500/30 transition-colors cursor-pointer"
+              >
+                <FileText className="w-3 h-3" />
+                <span>Support PDF</span>
+              </button>
+            )}
+
+            {hasMultiplePdfs && (
+              <button
+                type="button"
+                aria-expanded={pdfsDrawerOpen}
+                onClick={() => setPdfsDrawerOpen((prev) => !prev)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold rounded-full bg-[#EBF1F8] dark:bg-blue-950/60 text-[#162A4A] dark:text-blue-200 hover:bg-[#dce7f4] border border-[#162A4A]/15 dark:border-blue-500/30 transition-colors cursor-pointer"
+              >
+                <FileText className="w-3 h-3" />
+                <span>Supports ({attachedPdfs.length})</span>
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform duration-200 ${pdfsDrawerOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            )}
+
+            {hasVideo && (
+              <button
+                type="button"
+                onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-[11.5px] font-semibold rounded-full bg-[#B82924] hover:bg-[#941D19] text-white transition-colors cursor-pointer"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                <span>Regarder</span>
+                <Lock className="w-2.5 h-2.5 opacity-80" />
+              </button>
+            )}
+
+            {teacherBar}
+          </div>
+        </div>
+
+        {/* Tiroir fluide multi-PDF */}
+        {hasMultiplePdfs && (
+          <div className="ps-drawer" data-open={pdfsDrawerOpen ? "true" : "false"} inert={!pdfsDrawerOpen}>
+            <div className="ps-drawer-inner">
+              <div className="px-3.5 pb-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center gap-1.5 bg-[#FAFBFD] dark:bg-[#0A101E]">
+                {attachedPdfs.map((pdf, pIdx) => (
+                  <button
+                    key={pdf.id || pIdx}
+                    type="button"
+                    onClick={() =>
+                      onOpenPdf(pdf.url, `${titre} — ${chapTitre}`, pdfDocsOptions, pIdx)
+                    }
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-medium bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 hover:border-[#162A4A] dark:hover:border-purple-400 transition-colors cursor-pointer"
+                  >
+                    <FileText className="w-3 h-3 text-[#162A4A] dark:text-purple-300" />
+                    <span className="truncate max-w-[180px]">{pdf.titre || `Support ${pIdx + 1}`}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </article>
+    );
+  }
+
+  // ── MODE GRILLE MINIMALISTE 16:9 ──
   return (
     <article
       draggable={isTeacherView}
@@ -638,107 +857,21 @@ function UnifiedChapterVideoCard({
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
       onDrop={onDrop}
-      className={`group relative bg-white dark:bg-[#0d1322] border rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between ${
+      className={`group relative bg-white dark:bg-[#0E1525] border rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_rgba(15,23,42,0.09)] transition-all duration-200 flex flex-col justify-between ${
         isDragging
-          ? "opacity-40 scale-95 border-purple-500 ring-2 ring-purple-500 shadow-xl"
+          ? "opacity-40 scale-95 border-[#5B21B6] ring-2 ring-[#5B21B6]"
           : isDragOver
-          ? "border-purple-500 ring-4 ring-purple-400/50 scale-[1.02] shadow-xl"
-          : "border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40"
+          ? "border-[#5B21B6] ring-4 ring-purple-400/40 scale-[1.01]"
+          : "border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-purple-500/40 hover:-translate-y-0.5"
       }`}
     >
-      {/* Barre d'actions & Drag and Drop Enseignant/Admin */}
-      {isTeacherView && (
-        <div className="absolute top-2 right-2 z-20 flex items-center gap-1 bg-slate-950/90 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-lg">
-          {/* Poignée Drag & Drop avec numéro d'ordre */}
-          <div
-            className="cursor-grab active:cursor-grabbing p-1 rounded-lg text-purple-300 hover:text-white flex items-center gap-0.5 select-none"
-            title="Glisser-déposer (Drag & Drop) pour réordonner cette vidéo"
-          >
-            <GripVertical className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-mono font-bold">#{index + 1}</span>
-          </div>
+      {/* Barre d'actions Enseignant/Admin */}
+      {teacherBar && <div className="absolute top-2 right-2 z-20">{teacherBar}</div>}
 
-          {/* Boutons flèches rapides pour réordonner */}
-          {onMoveUp && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveUp();
-              }}
-              className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Déplacer vers la gauche (précédent)"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-          )}
-          {onMoveDown && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveDown();
-              }}
-              className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Déplacer vers la droite (suivant)"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Bouton Édition (si séance personnalisée) */}
-          {onEdit && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="p-1 rounded-lg text-purple-300 hover:text-white hover:bg-purple-600/50 transition-colors cursor-pointer"
-              title="Modifier les liens de cette séance"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Bouton Transférer vers un autre module / chapitre */}
-          {onTransfer && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onTransfer();
-              }}
-              className="p-1 rounded-lg text-emerald-400 hover:text-white hover:bg-emerald-600 transition-colors cursor-pointer"
-              title="Transférer cette vidéo vers un autre module ou chapitre"
-            >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Bouton Retrait / Suppression (pour TOUTES les vidéos : catalogue Prépasciences ou perso) */}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm(`Confirmez-vous le retrait de la vidéo "${titre}" de ce chapitre ?`)) {
-                  onDelete();
-                }
-              }}
-              className="p-1 rounded-lg text-red-400 hover:text-white hover:bg-red-600 transition-colors cursor-pointer"
-              title="Retirer cette vidéo du chapitre"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Vignette Vidéo / Support avec Héritage Miniature */}
+      {/* Vignette 16:9 */}
       {hasVideo ? (
         <div
-          className="relative w-full aspect-video bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 overflow-hidden cursor-pointer select-none"
+          className="relative w-full aspect-video bg-slate-900 overflow-hidden cursor-pointer select-none"
           onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
           title={`Regarder : ${titre}`}
         >
@@ -752,52 +885,45 @@ function UnifiedChapterVideoCard({
               src={thumbnailCandidates[thumbIdx]}
               alt={titre}
               referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
               loading="lazy"
               onLoad={() => setThumbLoaded(true)}
               onError={handleThumbError}
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0a1024] via-[#121b36] to-[#1c1236] flex flex-col items-center justify-center p-4 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-300 mb-2 shadow-inner">
-                <Atom className="w-6 h-6 animate-pulse text-purple-400" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0B1224] via-[#162A4A] to-[#1E1438] flex flex-col items-center justify-center p-4 text-center">
+              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-white/85 mb-2">
+                <Film className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-white line-clamp-1 max-w-[85%] drop-shadow-xs">
+              <span className="text-xs font-semibold text-white line-clamp-1 max-w-[85%]">
                 {titre}
-              </span>
-              <span className="text-[10px] text-purple-300/90 font-mono mt-0.5">
-                Replay HD · Physique-Chimie CPGE
               </span>
             </div>
           )}
 
-          {/* Calque Sombre & Badge Filière & Bouton Play */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/20 to-transparent flex flex-col justify-between p-2.5 sm:p-3 pointer-events-none">
+          {/* Scrim minimaliste & Play centré */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/15 to-transparent flex flex-col justify-between p-2.5 pointer-events-none">
             <div className="flex items-center justify-between gap-1 w-full">
-              {vid.badge && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-900/90 text-purple-200 border border-purple-400/30 shadow-xs">
+              {vid.badge ? (
+                <span className="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-950/75 text-white/95 backdrop-blur-xs border border-white/15">
                   {vid.badge}
                 </span>
+              ) : (
+                <span />
               )}
-              {!vid.isCustom && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-indigo-900/80 text-indigo-200 border border-indigo-400/30 shadow-xs">
-                  Prépasciences
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 shadow-xs ml-auto">
+              <span className="inline-flex items-center gap-1 text-[9.5px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-slate-950/75 text-[#E3C789] backdrop-blur-xs border border-[#C6A15B]/35">
                 <Lock className="w-2.5 h-2.5" />
-                MEMBRE
+                Membre
               </span>
             </div>
 
-            <div className="self-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-red-600/90 group-hover:bg-red-600 group-hover:scale-110 flex items-center justify-center text-white shadow-xl shadow-red-950/50 transition-all pointer-events-auto">
-              <PlayCircle className="w-7 h-7" />
+            <div className="self-center w-11 h-11 rounded-full bg-[#B82924]/95 group-hover:bg-[#941D19] group-hover:scale-105 flex items-center justify-center text-white shadow-lg transition-all pointer-events-auto">
+              <PlayCircle className="w-6 h-6" />
             </div>
 
             <div className="flex items-center justify-between text-[10px] text-white/90 font-medium">
-              <span className="truncate max-w-[70%] drop-shadow-xs">{chapTitre}</span>
+              <span className="truncate max-w-[72%] opacity-90">{chapTitre}</span>
               {vid.durationFormatted && (
-                <span className="bg-black/70 px-1.5 py-0.5 rounded font-mono text-[9px] text-purple-200 border border-white/10">
+                <span className="bg-black/75 px-1.5 py-0.5 rounded font-mono text-[9.5px] text-white/95">
                   {vid.durationFormatted}
                 </span>
               )}
@@ -806,54 +932,101 @@ function UnifiedChapterVideoCard({
         </div>
       ) : hasSupport ? (
         <div
-          className="relative w-full aspect-video bg-gradient-to-br from-indigo-900 to-purple-950 flex flex-col items-center justify-center p-3 cursor-pointer text-indigo-100"
-          onClick={() => onOpenPdf(firstSupportUrl, `Support : ${titre} — ${chapTitre}`)}
+          className="relative w-full aspect-video bg-gradient-to-br from-[#162A4A] to-[#223E6B] flex flex-col items-center justify-center p-3 cursor-pointer text-white"
+          onClick={() => onOpenPdf(firstSupportUrl, `Support : ${titre} — ${chapTitre}`, pdfDocsOptions, 0)}
         >
-          <FileText className="w-7 h-7 mb-1 opacity-90 text-indigo-300" />
-          <span className="text-[10px] font-bold tracking-wider uppercase text-indigo-100">
+          <FileText className="w-7 h-7 mb-1.5 opacity-90" />
+          <span className="text-[10.5px] font-semibold tracking-wider uppercase">
             {attachedPdfs[0]?.titre || "Support de Cours PDF"}
           </span>
         </div>
       ) : null}
 
-      {/* Informations de la séance */}
-      <div className="p-3.5 flex flex-col flex-1 justify-between gap-3">
+      {/* Corps de carte épuré */}
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-2.5">
         <div>
-          <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
+          <h4 className="font-display text-[13.5px] font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
             {titre}
           </h4>
           {sous && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+            <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
               {sous}
             </p>
           )}
         </div>
 
-        {/* Boutons d'action */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-          {attachedPdfs.map((pdf, pIdx) => (
-            <button
-              key={pdf.id || pIdx}
-              type="button"
-              onClick={() => onOpenPdf(pdf.url, `${pdf.titre || "Support PDF"} : ${titre} — ${chapTitre}`)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-500/30 transition-colors cursor-pointer"
-              title={pdf.titre || "Support PDF (Google Drive)"}
-            >
-              <FileText className="w-3 h-3 text-blue-500" />
-              <span className="truncate max-w-[130px]">{pdf.titre || `Support PDF ${attachedPdfs.length > 1 ? pIdx + 1 : ""}`.trim()}</span>
-            </button>
-          ))}
+        {/* Actions + Tiroir multi-PDF */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {attachedPdfs.length === 1 && (
+              <button
+                type="button"
+                onClick={() =>
+                  onOpenPdf(
+                    attachedPdfs[0].url,
+                    `${attachedPdfs[0].titre || "Support PDF"} : ${titre} — ${chapTitre}`
+                  )
+                }
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold rounded-full bg-[#EBF1F8] dark:bg-blue-950/60 text-[#162A4A] dark:text-blue-200 hover:bg-[#dce7f4] dark:hover:bg-blue-900/60 border border-[#162A4A]/15 dark:border-blue-500/30 transition-colors cursor-pointer"
+                title={attachedPdfs[0].titre || "Support PDF"}
+              >
+                <FileText className="w-3 h-3" />
+                <span className="truncate max-w-[110px]">
+                  {attachedPdfs[0].titre || "Support PDF"}
+                </span>
+              </button>
+            )}
 
-          {hasVideo && (
-            <button
-              type="button"
-              onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
-              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer ml-auto shadow-2xs"
-            >
-              <PlayCircle className="w-3 h-3" />
-              <span>Regarder</span>
-              <Lock className="w-2.5 h-2.5 ml-0.5 opacity-80" />
-            </button>
+            {hasMultiplePdfs && (
+              <button
+                type="button"
+                aria-expanded={pdfsDrawerOpen}
+                onClick={() => setPdfsDrawerOpen((prev) => !prev)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold rounded-full bg-[#EBF1F8] dark:bg-blue-950/60 text-[#162A4A] dark:text-blue-200 hover:bg-[#dce7f4] border border-[#162A4A]/15 dark:border-blue-500/30 transition-colors cursor-pointer"
+              >
+                <FileText className="w-3 h-3" />
+                <span>Supports ({attachedPdfs.length})</span>
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform duration-200 ${pdfsDrawerOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            )}
+
+            {hasVideo && (
+              <button
+                type="button"
+                onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+                className="inline-flex items-center gap-1 px-3 py-1 text-[11.5px] font-semibold rounded-full bg-[#B82924] hover:bg-[#941D19] text-white transition-colors cursor-pointer ml-auto"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                <span>Regarder</span>
+              </button>
+            )}
+          </div>
+
+          {hasMultiplePdfs && (
+            <div className="ps-drawer" data-open={pdfsDrawerOpen ? "true" : "false"} inert={!pdfsDrawerOpen}>
+              <div className="ps-drawer-inner">
+                <div className="pt-1.5 flex flex-col gap-1">
+                  {attachedPdfs.map((pdf, pIdx) => (
+                    <button
+                      key={pdf.id || pIdx}
+                      type="button"
+                      onClick={() =>
+                        onOpenPdf(pdf.url, `${titre} — ${chapTitre}`, pdfDocsOptions, pIdx)
+                      }
+                      className="w-full text-left flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium bg-[#F6F7FA] dark:bg-slate-900 hover:bg-[#EBF1F8] dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer"
+                    >
+                      <span className="inline-flex items-center gap-1.5 min-w-0">
+                        <FileText className="w-3 h-3 text-[#162A4A] dark:text-purple-300 shrink-0" />
+                        <span className="truncate">{pdf.titre || `Support PDF ${pIdx + 1}`}</span>
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -861,12 +1034,12 @@ function UnifiedChapterVideoCard({
   );
 }
 
-// ── CARTE EXTRAIT DE CONCOURS & PROBLÈME TYPE (SPÉCIFIQUE AUX ANNALES CPGE) ──
+// ── CARTE EXTRAIT DE CONCOURS & PROBLÈME TYPE (ACCENT OR PRESTIGE SOBRE) ──
 function ConcoursExtractCard({
   vid,
   index,
-  totalCount,
   chapTitre,
+  viewMode = "grid",
   onOpenPdf,
   onOpenVideo,
   isTeacherView,
@@ -886,7 +1059,8 @@ function ConcoursExtractCard({
   index: number;
   totalCount?: number;
   chapTitre: string;
-  onOpenPdf?: (url: string, title: string) => void;
+  viewMode?: "grid" | "list";
+  onOpenPdf?: (url: string, title: string, docs?: PdfDocOption[], initialIndex?: number) => void;
   onOpenVideo: (url: string, title: string) => void;
   isTeacherView?: boolean;
   onEdit?: () => void;
@@ -928,6 +1102,18 @@ function ConcoursExtractCard({
     return list;
   }, [vid.supports, vid.support]);
 
+  const pdfDocsOptions: PdfDocOption[] = useMemo(
+    () =>
+      attachedPdfs.map((p, idx) => ({
+        label: p.titre || `Sujet / Corrigé ${idx + 1}`,
+        url: p.url,
+      })),
+    [attachedPdfs]
+  );
+
+  const hasMultiplePdfs = attachedPdfs.length > 1;
+  const [pdfsDrawerOpen, setPdfsDrawerOpen] = useState(false);
+
   const thumbnailCandidates = useMemo(() => {
     const list: string[] = [];
     if (vid.thumbnail && vid.thumbnail.trim()) {
@@ -954,26 +1140,197 @@ function ConcoursExtractCard({
 
   const hasValidThumb = thumbnailCandidates.length > 0 && !thumbFailed;
 
-  // Style de badge selon le concours
-  const badgeStyle = useMemo(() => {
-    const b = (vid.badge || "").toLowerCase();
-    if (b.includes("x-ens") || b.includes("polytechnique")) {
-      return "bg-rose-950/90 text-rose-200 border-rose-500/40";
-    }
-    if (b.includes("mines")) {
-      return "bg-sky-950/90 text-sky-200 border-sky-500/40";
-    }
-    if (b.includes("centrale")) {
-      return "bg-amber-950/90 text-amber-200 border-amber-500/40";
-    }
-    if (b.includes("ccp") || b.includes("ccinp")) {
-      return "bg-emerald-950/90 text-emerald-200 border-emerald-500/40";
-    }
-    if (b.includes("tp")) {
-      return "bg-indigo-950/90 text-indigo-200 border-indigo-500/40";
-    }
-    return "bg-purple-950/90 text-purple-200 border-purple-500/40";
-  }, [vid.badge]);
+  const teacherBar = isTeacherView ? (
+    <div className="flex items-center gap-1 bg-slate-950/90 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-lg">
+      <div
+        className="cursor-grab active:cursor-grabbing p-1 rounded-lg text-[#E3C789] hover:text-white flex items-center gap-0.5 select-none"
+        title="Glisser-déposer pour réordonner"
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+        <span className="text-[10px] font-mono font-bold">#{index + 1}</span>
+      </div>
+      {onMoveUp && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveUp();
+          }}
+          className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          title="Déplacer précédent"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {onMoveDown && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveDown();
+          }}
+          className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          title="Déplacer suivant"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="p-1 rounded-lg text-[#E3C789] hover:text-white hover:bg-amber-600/50 transition-colors cursor-pointer"
+          title="Modifier cet extrait"
+        >
+          <Edit2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {onTransfer && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTransfer();
+          }}
+          className="p-1 rounded-lg text-emerald-400 hover:text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+          title="Transférer cet extrait"
+        >
+          <ArrowRightLeft className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (confirm(`Confirmez-vous le retrait de cet extrait de concours "${titre}" de ce chapitre ?`)) {
+              onDelete();
+            }
+          }}
+          className="p-1 rounded-lg text-red-400 hover:text-white hover:bg-red-600 transition-colors cursor-pointer"
+          title="Retirer cet extrait"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  ) : null;
+
+  if (viewMode === "list") {
+    return (
+      <article
+        draggable={isTeacherView}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+        onDrop={onDrop}
+        className={`group rounded-xl bg-white dark:bg-[#0E1525] border transition-all ${
+          isDragging
+            ? "opacity-40 scale-[0.99] border-[#9A7828] ring-2 ring-[#C6A15B]/50"
+            : isDragOver
+            ? "border-[#9A7828] ring-2 ring-[#C6A15B]/50"
+            : "border-[#C6A15B]/35 dark:border-amber-500/25 hover:border-[#9A7828]/60"
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3.5 py-2.5">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <span className="w-7 h-7 rounded-lg bg-[#F8F3E6] dark:bg-amber-950/50 border border-[#C6A15B]/35 text-[#7D601E] dark:text-[#E3C789] flex items-center justify-center shrink-0">
+              <Trophy className="w-3.5 h-3.5" />
+            </span>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">
+                  {titre}
+                </h4>
+                {vid.badge && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F8F3E6] dark:bg-amber-950/50 text-[#7D601E] dark:text-[#E3C789] border border-[#C6A15B]/30">
+                    {vid.badge}
+                  </span>
+                )}
+              </div>
+              {sous && (
+                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  {sous}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center flex-wrap gap-1.5 shrink-0 self-end sm:self-auto">
+            {attachedPdfs.length === 1 && onOpenPdf && (
+              <button
+                type="button"
+                onClick={() =>
+                  onOpenPdf(
+                    attachedPdfs[0].url,
+                    `${attachedPdfs[0].titre || "Support Concours"} : ${titre} — ${chapTitre}`
+                  )
+                }
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold rounded-full bg-[#F8F3E6] dark:bg-amber-950/60 text-[#7D601E] dark:text-[#E3C789] hover:bg-[#efe6cf] border border-[#C6A15B]/35 transition-colors cursor-pointer"
+              >
+                <FileText className="w-3 h-3" />
+                <span>Sujet / Corrigé</span>
+              </button>
+            )}
+
+            {hasMultiplePdfs && onOpenPdf && (
+              <button
+                type="button"
+                aria-expanded={pdfsDrawerOpen}
+                onClick={() => setPdfsDrawerOpen((prev) => !prev)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold rounded-full bg-[#F8F3E6] dark:bg-amber-950/60 text-[#7D601E] dark:text-[#E3C789] border border-[#C6A15B]/35 transition-colors cursor-pointer"
+              >
+                <FileText className="w-3 h-3" />
+                <span>Docs ({attachedPdfs.length})</span>
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform duration-200 ${pdfsDrawerOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            )}
+
+            {hasVideo && (
+              <button
+                type="button"
+                onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-[11.5px] font-semibold rounded-full bg-[#9A7828] hover:bg-[#7D601E] text-white transition-colors cursor-pointer"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                <span>Corrigé vidéo</span>
+              </button>
+            )}
+
+            {teacherBar}
+          </div>
+        </div>
+
+        {hasMultiplePdfs && onOpenPdf && (
+          <div className="ps-drawer" data-open={pdfsDrawerOpen ? "true" : "false"} inert={!pdfsDrawerOpen}>
+            <div className="ps-drawer-inner">
+              <div className="px-3.5 pb-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1.5 bg-[#FAFBFD] dark:bg-[#0A101E]">
+                {attachedPdfs.map((pdf, pIdx) => (
+                  <button
+                    key={pdf.id || pIdx}
+                    type="button"
+                    onClick={() =>
+                      onOpenPdf(pdf.url, `${titre} — ${chapTitre}`, pdfDocsOptions, pIdx)
+                    }
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-medium bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-[#C6A15B]/35 hover:border-[#9A7828] transition-colors cursor-pointer"
+                  >
+                    <FileText className="w-3 h-3 text-[#9A7828]" />
+                    <span className="truncate max-w-[180px]">{pdf.titre || `Document ${pIdx + 1}`}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </article>
+    );
+  }
 
   return (
     <article
@@ -982,107 +1339,19 @@ function ConcoursExtractCard({
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
       onDrop={onDrop}
-      className={`group relative bg-white dark:bg-[#0c1222] border-2 rounded-xl overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between ${
+      className={`group relative bg-white dark:bg-[#0E1525] border rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_rgba(15,23,42,0.09)] transition-all duration-200 flex flex-col justify-between ${
         isDragging
-          ? "opacity-40 scale-95 border-amber-500 ring-2 ring-amber-500 shadow-xl"
+          ? "opacity-40 scale-95 border-[#9A7828] ring-2 ring-[#C6A15B]"
           : isDragOver
-          ? "border-amber-500 ring-4 ring-amber-400/50 scale-[1.02] shadow-xl"
-          : "border-amber-200/70 dark:border-amber-500/30 hover:border-amber-400 dark:hover:border-amber-400/70"
+          ? "border-[#9A7828] ring-4 ring-[#C6A15B]/40 scale-[1.01]"
+          : "border-[#C6A15B]/35 dark:border-amber-500/25 hover:border-[#9A7828]/70 hover:-translate-y-0.5"
       }`}
     >
-      {/* Barre d'actions & Drag and Drop Enseignant/Admin */}
-      {isTeacherView && (
-        <div className="absolute top-2 right-2 z-20 flex items-center gap-1 bg-slate-950/90 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-lg">
-          {/* Poignée Drag & Drop avec numéro d'ordre */}
-          <div
-            className="cursor-grab active:cursor-grabbing p-1 rounded-lg text-amber-300 hover:text-white flex items-center gap-0.5 select-none"
-            title="Glisser-déposer (Drag & Drop) pour réordonner cet extrait de concours"
-          >
-            <GripVertical className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-mono font-bold">#{index + 1}</span>
-          </div>
+      {teacherBar && <div className="absolute top-2 right-2 z-20">{teacherBar}</div>}
 
-          {/* Boutons flèches rapides pour réordonner */}
-          {onMoveUp && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveUp();
-              }}
-              className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Déplacer vers la gauche (précédent)"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-          )}
-          {onMoveDown && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveDown();
-              }}
-              className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Déplacer vers la droite (suivant)"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Bouton Édition (si admin ou enseignant) */}
-          {onEdit && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="p-1 rounded-lg text-amber-300 hover:text-white hover:bg-amber-600/50 transition-colors cursor-pointer"
-              title="Modifier les liens et supports de cet extrait"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Bouton Transférer vers un autre module / chapitre */}
-          {onTransfer && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onTransfer();
-              }}
-              className="p-1 rounded-lg text-emerald-400 hover:text-white hover:bg-emerald-600 transition-colors cursor-pointer"
-              title="Transférer cet extrait de concours vers un autre module ou chapitre"
-            >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Bouton Retrait / Suppression de concours */}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm(`Confirmez-vous le retrait de cet extrait de concours "${titre}" de ce chapitre ?`)) {
-                  onDelete();
-                }
-              }}
-              className="p-1 rounded-lg text-red-400 hover:text-white hover:bg-red-600 transition-colors cursor-pointer"
-              title="Retirer cet extrait de concours du chapitre"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Vignette Vidéo avec badge concours et bouton Play */}
       {hasVideo && (
         <div
-          className="relative w-full aspect-video bg-gradient-to-br from-slate-900 via-amber-950/40 to-slate-900 overflow-hidden cursor-pointer select-none"
+          className="relative w-full aspect-video bg-slate-900 overflow-hidden cursor-pointer select-none"
           onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
           title={`Résolution Concours : ${titre}`}
         >
@@ -1096,45 +1365,41 @@ function ConcoursExtractCard({
               src={thumbnailCandidates[thumbIdx]}
               alt={titre}
               referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
               loading="lazy"
               onLoad={() => setThumbLoaded(true)}
               onError={handleThumbError}
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#120a1c] via-[#221330] to-[#0d1424] flex flex-col items-center justify-center p-4 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300 mb-2 shadow-inner">
-                <Sparkles className="w-6 h-6 text-amber-400" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#120e1c] via-[#1b182e] to-[#0f172a] flex flex-col items-center justify-center p-4 text-center">
+              <div className="w-10 h-10 rounded-xl bg-[#C6A15B]/15 border border-[#C6A15B]/35 flex items-center justify-center text-[#E3C789] mb-2">
+                <Trophy className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-white line-clamp-1 max-w-[85%]">
+              <span className="text-xs font-semibold text-white line-clamp-1 max-w-[85%]">
                 {titre}
-              </span>
-              <span className="text-[10px] text-amber-300/90 font-mono mt-0.5">
-                Extrait Concours · CPGE
               </span>
             </div>
           )}
 
-          {/* Calque Sombre & Badge Concours */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-transparent flex flex-col justify-between p-2.5 sm:p-3 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex flex-col justify-between p-2.5 pointer-events-none">
             <div className="flex items-center justify-between gap-1 w-full">
-              <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border shadow-xs ${badgeStyle}`}>
-                🏆 {vid.badge || "Concours CPGE"}
+              <span className="inline-flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-950/80 text-[#E3C789] border border-[#C6A15B]/40 backdrop-blur-xs">
+                <Trophy className="w-2.5 h-2.5" />
+                {vid.badge || "Concours"}
               </span>
-              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 shadow-xs ml-auto">
+              <span className="inline-flex items-center gap-1 text-[9.5px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-slate-950/75 text-white/90 border border-white/15">
                 <Lock className="w-2.5 h-2.5" />
-                MEMBRE
+                Membre
               </span>
             </div>
 
-            <div className="self-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-amber-600 to-red-600 group-hover:from-amber-500 group-hover:to-red-500 group-hover:scale-110 flex items-center justify-center text-white shadow-xl shadow-amber-950/60 transition-all pointer-events-auto">
-              <PlayCircle className="w-7 h-7" />
+            <div className="self-center w-11 h-11 rounded-full bg-[#9A7828]/95 group-hover:bg-[#7D601E] group-hover:scale-105 flex items-center justify-center text-white shadow-lg transition-all pointer-events-auto">
+              <PlayCircle className="w-6 h-6" />
             </div>
 
             <div className="flex items-center justify-between text-[10px] text-white/90 font-medium">
-              <span className="truncate max-w-[70%] text-amber-200/90 drop-shadow-xs font-semibold">{chapTitre}</span>
+              <span className="truncate max-w-[72%] text-[#E3C789]">{chapTitre}</span>
               {vid.durationFormatted && (
-                <span className="bg-black/80 px-1.5 py-0.5 rounded font-mono text-[9px] text-amber-300 border border-amber-500/30">
+                <span className="bg-black/75 px-1.5 py-0.5 rounded font-mono text-[9.5px] text-white">
                   {vid.durationFormatted}
                 </span>
               )}
@@ -1143,49 +1408,86 @@ function ConcoursExtractCard({
         </div>
       )}
 
-      {/* Titre & Description */}
-      <div className="p-3.5 flex flex-col flex-1 justify-between gap-3 bg-gradient-to-b from-amber-500/[0.02] to-transparent">
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-2.5">
         <div>
-          <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+          <h4 className="font-display text-[13.5px] font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
             {titre}
           </h4>
           {sous && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+            <p className="text-[11.5px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
               {sous}
             </p>
           )}
         </div>
 
-        {/* Boutons d'action & Supports Drive PDF */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-amber-100 dark:border-slate-800/80">
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            {attachedPdfs.map((pdf, pIdx) => (
+            {attachedPdfs.length === 1 && onOpenPdf && (
               <button
-                key={pdf.id || pIdx}
                 type="button"
-                onClick={() => onOpenPdf && onOpenPdf(pdf.url, `${pdf.titre || "Support Concours"} : ${titre} — ${chapTitre}`)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-500/30 transition-colors cursor-pointer"
-                title={pdf.titre || "Support PDF (Google Drive)"}
+                onClick={() =>
+                  onOpenPdf(
+                    attachedPdfs[0].url,
+                    `${attachedPdfs[0].titre || "Support Concours"} : ${titre} — ${chapTitre}`
+                  )
+                }
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold rounded-full bg-[#F8F3E6] dark:bg-amber-950/60 text-[#7D601E] dark:text-[#E3C789] hover:bg-[#efe6cf] border border-[#C6A15B]/35 transition-colors cursor-pointer"
               >
-                <FileText className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                <span className="truncate max-w-[130px]">{pdf.titre || `Sujet/Corrigé PDF ${attachedPdfs.length > 1 ? pIdx + 1 : ""}`.trim()}</span>
+                <FileText className="w-3 h-3" />
+                <span className="truncate max-w-[115px]">{attachedPdfs[0].titre || "Sujet / Corrigé"}</span>
               </button>
-            ))}
-            {attachedPdfs.length === 0 && (
-              <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
-                Résolution guidée
-              </span>
+            )}
+
+            {hasMultiplePdfs && onOpenPdf && (
+              <button
+                type="button"
+                aria-expanded={pdfsDrawerOpen}
+                onClick={() => setPdfsDrawerOpen((prev) => !prev)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] font-semibold rounded-full bg-[#F8F3E6] dark:bg-amber-950/60 text-[#7D601E] dark:text-[#E3C789] border border-[#C6A15B]/35 transition-colors cursor-pointer"
+              >
+                <FileText className="w-3 h-3" />
+                <span>Docs ({attachedPdfs.length})</span>
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform duration-200 ${pdfsDrawerOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            )}
+
+            {hasVideo && (
+              <button
+                type="button"
+                onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
+                className="inline-flex items-center gap-1 px-3 py-1 text-[11.5px] font-semibold rounded-full bg-[#9A7828] hover:bg-[#7D601E] text-white transition-colors cursor-pointer ml-auto"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                <span>Corrigé</span>
+              </button>
             )}
           </div>
-          {hasVideo && (
-            <button
-              type="button"
-              onClick={() => onOpenVideo(videoUrl, `${titre} — ${chapTitre}`)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white transition-colors cursor-pointer shadow-xs ml-auto"
-            >
-              <PlayCircle className="w-3.5 h-3.5" />
-              <span>Voir le Corrigé</span>
-            </button>
+
+          {hasMultiplePdfs && onOpenPdf && (
+            <div className="ps-drawer" data-open={pdfsDrawerOpen ? "true" : "false"} inert={!pdfsDrawerOpen}>
+              <div className="ps-drawer-inner">
+                <div className="pt-1.5 flex flex-col gap-1">
+                  {attachedPdfs.map((pdf, pIdx) => (
+                    <button
+                      key={pdf.id || pIdx}
+                      type="button"
+                      onClick={() =>
+                        onOpenPdf(pdf.url, `${titre} — ${chapTitre}`, pdfDocsOptions, pIdx)
+                      }
+                      className="w-full text-left flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium bg-[#F6F7FA] dark:bg-slate-900 hover:bg-[#F8F3E6] dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-[#C6A15B]/30 transition-colors cursor-pointer"
+                    >
+                      <span className="inline-flex items-center gap-1.5 min-w-0">
+                        <FileText className="w-3 h-3 text-[#9A7828] shrink-0" />
+                        <span className="truncate">{pdf.titre || `Document ${pIdx + 1}`}</span>
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -1298,7 +1600,6 @@ function CourseSessionCard({
               src={thumbnailCandidates[thumbIdx]}
               alt={titre}
               referrerPolicy="no-referrer"
-              crossOrigin="anonymous"
               loading="lazy"
               onLoad={() => setThumbLoaded(true)}
               onError={handleThumbError}
@@ -1388,7 +1689,7 @@ function CourseSessionCard({
   );
 }
 
-// ── 2. Carte Fiche de Synthèse (Colonne Droite) ──
+// ── 2. Carte Fiche de Synthèse (Étagère Horizontale Minimaliste) ──
 function CourseFicheCard({
   fiche,
   chapTitre,
@@ -1399,7 +1700,7 @@ function CourseFicheCard({
 }: {
   fiche: CourseFiche;
   chapTitre: string;
-  onOpenPdf: (url: string, title: string) => void;
+  onOpenPdf: (url: string, title: string, docs?: PdfDocOption[], initialIndex?: number) => void;
   isTeacherView?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -1424,7 +1725,7 @@ function CourseFicheCard({
 
   return (
     <article
-      className="group relative bg-white dark:bg-[#090d18] border border-amber-200/80 dark:border-slate-800 rounded-xl p-2.5 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-amber-400 dark:hover:border-amber-500/40 transition-all cursor-pointer"
+      className="group relative bg-white dark:bg-[#0E1525] border border-slate-200/90 dark:border-slate-800 hover:border-[#C6A15B] dark:hover:border-amber-500/45 rounded-xl p-2.5 flex items-center gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_20px_rgba(15,23,42,0.07)] transition-all cursor-pointer"
       onClick={() => isActif && onOpenPdf(url, `${titre} — ${chapTitre}`)}
     >
       {/* Boutons d'édition & suppression enseignant */}
@@ -1437,8 +1738,8 @@ function CourseFicheCard({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-1 rounded-md bg-amber-600/90 hover:bg-amber-700 text-white shadow-xs transition-all cursor-pointer"
-              title="Modifier cette fiche (titre, lien PDF Drive)"
+              className="p-1 rounded-md bg-[#9A7828] hover:bg-[#7D601E] text-white shadow-xs transition-all cursor-pointer"
+              title="Modifier cette fiche"
             >
               <Edit2 className="w-3 h-3" />
             </button>
@@ -1459,33 +1760,32 @@ function CourseFicheCard({
         </div>
       )}
 
-      {/* Mini aperçu du document style A4 / feuille */}
-      <div className="relative w-full aspect-[4/5] bg-slate-50 dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1.5 mb-2">
+      {/* Mini aperçu A4 */}
+      <div className="relative w-12 h-16 bg-[#F8F3E6] dark:bg-slate-900 rounded-lg overflow-hidden border border-[#C6A15B]/35 dark:border-slate-700 flex items-center justify-center shrink-0">
         {srcs.length > 0 && !imgFailed ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
-            className={`w-full h-full object-cover rounded shadow-2xs transition-opacity duration-300 ${
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
               imgLoaded ? "opacity-100" : "opacity-0"
             }`}
             src={srcs[imgIdx]}
             alt=""
             referrerPolicy="no-referrer"
-            crossOrigin="anonymous"
             loading="lazy"
             onLoad={() => setImgLoaded(true)}
             onError={handleImgError}
           />
         ) : (
-          <div className="text-center p-2 text-amber-700 dark:text-amber-400">
-            <FileText className="w-8 h-8 mx-auto mb-1 opacity-70" />
-            <span className="text-[9px] font-bold uppercase tracking-wider block">Fiche Synthèse</span>
-          </div>
+          <Bookmark className="w-5 h-5 text-[#9A7828] dark:text-[#D4B26A]" />
         )}
       </div>
 
       {/* Titre & Sous-titre */}
-      <div>
-        <h5 className="text-xs font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
+      <div className="min-w-0 flex-1 pr-2">
+        <span className="text-[9.5px] font-bold uppercase tracking-wider text-[#9A7828] dark:text-[#D4B26A]">
+          Fiche synthèse
+        </span>
+        <h5 className="font-display text-xs font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-[#162A4A] dark:group-hover:text-purple-200 transition-colors">
           {titre}
         </h5>
         {sous && (
@@ -1498,7 +1798,7 @@ function CourseFicheCard({
   );
 }
 
-// ── 3. Ligne TD & Devoirs Libres (En bas, Pleine Largeur) ──
+// ── 3. Ligne TD & Devoirs Libres (Minimaliste + Tiroir Fluide Multi-Corrigés) ──
 function CourseExerciseLine({
   item,
   index,
@@ -1511,7 +1811,7 @@ function CourseExerciseLine({
   item: CourseExercise;
   index: number;
   chapTitre: string;
-  onOpenPdf: (url: string, title: string) => void;
+  onOpenPdf: (url: string, title: string, docs?: PdfDocOption[], initialIndex?: number) => void;
   onOpenVideo: (url: string, title: string) => void;
   isTeacherView?: boolean;
   onDelete?: () => void;
@@ -1521,7 +1821,6 @@ function CourseExerciseLine({
   const enonceUrl = item.enonce || "";
   const videoUrl = item.video || "";
 
-  // Support de multiples corrigés rédigés / vidéos
   const corrigesList: CorrigeItem[] = useMemo(() => {
     if (item.corriges && item.corriges.length > 0) {
       return item.corriges.filter((c: CorrigeItem) => c.url && c.url.trim() !== "");
@@ -1539,91 +1838,158 @@ function CourseExerciseLine({
     return [];
   }, [item.corriges, item.correction]);
 
+  // Liste combinée PDF pour le sélecteur multi-documents du lecteur <dialog>
+  const pdfDocBundle: PdfDocOption[] = useMemo(() => {
+    const docs: PdfDocOption[] = [];
+    if (enonceUrl) {
+      docs.push({ label: "Énoncé", url: enonceUrl });
+    }
+    corrigesList.forEach((c, idx) => {
+      if (c.type !== "video") {
+        docs.push({ label: c.titre || `Corrigé ${idx + 1}`, url: c.url });
+      }
+    });
+    return docs;
+  }, [enonceUrl, corrigesList]);
+
+  const hasMultipleCorriges = corrigesList.length > 1;
+  const [corrDrawerOpen, setCorrDrawerOpen] = useState(false);
+
+  const openPdfWithBundle = (targetUrl: string, fallbackTitle: string) => {
+    const idx = pdfDocBundle.findIndex((d) => d.url === targetUrl);
+    if (pdfDocBundle.length > 1 && idx !== -1) {
+      onOpenPdf(targetUrl, `${titre} — ${chapTitre}`, pdfDocBundle, idx);
+    } else {
+      onOpenPdf(targetUrl, fallbackTitle);
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-[#0d1322] rounded-xl border border-slate-200/90 dark:border-slate-800 p-3.5 sm:p-4 hover:border-purple-300 dark:hover:border-purple-500/40 hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3">
-      {/* Côté Gauche : Icône cahier + Titre + Sous-titre plein format */}
-      <div className="flex items-center gap-3.5 min-w-0 flex-1">
-        <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-500/20">
-          <BookOpen className="w-5 h-5" />
+    <div className="bg-white dark:bg-[#0E1525] rounded-xl border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-purple-500/40 transition-all overflow-hidden">
+      <div className="p-3.5 sm:px-4 sm:py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Côté Gauche : Numéro + Titre + Sous-titre */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-9 h-9 rounded-xl bg-[#F6F7FA] dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 text-[#162A4A] dark:text-purple-300 flex items-center justify-center shrink-0 font-display font-bold text-xs tabular-nums">
+            {String(index + 1).padStart(2, "0")}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white leading-snug">
+              {titre}
+            </h4>
+            {sous && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                {sous}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <h4 className="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-white leading-snug">
-            {titre}
-          </h4>
-          {sous && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-              {sous}
-            </p>
+        {/* Côté Droit : Énoncé, Corrigé unique ou Tiroir Multi-Corrigés, Vidéo */}
+        <div className="flex items-center flex-wrap gap-1.5 shrink-0 self-end md:self-auto">
+          {enonceUrl && (
+            <button
+              type="button"
+              onClick={() => openPdfWithBundle(enonceUrl, `Énoncé : ${titre} — ${chapTitre}`)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-[#EBF1F8] dark:bg-blue-950/60 text-[#162A4A] dark:text-blue-200 hover:bg-[#dce7f4] dark:hover:bg-blue-900/60 border border-[#162A4A]/15 dark:border-blue-500/30 transition-colors cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Énoncé</span>
+            </button>
+          )}
+
+          {corrigesList.length === 1 && (
+            <button
+              type="button"
+              onClick={() =>
+                corrigesList[0].type === "video"
+                  ? onOpenVideo(corrigesList[0].url, `${corrigesList[0].titre} : ${titre} — ${chapTitre}`)
+                  : openPdfWithBundle(corrigesList[0].url, `${corrigesList[0].titre} : ${titre} — ${chapTitre}`)
+              }
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-[#EAF5EF] dark:bg-emerald-950/60 text-[#1E6B47] dark:text-emerald-300 hover:bg-[#daf0e4] dark:hover:bg-emerald-900/60 border border-[#1E6B47]/20 dark:border-emerald-500/30 transition-colors cursor-pointer"
+            >
+              {corrigesList[0].type === "video" ? (
+                <PlayCircle className="w-3.5 h-3.5" />
+              ) : (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              )}
+              <span>{corrigesList[0].titre || "Corrigé"}</span>
+              <Lock className="w-2.5 h-2.5 opacity-60" />
+            </button>
+          )}
+
+          {hasMultipleCorriges && (
+            <button
+              type="button"
+              aria-expanded={corrDrawerOpen}
+              onClick={() => setCorrDrawerOpen((prev) => !prev)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-[#EAF5EF] dark:bg-emerald-950/60 text-[#1E6B47] dark:text-emerald-300 hover:bg-[#daf0e4] dark:hover:bg-emerald-900/60 border border-[#1E6B47]/20 dark:border-emerald-500/30 transition-colors cursor-pointer"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Corrigés ({corrigesList.length})</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${corrDrawerOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          )}
+
+          {videoUrl && (
+            <button
+              type="button"
+              onClick={() => onOpenVideo(videoUrl, `Vidéo : ${titre} — ${chapTitre}`)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-[#B82924] hover:bg-[#941D19] text-white transition-colors cursor-pointer"
+            >
+              <PlayCircle className="w-3.5 h-3.5" />
+              <span>Vidéo</span>
+              <Lock className="w-2.5 h-2.5 opacity-80" />
+            </button>
+          )}
+
+          {isTeacherView && onDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`Supprimer le TD "${titre}" ?`)) onDelete();
+              }}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer ml-1"
+              title="Supprimer ce TD"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           )}
         </div>
       </div>
 
-      {/* Côté Droit : Boutons Énoncé, Corrigés Multiples & Vidéo */}
-      <div className="flex items-center flex-wrap gap-2 shrink-0 self-end md:self-auto">
-        {enonceUrl && (
-          <button
-            type="button"
-            onClick={() => onOpenPdf(enonceUrl, `Énoncé : ${titre} — ${chapTitre}`)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shadow-2xs"
-          >
-            <FileText className="w-3.5 h-3.5 text-slate-500" />
-            <span>Énoncé</span>
-          </button>
-        )}
-
-        {/* Corrigés multiples */}
-        {corrigesList.map((corr: CorrigeItem, cIdx: number) => (
-          <button
-            key={corr.id || cIdx}
-            type="button"
-            onClick={() =>
-              corr.type === "video"
-                ? onOpenVideo(corr.url, `${corr.titre} : ${titre} — ${chapTitre}`)
-                : onOpenPdf(corr.url, `${corr.titre} : ${titre} — ${chapTitre}`)
-            }
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-500/30 transition-colors cursor-pointer shadow-2xs"
-            title={corr.titre}
-          >
-            {corr.type === "video" ? (
-              <PlayCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            ) : (
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            )}
-            <span>
-              {corr.titre || (corrigesList.length > 1 ? `Corrigé ${cIdx + 1}` : "Correction")}
-            </span>
-            <Lock className="w-2.5 h-2.5 opacity-60 ml-0.5" />
-          </button>
-        ))}
-
-        {videoUrl && (
-          <button
-            type="button"
-            onClick={() => onOpenVideo(videoUrl, `Vidéo : ${titre} — ${chapTitre}`)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer shadow-2xs"
-          >
-            <PlayCircle className="w-3.5 h-3.5" />
-            <span>Vidéo</span>
-            <Lock className="w-2.5 h-2.5 ml-0.5 opacity-80" />
-          </button>
-        )}
-
-        {/* Suppression en mode enseignant */}
-        {isTeacherView && onDelete && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (confirm(`Supprimer le TD "${titre}" ?`)) onDelete();
-            }}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ml-1"
-            title="Supprimer ce TD"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+      {/* Tiroir fluide multi-corrigés (0fr -> 1fr) */}
+      {hasMultipleCorriges && (
+        <div className="ps-drawer" data-open={corrDrawerOpen ? "true" : "false"} inert={!corrDrawerOpen}>
+          <div className="ps-drawer-inner">
+            <div className="px-4 pb-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 bg-[#FAFBFD] dark:bg-[#0A101E] flex flex-wrap items-center gap-2">
+              {corrigesList.map((corr: CorrigeItem, cIdx: number) => (
+                <button
+                  key={corr.id || cIdx}
+                  type="button"
+                  onClick={() =>
+                    corr.type === "video"
+                      ? onOpenVideo(corr.url, `${corr.titre} : ${titre} — ${chapTitre}`)
+                      : openPdfWithBundle(corr.url, `${corr.titre} : ${titre} — ${chapTitre}`)
+                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 text-[#1E6B47] dark:text-emerald-300 border border-[#1E6B47]/20 dark:border-emerald-500/30 hover:border-[#1E6B47] transition-colors cursor-pointer"
+                >
+                  {corr.type === "video" ? (
+                    <PlayCircle className="w-3.5 h-3.5" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  )}
+                  <span>{corr.titre || `Corrigé ${cIdx + 1}`}</span>
+                  <Lock className="w-2.5 h-2.5 opacity-60" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1666,6 +2032,52 @@ export function CoursesWidget({
   const activeIsTeacher = isMounted && isTeacher;
   const activeIsAdmin = isMounted && isAdmin;
   const isTeacherView = (activeIsTeacher || activeIsAdmin) && teacherViewMode === "teacher";
+
+  const [localNiveau, setLocalNiveau] = useState<"sup" | "spe" | null>(() => {
+    if (initialNiveau) return initialNiveau;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const n = params.get("niveau");
+      if (n === "sup" || n === "spe") return n as "sup" | "spe";
+    }
+    return null;
+  });
+
+  const selectedNiveau = initialNiveau !== undefined ? initialNiveau : localNiveau;
+
+  // Filière active (PSI par défaut, MP, PC, TSI, Toutes)
+  const [selectedFiliere, setSelectedFiliere] = useState<FiliereCPGE | "ALL">("PSI");
+  const [courseViewMode, setCourseViewMode] = useState<"chapitres" | "videotheque">("chapitres");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [moduleSelection, setModuleSelection] = useState<{
+    niveau: "sup" | "spe" | null;
+    moduleId: string;
+  }>({ niveau: selectedNiveau, moduleId: "all" });
+
+  const activeModule =
+    moduleSelection.niveau === selectedNiveau ? moduleSelection.moduleId : "all";
+  const setActiveModule = (moduleId: string) => {
+    setModuleSelection({ niveau: selectedNiveau, moduleId });
+  };
+
+  // Par défaut : tous les chapitres sont repliés à l'entrée sur la plateforme (demande utilisateur)
+  const [openState, setOpenState] = useState<{
+    niveau: "sup" | "spe" | null;
+    ids: Set<string>;
+  }>(() => ({ niveau: selectedNiveau, ids: new Set() }));
+
+  const openChapterIds =
+    openState.niveau === selectedNiveau ? openState.ids : new Set<string>();
+
+  const setOpenChapterIds = (
+    updater: Set<string> | ((prev: Set<string>) => Set<string>)
+  ) => {
+    setOpenState((prev) => {
+      const current = prev.niveau === selectedNiveau ? prev.ids : new Set<string>();
+      const nextIds = typeof updater === "function" ? updater(current) : updater;
+      return { niveau: selectedNiveau, ids: nextIds };
+    });
+  };
 
   // État et gestionnaires pour le Drag & Drop et réordonnancement des vidéos
   const [draggedVideo, setDraggedVideo] = useState<{
@@ -1907,26 +2319,10 @@ export function CoursesWidget({
     reorderVideos(chapter.moduleId || activeModule, chapter.id, newOrder, isConcours);
   };
 
-  const [selectedNiveau, setSelectedNiveau] = useState<"sup" | "spe" | null>(() => {
-    if (initialNiveau) return initialNiveau;
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const n = params.get("niveau");
-      if (n === "sup" || n === "spe") return n as "sup" | "spe";
-    }
-    return null;
-  });
-
-  useEffect(() => {
-    if (initialNiveau !== undefined) {
-      setSelectedNiveau(initialNiveau);
-      setActiveModule("all");
-    }
-  }, [initialNiveau]);
-
   const handleLevelChange = (lvl: "sup" | "spe" | null) => {
-    setSelectedNiveau(lvl);
-    setActiveModule("all");
+    setLocalNiveau(lvl);
+    setModuleSelection({ niveau: lvl, moduleId: "all" });
+    setOpenState({ niveau: lvl, ids: new Set() });
     if (onSelectNiveau) {
       onSelectNiveau(lvl);
     } else if (typeof window !== "undefined") {
@@ -1940,9 +2336,6 @@ export function CoursesWidget({
     }
   };
 
-  // Filière active (PSI par défaut, MP, PC, TSI, Toutes)
-  const [selectedFiliere, setSelectedFiliere] = useState<FiliereCPGE | "ALL">("PSI");
-  const [courseViewMode, setCourseViewMode] = useState<"chapitres" | "videotheque">("chapitres");
   const [expandedVideoChapters, setExpandedVideoChapters] = useState<Set<string>>(new Set());
   const [expandedConcoursChapters, setExpandedConcoursChapters] = useState<Set<string>>(new Set());
 
@@ -1963,21 +2356,6 @@ export function CoursesWidget({
       return next;
     });
   };
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeModule, setActiveModule] = useState<string>("all");
-  const [isModuleDropdownOpen, setIsModuleDropdownOpen] = useState(false);
-  const moduleDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (moduleDropdownRef.current && !moduleDropdownRef.current.contains(event.target as Node)) {
-        setIsModuleDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const activeCoursesData = useMemo(() => {
     const base = courses && courses.length > 0 ? courses : PC_COURSES_DATA;
@@ -2001,48 +2379,6 @@ export function CoursesWidget({
     return list;
   }, [activeCoursesData]);
 
-  // Informations sur le module actuellement filtré
-  const currentModuleItem = useMemo(() => {
-    const defaultDesc =
-      selectedNiveau === "sup"
-        ? "Programme complet 1ère Année (MPSI / PCSI / TSI)"
-        : "Programme complet 2ème Année (MP / PSI / TSI)";
-
-    if (activeModule === "all") {
-      return {
-        id: "all",
-        titre: "Tous les modules",
-        icon: "📚",
-        count: allChapters.length,
-        description: defaultDesc,
-      };
-    }
-    const found = activeCoursesData.find((m) => m.id === activeModule);
-    return found
-      ? {
-          id: found.id,
-          titre: found.titre,
-          icon: found.icon || "⚛️",
-          count: found.chapitres?.length || 0,
-          description: found.description || "Module CPGE",
-        }
-      : {
-          id: "all",
-          titre: "Tous les modules",
-          icon: "📚",
-          count: allChapters.length,
-          description: defaultDesc,
-        };
-  }, [activeModule, activeCoursesData, allChapters.length, selectedNiveau]);
-
-  // Par défaut : tous les chapitres sont repliés à l'entrée sur la plateforme (demande utilisateur)
-  const [openChapterIds, setOpenChapterIds] = useState<Set<string>>(() => new Set());
-
-  useEffect(() => {
-    // Garder les chapitres repliés lors d'un basculement de niveau
-    setOpenChapterIds(new Set());
-  }, [selectedNiveau]);
-
   const toggleChapter = (id: string) => {
     setOpenChapterIds((prev) => {
       const next = new Set(prev);
@@ -2051,18 +2387,6 @@ export function CoursesWidget({
       return next;
     });
   };
-
-  // Options dynamiques des modules pour les filtres
-  const moduleFilterOptions = useMemo(() => {
-    const options = [{ id: "all", label: "Tous les modules" }];
-    activeCoursesData.forEach((m) => {
-      options.push({
-        id: m.id,
-        label: `${m.icon || "📚"} ${m.titre}`,
-      });
-    });
-    return options;
-  }, [activeCoursesData]);
 
   // Filtrage par module et recherche textuelle
   const filteredChapters = useMemo(() => {
@@ -2078,6 +2402,38 @@ export function CoursesWidget({
       return matchesMod && matchesSearch;
     });
   }, [allChapters, activeModule, searchQuery]);
+
+  // États UI minimalistes inspirés de #cours-mp-w : onglets internes & bascule Grille/Liste
+  type ChapterTabId = "all" | "fiches" | "videos" | "concours" | "td";
+  const [chapterTabs, setChapterTabs] = useState<Record<string, ChapterTabId>>({});
+  const [chapterVideoView, setChapterVideoView] = useState<Record<string, "grid" | "list">>({});
+  const [chapterConcoursView, setChapterConcoursView] = useState<Record<string, "grid" | "list">>({});
+
+  // Compteurs 6 KPI réactifs aux filtres actifs (module, filière, recherche)
+  const heroStats = useMemo(() => {
+    let polyAndCours = 0;
+    let fiches = 0;
+    let videos = 0;
+    let concours = 0;
+    let tds = 0;
+
+    filteredChapters.forEach((ch) => {
+      polyAndCours += Math.max(1, ch.cours?.length || 0);
+      fiches += ch.fiches?.length || 0;
+      videos += getChapterCourseVideos(ch, selectedFiliere).length;
+      concours += getChapterConcoursVideos(ch, selectedFiliere).length;
+      tds += ch.tds?.length || 0;
+    });
+
+    return {
+      chapters: filteredChapters.length,
+      polyAndCours,
+      fiches,
+      videos,
+      concours,
+      tds,
+    };
+  }, [filteredChapters, selectedFiliere]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // MODALS D'AJOUT DIRECT PAR L'ENSEIGNANT SUR LA PAGE
@@ -2162,10 +2518,10 @@ export function CoursesWidget({
   ) => {
     const initialSupports: SessionSupportItem[] = [];
     if (vid.supports && Array.isArray(vid.supports)) {
-      vid.supports.forEach((s) => {
+      vid.supports.forEach((s, idx) => {
         if (s && s.url && s.url.trim()) {
           initialSupports.push({
-            id: s.id || `sup-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            id: s.id || `sup-${vid.id}-${idx}`,
             titre: s.titre || "Support PDF",
             url: s.url.trim(),
           });
@@ -2176,7 +2532,7 @@ export function CoursesWidget({
       const already = initialSupports.some((s) => s.url === vid.support!.trim());
       if (!already) {
         initialSupports.unshift({
-          id: `sup-${Date.now()}-legacy`,
+          id: `sup-${vid.id}-legacy`,
           titre: "Support PDF",
           url: vid.support.trim(),
         });
@@ -2545,89 +2901,86 @@ export function CoursesWidget({
       )}
 
       {/* ================================================================= */}
-      {/* CAS 1 : PAS DE NIVEAU SÉLECTIONNÉ => AFFICHAGE DES 2 CARTES 3D    */}
+      {/* CAS 1 : PAS DE NIVEAU SÉLECTIONNÉ => CHOIX SUP / SPÉ MINIMALISTE  */}
       {/* ================================================================= */}
       {selectedNiveau === null ? (
         <div className="space-y-6 animate-fadeIn">
-          {/* En-tête compact & épuré */}
-          <div className="rounded-2xl bg-white/85 dark:bg-[#0d1322]/85 border border-purple-200/70 dark:border-purple-500/25 px-5 py-4 sm:px-7 sm:py-5 text-center shadow-2xs">
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Cours &amp;{" "}
-              <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">
-                Travaux Dirigés
+          {/* En-tête académique minimaliste */}
+          <div className="ps-course-hero px-6 py-8 sm:px-10 sm:py-10 text-center">
+            <div className="relative z-10 max-w-2xl mx-auto">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-display font-bold uppercase tracking-[0.14em] text-[#7D601E] dark:text-[#E3C789] bg-white/85 dark:bg-slate-900/80 border border-[#C6A15B]/35 mb-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C6A15B]" />
+                CPGE Physique-Chimie · Pr. Hassan Eddams
               </span>
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">
-              Choisissez votre année CPGE pour accéder aux cours et séances.
-            </p>
+              <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Cours, Synthèses &amp;{" "}
+                <span className="text-[#5B21B6] dark:text-purple-400">Travaux Dirigés</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-lg mx-auto">
+                Sélectionnez votre année CPGE pour explorer les polycopiés officiels, fiches de synthèse, replays vidéo et TD corrigés.
+              </p>
+            </div>
           </div>
 
-          {/* Les Deux Cartes : 1ère Année SUP (MPSI/PCSI/TSI) & 2ème Année SPÉ (MP/PSI/TSI) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+          {/* Les Deux Cartes : 1ère Année SUP & 2ème Année SPÉ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             {/* ── CARTE 1 : SUP (MPSI / PCSI / TSI) ── */}
             <div
               onClick={() => handleLevelChange("sup")}
-              className="group relative cursor-pointer rounded-3xl bg-white/80 dark:bg-[#0c101e]/85 backdrop-blur-xl border border-slate-200/90 dark:border-purple-500/30 hover:border-purple-500/70 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_rgba(124,58,237,0.18)] hover:-translate-y-1.5 overflow-hidden text-left"
+              className="group relative cursor-pointer rounded-3xl bg-white dark:bg-[#0E1525] border border-slate-200/90 dark:border-slate-800 hover:border-[#162A4A]/45 dark:hover:border-purple-500/50 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-[0_2px_12px_rgba(15,23,42,0.04)] hover:shadow-[0_20px_44px_rgba(15,23,42,0.1)] hover:-translate-y-1 overflow-hidden text-left"
             >
-              {/* Effet Halo Décoratif */}
-              <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-purple-400/15 dark:bg-purple-600/15 blur-3xl group-hover:bg-purple-400/25 transition-all" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#162A4A] to-transparent opacity-80" />
 
               <div>
-                {/* Badge promotion */}
                 <div className="flex items-center justify-between gap-2 mb-5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
-                    <span>⚛️</span>
-                    <span>1ère Année CPGE · SUP (MPSI / PCSI / TSI)</span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#EBF1F8] dark:bg-blue-950/60 text-[#162A4A] dark:text-blue-200 border border-[#162A4A]/15 dark:border-blue-500/30">
+                    1ère Année · SUP
                   </span>
-                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                  <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                     5 Modules · 22 Chapitres
                   </span>
                 </div>
 
-                {/* Titre & Sous-titre */}
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-purple-500/30 shrink-0 group-hover:scale-110 transition-transform">
-                    ⚛️
+                  <div className="w-12 h-12 rounded-2xl bg-[#162A4A] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Atom className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight group-hover:text-[#162A4A] dark:group-hover:text-blue-300 transition-colors">
                       MPSI / PCSI / TSI
                     </h3>
-                    <p className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-400">
-                      Fondements & Consolidation Méthodologique
+                    <p className="text-xs sm:text-sm font-semibold text-[#5B21B6] dark:text-purple-300">
+                      Fondements &amp; Consolidation Méthodologique
                     </p>
                   </div>
                 </div>
 
-                {/* Description du programme */}
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 font-medium">
-                  Programme officiel de Sup : Électronique dans l&apos;ARQS, Thermodynamique, Mécanique du Point, Optique Géométrique, Électrostatique & Magnétostatique.
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                  Programme officiel de Sup : Électronique dans l&apos;ARQS, Thermodynamique, Mécanique du Point, Optique Géométrique, Électrostatique &amp; Magnétostatique.
                 </p>
 
-                {/* Points forts */}
-                <ul className="space-y-2.5 mb-6 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                <ul className="space-y-2 mb-6 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1E6B47] dark:text-emerald-400 shrink-0" />
                     <span>Polycopiés de cours officiels rédigés par Pr. H. Eddams</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1E6B47] dark:text-emerald-400 shrink-0" />
                     <span>Séries de TD complètes avec corrigés rédigés détaillés</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Fiches méthodologiques & formulaires synthétiques CPGE</span>
+                    <CheckCircle2 className="w-4 h-4 text-[#1E6B47] dark:text-emerald-400 shrink-0" />
+                    <span>Fiches méthodologiques &amp; formulaires synthétiques CPGE</span>
                   </li>
                 </ul>
               </div>
 
-              {/* Bouton d'entrée */}
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <button
                   type="button"
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center justify-center gap-2 shadow-md shadow-purple-600/25 transition-all group-hover:gap-3 cursor-pointer"
+                  className="w-full py-3 px-4 rounded-full font-semibold text-xs sm:text-sm bg-[#162A4A] hover:bg-[#5B21B6] text-white flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  <span>Accéder aux cours MPSI / PCSI / TSI</span>
+                  <span>Accéder aux cours Sup</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </div>
@@ -2636,67 +2989,60 @@ export function CoursesWidget({
             {/* ── CARTE 2 : SPÉ (MP / PSI / TSI) ── */}
             <div
               onClick={() => handleLevelChange("spe")}
-              className="group relative cursor-pointer rounded-3xl bg-white/80 dark:bg-[#0c101e]/85 backdrop-blur-xl border border-slate-200/90 dark:border-purple-500/30 hover:border-indigo-500/70 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_rgba(99,102,241,0.18)] hover:-translate-y-1.5 overflow-hidden text-left"
+              className="group relative cursor-pointer rounded-3xl bg-white dark:bg-[#0E1525] border border-slate-200/90 dark:border-slate-800 hover:border-[#5B21B6]/50 dark:hover:border-purple-500/50 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-[0_2px_12px_rgba(15,23,42,0.04)] hover:shadow-[0_20px_44px_rgba(91,33,182,0.12)] hover:-translate-y-1 overflow-hidden text-left"
             >
-              {/* Effet Halo Décoratif */}
-              <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-indigo-400/15 dark:bg-indigo-600/15 blur-3xl group-hover:bg-indigo-400/25 transition-all" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#5B21B6] to-transparent opacity-90" />
 
               <div>
-                {/* Badge promotion */}
                 <div className="flex items-center justify-between gap-2 mb-5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
-                    <span>⚡</span>
-                    <span>2ème Année CPGE · SPÉ (MP / PSI / TSI)</span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#F3EEFD] dark:bg-purple-950/60 text-[#4C1D95] dark:text-purple-200 border border-[#5B21B6]/15 dark:border-purple-500/30">
+                    2ème Année · SPÉ
                   </span>
-                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                    6 Modules · Séances & Vidéos
+                  <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                    6 Modules · Séances &amp; Vidéos
                   </span>
                 </div>
 
-                {/* Titre & Sous-titre */}
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-indigo-500/30 shrink-0 group-hover:scale-110 transition-transform">
-                    ⚡
+                  <div className="w-12 h-12 rounded-2xl bg-[#5B21B6] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Sparkles className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight group-hover:text-[#5B21B6] dark:group-hover:text-purple-300 transition-colors">
                       MP / PSI / TSI
                     </h3>
-                    <p className="text-xs sm:text-sm font-semibold text-indigo-700 dark:text-indigo-400">
-                      Approfondissement & Préparation Concours
+                    <p className="text-xs sm:text-sm font-semibold text-[#9A7828] dark:text-[#D4B26A]">
+                      Approfondissement &amp; Préparation Concours
                     </p>
                   </div>
                 </div>
 
-                {/* Description du programme */}
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 font-medium">
-                  Programme officiel de Spé : Électronique & Numérisation, Électromagnétisme & Ondes, Thermodynamique & Diffusion, Optique Ondulatoire, Physique Quantique.
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                  Programme officiel de Spé : Électronique &amp; Numérisation, Électromagnétisme &amp; Ondes, Thermodynamique &amp; Diffusion, Optique Ondulatoire, Physique Quantique.
                 </p>
 
-                {/* Points forts */}
-                <ul className="space-y-2.5 mb-6 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                <ul className="space-y-2 mb-6 text-xs text-slate-700 dark:text-slate-300">
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1E6B47] dark:text-emerald-400 shrink-0" />
                     <span>Séances de cours interactives avec Replays Vidéo HD</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1E6B47] dark:text-emerald-400 shrink-0" />
                     <span>Polycopiés de cours officiels rédigés par Pr. H. Eddams</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Préparation ciblée aux concours : CNC, CCINP, Mines, Centrale, X-ENS</span>
+                    <CheckCircle2 className="w-4 h-4 text-[#1E6B47] dark:text-emerald-400 shrink-0" />
+                    <span>Préparation ciblée : CNC, CCINP, Mines, Centrale, X-ENS</span>
                   </li>
                 </ul>
               </div>
 
-              {/* Bouton d'entrée */}
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <button
                   type="button"
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex items-center justify-center gap-2 shadow-md shadow-indigo-600/25 transition-all group-hover:gap-3 cursor-pointer"
+                  className="w-full py-3 px-4 rounded-full font-semibold text-xs sm:text-sm bg-[#5B21B6] hover:bg-[#4C1D95] text-white flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  <span>Accéder aux cours MP / PSI / TSI</span>
+                  <span>Accéder aux cours Spé</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </div>
@@ -2705,96 +3051,149 @@ export function CoursesWidget({
         </div>
       ) : (
         /* ================================================================= */
-        /* CAS 2 : NIVEAU SÉLECTIONNÉ (SUP OU SPÉ) => COURS, TDS, FICHES     */
+        /* CAS 2 : EXPLORATEUR DE COURS MINIMALISTE PREMIUM (STYLE #cours-mp-w) */
         /* ================================================================= */
-        <div className="space-y-4 animate-fadeIn">
-          {/* 1. Bandeau Cours & Travaux Dirigés minimalisé et sans distraction */}
-          <div className="rounded-2xl bg-white/85 dark:bg-[#0d1322]/85 border border-purple-200/70 dark:border-purple-500/25 px-5 py-3.5 sm:px-6 sm:py-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="w-9 h-9 rounded-xl bg-purple-100/80 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/30 flex items-center justify-center shrink-0">
-                <BookOpen className="w-4 h-4 text-purple-700 dark:text-purple-300" />
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Cours &amp;{" "}
-                <span className="bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 dark:from-purple-400 dark:via-indigo-300 dark:to-purple-400 bg-clip-text text-transparent">
-                  Travaux Dirigés
-                </span>
-              </h2>
-            </div>
+        <div className="space-y-5 animate-fadeIn">
+          {/* 1. HERO ACADÉMIQUE + BASCULES INTÉGRÉES */}
+          <section className="relative">
+            <div className="ps-course-hero px-5 pt-7 pb-11 sm:px-8 sm:pt-9 sm:pb-12 text-center">
+              <div className="relative z-10 max-w-3xl mx-auto">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-display font-bold uppercase tracking-[0.14em] text-[#7D601E] dark:text-[#E3C789] bg-white/85 dark:bg-slate-900/80 border border-[#C6A15B]/35 mb-3 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C6A15B]" />
+                  <span>
+                    {selectedNiveau === "sup"
+                      ? "CPGE 1ère Année · MPSI / PCSI / TSI"
+                      : "CPGE 2ème Année · MP / PSI / PC / TSI"}
+                  </span>
+                </div>
 
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100/80 dark:bg-purple-950/70 text-purple-800 dark:text-purple-200 border border-purple-200/90 dark:border-purple-500/30">
-              <span>{selectedNiveau === "sup" ? "⚛️" : "⚡"}</span>
-              <span>{selectedNiveau === "sup" ? "1ère année · Sup" : "2ème année · Spé"}</span>
-            </span>
-          </div>
+                <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white tracking-tight leading-tight">
+                  Cours, Synthèses &amp;{" "}
+                  <span className="text-[#5B21B6] dark:text-purple-400">TD Corrigés</span>
+                </h1>
 
-          {/* 1 bis. Barre de Bascule Filières CPGE (PSI / MP / PC / TSI) & Mode de Vue */}
-          <div className="bg-white/90 dark:bg-[#0d1322]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-purple-500/25 p-3.5 sm:p-4 shadow-xs mb-5 flex flex-col md:flex-row md:items-center justify-between gap-3">
-            {/* Sélecteur de Filière */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span>🎯</span>
-                <span>Filière CPGE :</span>
-              </span>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
+                  Polycopiés officiels rédigés par <strong className="font-semibold text-slate-800 dark:text-slate-200">Pr. Hassan Eddams</strong>, fiches de synthèse, séances vidéo et extraits de concours classés par chapitre.
+                </p>
 
-              <div className="flex items-center flex-wrap gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 max-w-full">
-                {(["PSI", "MP", "PC", "TSI", "ALL"] as const).map((fil) => {
-                  const isSel = selectedFiliere === fil;
-                  const label = fil === "ALL" ? "Toutes filières" : fil;
-                  return (
+                {/* Sélecteur de Filière + Vue Par Chapitre / Vidéothèque intégrés sobrement */}
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+                  <div
+                    role="group"
+                    aria-label="Filtrer par filière CPGE"
+                    className="inline-flex items-center flex-wrap gap-1 p-1 rounded-full bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs"
+                  >
+                    {(["PSI", "MP", "PC", "TSI", "ALL"] as const).map((fil) => {
+                      const isSel = selectedFiliere === fil;
+                      const label = fil === "ALL" ? "Toutes" : fil;
+                      return (
+                        <button
+                          key={fil}
+                          type="button"
+                          aria-pressed={isSel}
+                          onClick={() => setSelectedFiliere(fil)}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                            isSel
+                              ? "bg-[#162A4A] dark:bg-purple-600 text-white shadow-2xs"
+                              : "text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    role="group"
+                    aria-label="Mode d'affichage"
+                    className="inline-flex items-center gap-1 p-1 rounded-full bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs"
+                  >
                     <button
-                      key={fil}
                       type="button"
-                      onClick={() => setSelectedFiliere(fil)}
-                      className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                        isSel
-                          ? "bg-purple-600 text-white shadow-xs"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      aria-pressed={courseViewMode === "chapitres"}
+                      onClick={() => setCourseViewMode("chapitres")}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                        courseViewMode === "chapitres"
+                          ? "bg-[#5B21B6] text-white shadow-2xs"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white"
                       }`}
                     >
-                      {label}
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Par chapitre</span>
                     </button>
-                  );
-                })}
+                    <button
+                      type="button"
+                      aria-pressed={courseViewMode === "videotheque"}
+                      onClick={() => setCourseViewMode("videotheque")}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                        courseViewMode === "videotheque"
+                          ? "bg-[#5B21B6] text-white shadow-2xs"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white"
+                      }`}
+                    >
+                      <PlayCircle className="w-3.5 h-3.5" />
+                      <span>Vidéothèque</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-
-              <span className="text-[11px] text-purple-700 dark:text-purple-300 font-semibold hidden lg:inline">
-                {selectedFiliere === "PSI" && "✨ Mode PSI : Tronc commun (partagé avec MP) + Spécificités (Navier-Stokes, Poiseuille, bilans)"}
-                {selectedFiliere === "MP" && "✨ Mode MP : Tronc commun + Spécificités (Physique quantique, Boltzmann)"}
-                {selectedFiliere === "PC" && "✨ Mode PC : Tronc commun + Spécificités (Mécanique des fluides & Chimie)"}
-                {selectedFiliere === "TSI" && "✨ Mode TSI : Programme officiel des Sciences Physiques"}
-                {selectedFiliere === "ALL" && "✨ Mode Global : Toutes les filières CPGE"}
-              </span>
             </div>
 
-            {/* Bascule Vue par Chapitre vs Catalogue Vidéothèque */}
-            <div className="grid grid-cols-2 md:flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 w-full md:w-auto md:shrink-0">
-              <button
-                type="button"
-                onClick={() => setCourseViewMode("chapitres")}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  courseViewMode === "chapitres"
-                    ? "bg-white dark:bg-purple-950 text-purple-700 dark:text-purple-200 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Par Chapitre</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setCourseViewMode("videotheque")}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  courseViewMode === "videotheque"
-                    ? "bg-white dark:bg-purple-950 text-purple-700 dark:text-purple-200 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
-              >
-                <PlayCircle className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Vidéothèque</span>
-              </button>
-            </div>
-          </div>
+            {/* 2. BARRE DE STATISTIQUES FLOTTANTE (6 KPI LIVE) */}
+            {courseViewMode === "chapitres" && (
+              <div className="ps-stats-bar -mt-6 mx-2 sm:mx-6">
+                <div className="ps-stat-cell">
+                  <div className="font-display text-lg sm:text-xl font-extrabold text-[#162A4A] dark:text-white tabular-nums leading-none">
+                    {heroStats.chapters}
+                  </div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                    Chapitres
+                  </div>
+                </div>
+                <div className="ps-stat-cell">
+                  <div className="font-display text-lg sm:text-xl font-extrabold text-[#5B21B6] dark:text-purple-300 tabular-nums leading-none">
+                    {heroStats.polyAndCours}
+                  </div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                    Polycopiés
+                  </div>
+                </div>
+                <div className="ps-stat-cell">
+                  <div className="font-display text-lg sm:text-xl font-extrabold text-[#9A7828] dark:text-[#E3C789] tabular-nums leading-none">
+                    {heroStats.fiches}
+                  </div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                    Fiches
+                  </div>
+                </div>
+                <div className="ps-stat-cell">
+                  <div className="font-display text-lg sm:text-xl font-extrabold text-[#B82924] dark:text-rose-400 tabular-nums leading-none">
+                    {heroStats.videos}
+                  </div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                    Replays
+                  </div>
+                </div>
+                <div className="ps-stat-cell">
+                  <div className="font-display text-lg sm:text-xl font-extrabold text-[#7D601E] dark:text-amber-300 tabular-nums leading-none">
+                    {heroStats.concours}
+                  </div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                    Concours
+                  </div>
+                </div>
+                <div className="ps-stat-cell">
+                  <div className="font-display text-lg sm:text-xl font-extrabold text-[#1E6B47] dark:text-emerald-400 tabular-nums leading-none">
+                    {heroStats.tds}
+                  </div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
+                    TD &amp; DL
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
 
           {courseViewMode === "videotheque" ? (
             <VideothequeWidget
@@ -2804,676 +3203,834 @@ export function CoursesWidget({
             />
           ) : (
             <>
-              {/* 2. Filtres par Module & Recherche */}
-      <div className="bg-white/90 dark:bg-[#0d1322]/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-purple-500/25 p-4 sm:p-5 shadow-xs mb-6 space-y-3.5">
-        {/* Ligne 1 : Liste Déroulante des Modules + Actions Déplier/Replier */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Menu Déroulant (Liste Déroulante) Ergonomique */}
-          <div className="relative flex-1" ref={moduleDropdownRef}>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 max-w-xl">
-                <button
-                  type="button"
-                  onClick={() => setIsModuleDropdownOpen((prev) => !prev)}
-                  className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-purple-500/30 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/90 dark:hover:bg-slate-900 text-slate-900 dark:text-white transition-all cursor-pointer shadow-2xs text-left"
+              {/* 3. BARRE DE FILTRES MODULES (PILLS HORIZONTALES) & RECHERCHE */}
+              <div className="space-y-3 pt-1">
+                {/* Pilules de Modules — 1 clic, sans menu déroulant lourd */}
+                <div
+                  role="group"
+                  aria-label="Filtrer par module"
+                  className="ps-h-scroll items-center gap-2 pb-0.5"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-xl shrink-0 p-1 rounded-lg bg-white dark:bg-slate-800 shadow-2xs border border-slate-200 dark:border-slate-700">
-                      {currentModuleItem.icon}
+                  <button
+                    type="button"
+                    aria-pressed={activeModule === "all"}
+                    onClick={() => setActiveModule("all")}
+                    className={`flex-none inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                      activeModule === "all"
+                        ? "bg-[#162A4A] dark:bg-purple-600 text-white border-[#162A4A] dark:border-purple-600 shadow-xs"
+                        : "bg-white dark:bg-[#0E1525] text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
+                    }`}
+                  >
+                    <span>Tous les modules</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${
+                        activeModule === "all"
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                      }`}
+                    >
+                      {allChapters.length}
                     </span>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[10px] uppercase tracking-wider text-purple-700 dark:text-purple-300 font-bold">
-                        Module de Cours CPGE
-                      </span>
-                      <span className="text-xs sm:text-sm font-extrabold truncate">
-                        {currentModuleItem.titre}
-                      </span>
+                  </button>
+
+                  {activeCoursesData.map((m) => {
+                    const isSelected = activeModule === m.id;
+                    const chCount = m.chapitres?.length || 0;
+                    const accent = getModuleAccent(m.id);
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => setActiveModule(m.id)}
+                        className={`flex-none inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-[#162A4A] dark:bg-purple-600 text-white border-[#162A4A] dark:border-purple-600 shadow-xs"
+                            : "bg-white dark:bg-[#0E1525] text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
+                        }`}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: isSelected ? "#E3C789" : accent.stripe }}
+                          aria-hidden="true"
+                        />
+                        <span className="whitespace-nowrap">{m.titre}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${
+                            isSelected
+                              ? "bg-white/20 text-white"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          }`}
+                        >
+                          {chCount}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Ligne Recherche + Actions Déplier / Replier */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="relative flex-1 max-w-xl">
+                    <label htmlFor="ps-courses-search" className="sr-only">
+                      Rechercher un chapitre
+                    </label>
+                    <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      id="ps-courses-search"
+                      type="text"
+                      placeholder="Rechercher un chapitre, concept ou formule (Maxwell, Fourier, Navier-Stokes)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-9 py-2.5 rounded-full border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0E1525] text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#5B21B6] dark:focus:border-purple-400 focus:ring-2 focus:ring-[#5B21B6]/15 transition-all outline-hidden shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        aria-label="Effacer la recherche"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
+                      <strong className="text-slate-900 dark:text-white font-bold">
+                        {filteredChapters.length}
+                      </strong>{" "}
+                      {filteredChapters.length > 1 ? "chapitres" : "chapitre"}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setOpenChapterIds(new Set(filteredChapters.map((c) => c.id)))}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-[#0E1525] text-slate-700 dark:text-slate-200 hover:border-[#162A4A] dark:hover:border-purple-400 transition-colors cursor-pointer"
+                      >
+                        Tout déplier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOpenChapterIds(new Set())}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-[#0E1525] text-slate-700 dark:text-slate-200 hover:border-[#162A4A] dark:hover:border-purple-400 transition-colors cursor-pointer"
+                      >
+                        Tout replier
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
-                      {currentModuleItem.count} chapitres
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                        isModuleDropdownOpen ? "rotate-180 text-purple-600 dark:text-purple-400" : ""
-                      }`}
-                    />
-                  </div>
-                </button>
+                </div>
+              </div>
 
-                {/* Popover de la Liste Déroulante */}
-                {isModuleDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-full max-h-80 overflow-y-auto rounded-2xl border border-slate-200 dark:border-purple-500/40 bg-white dark:bg-[#0c1224] p-1.5 shadow-2xl z-40 divide-y divide-slate-100 dark:divide-slate-800/80 animate-fadeIn">
-                    {/* Option : Tous les modules */}
+              {/* 4. LISTE DES CHAPITRES ACCORDÉON MINIMALISTE (STYLE #cours-mp-w) */}
+              <div className="space-y-3.5">
+                {filteredChapters.map((chapter) => {
+                  const isOpen = openChapterIds.has(chapter.id);
+                  const tds = chapter.tds || [];
+                  const fiches = chapter.fiches || [];
+                  const courseVideos = getChapterCourseVideos(chapter, selectedFiliere);
+                  const concoursVideos = getChapterConcoursVideos(chapter, selectedFiliere);
+                  const accent = getModuleAccent(chapter.moduleId);
+                  const activeTab: ChapterTabId = chapterTabs[chapter.id] || "all";
+                  const videoViewMode = chapterVideoView[chapter.id] || "grid";
+                  const concoursViewMode = chapterConcoursView[chapter.id] || "grid";
+
+                  return (
+                    <article
+                      key={chapter.id}
+                      onDragOver={(e) => {
+                        if (draggedVideo && draggedVideo.chapterId !== chapter.id) {
+                          handleDragOver(chapter.id, undefined, false, e, true);
+                        }
+                      }}
+                      onDrop={(e) => {
+                        if (draggedVideo && draggedVideo.chapterId !== chapter.id) {
+                          e.preventDefault();
+                          handleDropOnChapter(chapter, draggedVideo.isConcours);
+                        }
+                      }}
+                      className={`relative bg-white dark:bg-[#0E1525] rounded-2xl border transition-all duration-200 overflow-hidden ${
+                        dragOverVideo?.chapterId === chapter.id && dragOverVideo.isChapterDropZone
+                          ? "border-emerald-500 ring-4 ring-emerald-400/35 shadow-xl"
+                          : isOpen
+                          ? "border-slate-300 dark:border-purple-500/45 shadow-[0_8px_28px_rgba(15,23,42,0.07)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)]"
+                          : "border-slate-200/90 dark:border-slate-800 shadow-[0_1px_3px_rgba(15,23,42,0.03)] hover:border-slate-300 dark:hover:border-slate-700"
+                      }`}
+                    >
+                      {/* Filet latéral discret d'identité module */}
+                      <div
+                        className="pointer-events-none absolute inset-y-0 left-0 w-[3.5px]"
+                        style={{ backgroundColor: accent.stripe }}
+                        aria-hidden="true"
+                      />
+
+                      {/* En-tête accordéon accessible : <h3> enveloppant le <button aria-expanded> */}
+                      <div className="flex items-center gap-2 pr-4 sm:pr-5">
+                        <h3 className="flex-1 min-w-0 m-0">
+                          <button
+                            type="button"
+                            aria-expanded={isOpen}
+                            onClick={() => toggleChapter(chapter.id)}
+                            className="w-full text-left flex items-center gap-3.5 sm:gap-4 pl-5 pr-2 py-4 sm:py-5 cursor-pointer hover:bg-[#F6F7FA]/70 dark:hover:bg-slate-800/30 transition-colors"
+                          >
+                            {/* Numéro de chapitre épuré */}
+                            <span
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center font-display font-bold text-sm shrink-0 transition-all tabular-nums ${
+                                isOpen
+                                  ? "bg-[#162A4A] dark:bg-purple-600 text-white shadow-xs"
+                                  : "bg-[#F6F7FA] dark:bg-slate-900 text-[#162A4A] dark:text-slate-200 border border-slate-200/90 dark:border-slate-700"
+                              }`}
+                            >
+                              {String(chapter.num).padStart(2, "0")}
+                            </span>
+
+                            {/* Titre, description 1 ligne & chips Lucide sobres */}
+                            <span className="flex-1 min-w-0 block">
+                              <span className="font-display block text-[15px] sm:text-[17px] font-bold text-slate-900 dark:text-white leading-snug">
+                                {chapter.titre}
+                              </span>
+                              {chapter.description && (
+                                <span className="block text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 font-normal">
+                                  {chapter.description}
+                                </span>
+                              )}
+
+                              {/* Chips minimalistes avec icônes Lucide (zéro emoji bruyant) */}
+                              <span className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-[#EBF1F8]/90 dark:bg-blue-950/50 text-[#162A4A] dark:text-blue-200">
+                                  <BookOpen className="w-3 h-3" />
+                                  Polycopié
+                                </span>
+                                {fiches.length > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-[#F8F3E6] dark:bg-amber-950/50 text-[#7D601E] dark:text-[#E3C789]">
+                                    <Bookmark className="w-3 h-3" />
+                                    {fiches.length} {fiches.length > 1 ? "fiches" : "fiche"}
+                                  </span>
+                                )}
+                                {courseVideos.length > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-[#F3EEFD] dark:bg-purple-950/50 text-[#5B21B6] dark:text-purple-200">
+                                    <PlayCircle className="w-3 h-3" />
+                                    {courseVideos.length} {courseVideos.length > 1 ? "vidéos" : "vidéo"}
+                                  </span>
+                                )}
+                                {concoursVideos.length > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-[#F8F3E6] dark:bg-amber-950/50 text-[#9A7828] dark:text-amber-300">
+                                    <Trophy className="w-3 h-3" />
+                                    {concoursVideos.length} concours
+                                  </span>
+                                )}
+                                {tds.length > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-[#EAF5EF] dark:bg-emerald-950/50 text-[#1E6B47] dark:text-emerald-300">
+                                    <PenTool className="w-3 h-3" />
+                                    {tds.length} TD
+                                  </span>
+                                )}
+                              </span>
+                            </span>
+
+                            {/* Étiquette module + chevron */}
+                            <span className="flex items-center gap-2.5 shrink-0">
+                              <span
+                                className={`hidden md:inline-block text-[11px] font-semibold px-2.5 py-1 rounded-full border ${accent.pillLight} ${accent.pillDark}`}
+                              >
+                                {chapter.moduleName || chapter.moduleTitre || chapter.badge}
+                              </span>
+                              <span
+                                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                                  isOpen
+                                    ? "rotate-180 bg-[#162A4A] dark:bg-purple-600 text-white"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                                }`}
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </span>
+                            </span>
+                          </button>
+                        </h3>
+
+                        {/* Bouton suppression chapitre (en dehors du <button> accordéon) */}
+                        {isTeacherView && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Supprimer définitivement le chapitre "${chapter.titre}" ?`)) {
+                                removeChapter(chapter.moduleId, chapter.id);
+                              }
+                            }}
+                            className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+                            title="Supprimer ce chapitre entier"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Zone de dépôt Drag & Drop inter-chapitres */}
+                      {draggedVideo && draggedVideo.chapterId !== chapter.id && (
+                        <div
+                          onDragOver={(e) => handleDragOver(chapter.id, undefined, false, e, true)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDropOnChapter(chapter, draggedVideo.isConcours);
+                          }}
+                          className={`mx-5 mb-4 p-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-copy select-none ${
+                            dragOverVideo?.chapterId === chapter.id && dragOverVideo.isChapterDropZone
+                              ? "bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-300"
+                              : "bg-purple-500/10 border-purple-400/50 text-purple-700 dark:text-purple-300"
+                          }`}
+                        >
+                          <ArrowRightLeft className="w-4 h-4 text-emerald-500" />
+                          <span>
+                            Déposer ici pour transférer « {draggedVideo.videoItem.titre} » dans ({chapter.titre})
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Contenu déplié : Onglets internes + Polycopié & Fiches + Vidéos + Concours + TD */}
+                      {isOpen && (() => {
+                        const chapterPdf = getChapterOfficialPdf(chapter);
+                        const isVideosExpanded = expandedVideoChapters.has(chapter.id);
+                        const displayedCourseVideos = isVideosExpanded ? courseVideos : courseVideos.slice(0, 8);
+                        const isConcoursExpanded = expandedConcoursChapters.has(chapter.id);
+                        const displayedConcoursVideos = isConcoursExpanded ? concoursVideos : concoursVideos.slice(0, 8);
+
+                        const showFiches = activeTab === "all" || activeTab === "fiches";
+                        const showVideos = activeTab === "all" || activeTab === "videos";
+                        const showConcours = (activeTab === "all" || activeTab === "concours") && concoursVideos.length > 0;
+                        const showTd = activeTab === "all" || activeTab === "td";
+
+                        return (
+                          <div className="ps-ch-body border-t border-slate-200/80 dark:border-slate-800/90 bg-[#F6F7FA]/85 dark:bg-[#0A101E]">
+                            {/* Onglets rapides internes de chapitre (une seule ligne, indicateur souligné WCAG) */}
+                            <div
+                              role="tablist"
+                              aria-label={`Sections du chapitre ${chapter.titre}`}
+                              className="ps-ch-tabs px-4 sm:px-6 bg-white/80 dark:bg-[#0E1525]/90"
+                            >
+                              <button
+                                type="button"
+                                role="tab"
+                                aria-selected={activeTab === "all"}
+                                onClick={() =>
+                                  setChapterTabs((prev) => ({ ...prev, [chapter.id]: "all" }))
+                                }
+                                className="ps-ch-tab"
+                              >
+                                <span>Tout voir</span>
+                              </button>
+                              <button
+                                type="button"
+                                role="tab"
+                                aria-selected={activeTab === "fiches"}
+                                onClick={() =>
+                                  setChapterTabs((prev) => ({ ...prev, [chapter.id]: "fiches" }))
+                                }
+                                className="ps-ch-tab"
+                              >
+                                <BookOpen className="w-3.5 h-3.5" />
+                                <span>Cours &amp; Fiches</span>
+                                <span className="text-[10.5px] opacity-70 tabular-nums">
+                                  ({1 + fiches.length})
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                role="tab"
+                                aria-selected={activeTab === "videos"}
+                                onClick={() =>
+                                  setChapterTabs((prev) => ({ ...prev, [chapter.id]: "videos" }))
+                                }
+                                className="ps-ch-tab"
+                              >
+                                <PlayCircle className="w-3.5 h-3.5" />
+                                <span>Vidéos</span>
+                                <span className="text-[10.5px] opacity-70 tabular-nums">
+                                  ({courseVideos.length})
+                                </span>
+                              </button>
+                              {concoursVideos.length > 0 && (
+                                <button
+                                  type="button"
+                                  role="tab"
+                                  aria-selected={activeTab === "concours"}
+                                  onClick={() =>
+                                    setChapterTabs((prev) => ({ ...prev, [chapter.id]: "concours" }))
+                                  }
+                                  className="ps-ch-tab"
+                                >
+                                  <Trophy className="w-3.5 h-3.5" />
+                                  <span>Concours</span>
+                                  <span className="text-[10.5px] opacity-70 tabular-nums">
+                                    ({concoursVideos.length})
+                                  </span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                role="tab"
+                                aria-selected={activeTab === "td"}
+                                onClick={() =>
+                                  setChapterTabs((prev) => ({ ...prev, [chapter.id]: "td" }))
+                                }
+                                className="ps-ch-tab"
+                              >
+                                <PenTool className="w-3.5 h-3.5" />
+                                <span>TD &amp; DL</span>
+                                <span className="text-[10.5px] opacity-70 tabular-nums">
+                                  ({tds.length})
+                                </span>
+                              </button>
+                            </div>
+
+                            <div className="p-4 sm:p-6 space-y-6">
+                              {/* ── SECTION 1 : POLYCOPIÉ OFFICIEL + ÉTAGÈRE COMPACTE FICHES ── */}
+                              {showFiches && (
+                                <div className="space-y-3.5">
+                                  <ChapterOfficialPdfBanner
+                                    pdf={chapterPdf}
+                                    chapterTitre={chapter.titre}
+                                    selectedFiliere={selectedFiliere}
+                                    onOpenPdf={onOpenPdf}
+                                  />
+
+                                  {(fiches.length > 0 || isTeacherView) && (
+                                    <div className="space-y-2.5">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2">
+                                          <Bookmark className="w-3.5 h-3.5 text-[#9A7828] dark:text-[#D4B26A]" />
+                                          <span className="font-display text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                                            Fiches de synthèse
+                                          </span>
+                                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 tabular-nums">
+                                            ({fiches.length})
+                                          </span>
+                                        </div>
+
+                                        {isTeacherView && (
+                                          <button
+                                            type="button"
+                                            onClick={() => openAddFiche(chapter)}
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-[#9A7828] hover:bg-[#7D601E] text-white transition-colors cursor-pointer"
+                                          >
+                                            <PlusCircle className="w-3.5 h-3.5" />
+                                            <span>Ajouter une fiche</span>
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {fiches.length > 0 ? (
+                                        <div className="ps-fiches-shelf">
+                                          {fiches.map((f, fIdx) => (
+                                            <CourseFicheCard
+                                              key={f.id || fIdx}
+                                              fiche={f}
+                                              chapTitre={chapter.titre}
+                                              onOpenPdf={onOpenPdf}
+                                              isTeacherView={isTeacherView}
+                                              onEdit={
+                                                isTeacherView
+                                                  ? () => openEditFiche(chapter, f)
+                                                  : undefined
+                                              }
+                                              onDelete={
+                                                isTeacherView
+                                                  ? () => deleteFiche(chapter.moduleId, chapter.id, f.id || f.titre)
+                                                  : undefined
+                                              }
+                                            />
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="p-3.5 text-center rounded-xl bg-white/70 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-500">
+                                          Aucune fiche de synthèse pour ce chapitre.
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* ── SECTION 2 : SÉANCES & REPLAYS VIDÉO DU COURS (GRILLE / LISTE) ── */}
+                              {showVideos && (
+                                <div className="space-y-3">
+                                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <PlayCircle className="w-4 h-4 text-[#5B21B6] dark:text-purple-400" />
+                                      <span className="font-display text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                                        Séances de cours &amp; Replays
+                                      </span>
+                                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/90 dark:border-slate-700 tabular-nums">
+                                        {courseVideos.length}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {/* Bascule Grille / Liste compacte */}
+                                      {courseVideos.length > 0 && (
+                                        <div
+                                          role="group"
+                                          aria-label="Disposition des vidéos"
+                                          className="inline-flex items-center p-0.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700"
+                                        >
+                                          <button
+                                            type="button"
+                                            aria-pressed={videoViewMode === "grid"}
+                                            onClick={() =>
+                                              setChapterVideoView((prev) => ({ ...prev, [chapter.id]: "grid" }))
+                                            }
+                                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                                              videoViewMode === "grid"
+                                                ? "bg-[#162A4A] dark:bg-purple-600 text-white"
+                                                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                            }`}
+                                          >
+                                            <LayoutGrid className="w-3 h-3" />
+                                            <span className="hidden sm:inline">Grille</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            aria-pressed={videoViewMode === "list"}
+                                            onClick={() =>
+                                              setChapterVideoView((prev) => ({ ...prev, [chapter.id]: "list" }))
+                                            }
+                                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                                              videoViewMode === "list"
+                                                ? "bg-[#162A4A] dark:bg-purple-600 text-white"
+                                                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                            }`}
+                                          >
+                                            <List className="w-3 h-3" />
+                                            <span className="hidden sm:inline">Liste</span>
+                                          </button>
+                                        </div>
+                                      )}
+
+                                      {isTeacherView && (
+                                        <>
+                                          {chapter.hiddenVideoIds && chapter.hiddenVideoIds.length > 0 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => restoreVideos(chapter.moduleId || activeModule, chapter.id, false)}
+                                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-800 hover:bg-slate-700 text-purple-200 border border-purple-500/30 transition-colors cursor-pointer"
+                                            >
+                                              <RotateCcw className="w-3 h-3" />
+                                              <span>Restaurer ({chapter.hiddenVideoIds.length})</span>
+                                            </button>
+                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={() => openAddSession(chapter)}
+                                            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-[#5B21B6] hover:bg-[#4C1D95] text-white transition-colors cursor-pointer"
+                                          >
+                                            <PlusCircle className="w-3.5 h-3.5" />
+                                            <span>Séance</span>
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {courseVideos.length > 0 ? (
+                                    <div className={videoViewMode === "list" ? "space-y-2" : "ps-vid-grid"}>
+                                      {displayedCourseVideos.map((vid, vIdx) => (
+                                        <UnifiedChapterVideoCard
+                                          key={vid.id || vIdx}
+                                          vid={vid}
+                                          index={vIdx}
+                                          totalCount={displayedCourseVideos.length}
+                                          chapTitre={chapter.titre}
+                                          viewMode={videoViewMode}
+                                          onOpenPdf={onOpenPdf}
+                                          onOpenVideo={onOpenVideo}
+                                          isTeacherView={isTeacherView}
+                                          onEdit={
+                                            isTeacherView
+                                              ? () => openEditSession(chapter, vid, false)
+                                              : undefined
+                                          }
+                                          onDelete={
+                                            isTeacherView
+                                              ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, vid.id, false)
+                                              : undefined
+                                          }
+                                          onTransfer={
+                                            isTeacherView
+                                              ? () => openTransferModal(vid, chapter, false)
+                                              : undefined
+                                          }
+                                          onMoveUp={
+                                            isTeacherView && vIdx > 0
+                                              ? () => handleMoveVideo(chapter, vid.id, "prev", false)
+                                              : undefined
+                                          }
+                                          onMoveDown={
+                                            isTeacherView && vIdx < displayedCourseVideos.length - 1
+                                              ? () => handleMoveVideo(chapter, vid.id, "next", false)
+                                              : undefined
+                                          }
+                                          onDragStart={(e) => handleDragStart(chapter.moduleId || activeModule, chapter.id, vid.id, false, vid, e)}
+                                          onDragOver={(e) => handleDragOver(chapter.id, vid.id, false, e)}
+                                          onDragEnd={handleDragEnd}
+                                          onDrop={() => handleDrop(chapter, vid.id, false)}
+                                          isDragging={
+                                            draggedVideo?.chapterId === chapter.id &&
+                                            draggedVideo?.videoId === vid.id &&
+                                            !draggedVideo?.isConcours
+                                          }
+                                          isDragOver={
+                                            dragOverVideo?.chapterId === chapter.id &&
+                                            dragOverVideo?.videoId === vid.id &&
+                                            !dragOverVideo?.isConcours
+                                          }
+                                        />
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="p-4 text-center rounded-xl bg-white/70 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
+                                      {selectedFiliere === "PSI" && chapter.id.includes("quantique")
+                                        ? "La Physique Quantique est spécifique aux filières MP et PC (hors programme PSI)."
+                                        : "Aucune séance vidéo enregistrée pour cette filière."}
+                                    </div>
+                                  )}
+
+                                  {courseVideos.length > 8 && (
+                                    <div className="text-center pt-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleExpandVideos(chapter.id)}
+                                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-[#0E1525] hover:border-[#162A4A] dark:hover:border-purple-400 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 transition-colors cursor-pointer"
+                                      >
+                                        <span>
+                                          {isVideosExpanded
+                                            ? "Afficher moins"
+                                            : `Afficher les ${courseVideos.length} séances`}
+                                        </span>
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isVideosExpanded ? "rotate-180" : ""}`} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* ── SECTION 3 : EXTRAITS DE CONCOURS & PROBLÈMES TYPES ── */}
+                              {showConcours && (
+                                <div className="space-y-3">
+                                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <Trophy className="w-4 h-4 text-[#9A7828] dark:text-[#D4B26A]" />
+                                      <span className="font-display text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                                        Extraits de concours &amp; Problèmes types
+                                      </span>
+                                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#F8F3E6] dark:bg-amber-950/60 text-[#7D601E] dark:text-[#E3C789] border border-[#C6A15B]/35 tabular-nums">
+                                        {concoursVideos.length}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <div
+                                        role="group"
+                                        aria-label="Disposition des extraits concours"
+                                        className="inline-flex items-center p-0.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700"
+                                      >
+                                        <button
+                                          type="button"
+                                          aria-pressed={concoursViewMode === "grid"}
+                                          onClick={() =>
+                                            setChapterConcoursView((prev) => ({ ...prev, [chapter.id]: "grid" }))
+                                          }
+                                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                                            concoursViewMode === "grid"
+                                              ? "bg-[#9A7828] text-white"
+                                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                          }`}
+                                        >
+                                          <LayoutGrid className="w-3 h-3" />
+                                          <span className="hidden sm:inline">Grille</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          aria-pressed={concoursViewMode === "list"}
+                                          onClick={() =>
+                                            setChapterConcoursView((prev) => ({ ...prev, [chapter.id]: "list" }))
+                                          }
+                                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                                            concoursViewMode === "list"
+                                              ? "bg-[#9A7828] text-white"
+                                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                          }`}
+                                        >
+                                          <List className="w-3 h-3" />
+                                          <span className="hidden sm:inline">Liste</span>
+                                        </button>
+                                      </div>
+
+                                      {isTeacherView && chapter.hiddenConcoursVideoIds && chapter.hiddenConcoursVideoIds.length > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => restoreVideos(chapter.moduleId || activeModule, chapter.id, true)}
+                                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-800 hover:bg-slate-700 text-[#E3C789] border border-[#C6A15B]/35 transition-colors cursor-pointer"
+                                        >
+                                          <RotateCcw className="w-3 h-3" />
+                                          <span>Restaurer ({chapter.hiddenConcoursVideoIds.length})</span>
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className={concoursViewMode === "list" ? "space-y-2" : "ps-vid-grid"}>
+                                    {displayedConcoursVideos.map((cVid, cIdx) => (
+                                      <ConcoursExtractCard
+                                        key={cVid.id || cIdx}
+                                        vid={cVid}
+                                        index={cIdx}
+                                        totalCount={displayedConcoursVideos.length}
+                                        chapTitre={chapter.titre}
+                                        viewMode={concoursViewMode}
+                                        onOpenPdf={onOpenPdf}
+                                        onOpenVideo={onOpenVideo}
+                                        isTeacherView={isTeacherView}
+                                        onEdit={
+                                          isTeacherView
+                                            ? () => openEditSession(chapter, cVid, true)
+                                            : undefined
+                                        }
+                                        onDelete={
+                                          isTeacherView
+                                            ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, cVid.id, true)
+                                            : undefined
+                                        }
+                                        onTransfer={
+                                          isTeacherView
+                                            ? () => openTransferModal(cVid, chapter, true)
+                                            : undefined
+                                        }
+                                        onMoveUp={
+                                          isTeacherView && cIdx > 0
+                                            ? () => handleMoveVideo(chapter, cVid.id, "prev", true)
+                                            : undefined
+                                        }
+                                        onMoveDown={
+                                          isTeacherView && cIdx < displayedConcoursVideos.length - 1
+                                            ? () => handleMoveVideo(chapter, cVid.id, "next", true)
+                                            : undefined
+                                        }
+                                        onDragStart={(e) => handleDragStart(chapter.moduleId || activeModule, chapter.id, cVid.id, true, cVid, e)}
+                                        onDragOver={(e) => handleDragOver(chapter.id, cVid.id, true, e)}
+                                        onDragEnd={handleDragEnd}
+                                        onDrop={() => handleDrop(chapter, cVid.id, true)}
+                                        isDragging={
+                                          draggedVideo?.chapterId === chapter.id &&
+                                          draggedVideo?.videoId === cVid.id &&
+                                          draggedVideo?.isConcours
+                                        }
+                                        isDragOver={
+                                          dragOverVideo?.chapterId === chapter.id &&
+                                          dragOverVideo?.videoId === cVid.id &&
+                                          dragOverVideo?.isConcours
+                                        }
+                                      />
+                                    ))}
+                                  </div>
+
+                                  {concoursVideos.length > 8 && (
+                                    <div className="text-center pt-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleExpandConcours(chapter.id)}
+                                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-[#0E1525] hover:border-[#9A7828] text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 transition-colors cursor-pointer"
+                                      >
+                                        <span>
+                                          {isConcoursExpanded
+                                            ? "Afficher moins"
+                                            : `Afficher les ${concoursVideos.length} extraits`}
+                                        </span>
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isConcoursExpanded ? "rotate-180" : ""}`} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* ── SECTION 4 : TD & DEVOIRS LIBRES (DL) ── */}
+                              {showTd && (
+                                <div className="space-y-3">
+                                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                                    <div className="flex items-center gap-2">
+                                      <PenTool className="w-4 h-4 text-[#1E6B47] dark:text-emerald-400" />
+                                      <span className="font-display text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                                        TD &amp; Devoirs Libres (DL)
+                                      </span>
+                                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/90 dark:border-slate-700 tabular-nums">
+                                        {tds.length}
+                                      </span>
+                                    </div>
+
+                                    {isTeacherView && (
+                                      <button
+                                        type="button"
+                                        onClick={() => openAddExercise(chapter)}
+                                        className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-[#1E6B47] hover:bg-[#165236] text-white transition-colors cursor-pointer"
+                                      >
+                                        <PlusCircle className="w-3.5 h-3.5" />
+                                        <span>Ajouter un TD</span>
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {tds.length > 0 ? (
+                                    <div className="space-y-2">
+                                      {tds.map((td, tIdx) => (
+                                        <CourseExerciseLine
+                                          key={td.id || tIdx}
+                                          item={td}
+                                          index={tIdx}
+                                          chapTitre={chapter.titre}
+                                          onOpenPdf={onOpenPdf}
+                                          onOpenVideo={onOpenVideo}
+                                          isTeacherView={isTeacherView}
+                                          onDelete={
+                                            isTeacherView && td.id
+                                              ? () => deleteExercise(chapter.moduleId, chapter.id, td.id!)
+                                              : undefined
+                                          }
+                                        />
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="p-4 text-center rounded-xl bg-white/70 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-500">
+                                      Aucun TD enregistré pour ce chapitre pour le moment.
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </article>
+                  );
+                })}
+
+                {filteredChapters.length === 0 && (
+                  <div className="p-12 text-center bg-white dark:bg-[#0E1525] rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 space-y-2">
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      Aucun chapitre ne correspond à votre recherche.
+                    </p>
                     <button
                       type="button"
                       onClick={() => {
+                        setSearchQuery("");
                         setActiveModule("all");
-                        setIsModuleDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        activeModule === "all"
-                          ? "bg-purple-600 text-white font-bold shadow-xs"
-                          : "hover:bg-purple-50 dark:hover:bg-purple-950/50 text-slate-800 dark:text-slate-200"
-                      }`}
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-[#162A4A] text-white hover:bg-[#5B21B6] transition-colors cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-lg shrink-0">📚</span>
-                        <div className="text-left min-w-0">
-                          <div className="font-bold">Tous les modules</div>
-                          <div className={`text-[10px] truncate ${activeModule === "all" ? "text-purple-100" : "text-slate-400"}`}>
-                            {selectedNiveau === "sup"
-                              ? "Voir l'intégralité du syllabus officiel MPSI / PCSI / TSI"
-                              : "Voir l'intégralité du syllabus officiel Spé MP / PSI / TSI"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                        <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${
-                          activeModule === "all"
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                        }`}>
-                          {allChapters.length} chap.
-                        </span>
-                        {activeModule === "all" && <Check className="w-4 h-4 text-white" />}
-                      </div>
+                      Réinitialiser les filtres
                     </button>
-
-                    {/* Liste des modules */}
-                    {activeCoursesData.map((m) => {
-                      const isSelected = activeModule === m.id;
-                      const chCount = m.chapitres?.length || 0;
-                      return (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => {
-                            setActiveModule(m.id);
-                            setIsModuleDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                            isSelected
-                              ? "bg-purple-600 text-white font-bold shadow-xs"
-                              : "hover:bg-purple-50 dark:hover:bg-purple-950/50 text-slate-800 dark:text-slate-200"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-lg shrink-0">{m.icon || "⚛️"}</span>
-                            <div className="text-left min-w-0">
-                              <div className="font-bold truncate">{m.titre}</div>
-                              <div className={`text-[10px] truncate max-w-sm ${isSelected ? "text-purple-100" : "text-slate-400"}`}>
-                                {m.description || "Module CPGE"}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                            <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${
-                              isSelected
-                                ? "bg-white/20 text-white"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                            }`}>
-                              {chCount} chap.
-                            </span>
-                            {isSelected && <Check className="w-4 h-4 text-white" />}
-                          </div>
-                        </button>
-                      );
-                    })}
                   </div>
                 )}
               </div>
-
-              {/* Bouton rapide "Tous les modules" si un filtre est actif */}
-              {activeModule !== "all" && (
-                <button
-                  type="button"
-                  onClick={() => setActiveModule("all")}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                  title="Réinitialiser et afficher tous les modules"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  <span>Tout afficher</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Boutons d'action Déplier / Replier & Compteur */}
-          <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60 dark:border-slate-800/80">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              <strong className="text-slate-900 dark:text-white font-bold">{filteredChapters.length}</strong> {filteredChapters.length > 1 ? "chapitres affichés" : "chapitre affiché"}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setOpenChapterIds(new Set(filteredChapters.map((c) => c.id)))}
-                className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:border-purple-300 dark:hover:border-purple-500 hover:text-purple-700 dark:hover:text-purple-300 shadow-2xs transition-all cursor-pointer"
-              >
-                Tout déplier
-              </button>
-              <button
-                type="button"
-                onClick={() => setOpenChapterIds(new Set())}
-                className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:border-purple-300 dark:hover:border-purple-500 hover:text-purple-700 dark:hover:text-purple-300 shadow-2xs transition-all cursor-pointer"
-              >
-                Tout replier
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Barre de Recherche */}
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un chapitre, concept ou formule (ex: Maxwell, Navier-Stokes, Fourier, Pourbaix)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#090d18] text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#0d1322] focus:border-purple-600 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-600/15 transition-all outline-hidden shadow-2xs"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 3. Liste des Chapitres avec la Mise en Page Exacte du Site de Référence */}
-      <div className="space-y-5">
-        {filteredChapters.map((chapter) => {
-          const isOpen = openChapterIds.has(chapter.id);
-          const seances = chapter.cours || [];
-          const tds = chapter.tds || [];
-          const fiches = chapter.fiches || [];
-          const videoCount = seances.filter((s) => s.video && s.video.trim() !== "").length;
-
-          return (
-            <div
-              key={chapter.id}
-              onDragOver={(e) => {
-                if (draggedVideo && draggedVideo.chapterId !== chapter.id) {
-                  handleDragOver(chapter.id, undefined, false, e, true);
-                }
-              }}
-              onDrop={(e) => {
-                if (draggedVideo && draggedVideo.chapterId !== chapter.id) {
-                  e.preventDefault();
-                  handleDropOnChapter(chapter, draggedVideo.isConcours);
-                }
-              }}
-              className={`bg-white dark:bg-[#0d1322] rounded-2xl border transition-all duration-200 overflow-hidden ${
-                dragOverVideo?.chapterId === chapter.id && dragOverVideo.isChapterDropZone
-                  ? "border-emerald-500 ring-4 ring-emerald-400/40 shadow-xl scale-[1.005]"
-                  : isOpen
-                  ? "border-purple-300 dark:border-purple-500/50 shadow-md dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
-                  : "border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700"
-              }`}
-            >
-              {/* Header de Chapitre (Clic pour déplier/replier) */}
-              <div
-                onClick={() => toggleChapter(chapter.id)}
-                className="flex items-center gap-4 p-5 sm:p-6 cursor-pointer select-none hover:bg-purple-50/30 dark:hover:bg-purple-950/20 transition-colors"
-              >
-                {/* Numéro de Chapitre dans Écusson Prestigieux */}
-                <div
-                  className={`w-11 h-11 rounded-xl flex items-center justify-center font-extrabold text-base shrink-0 transition-all ${
-                    isOpen
-                      ? "bg-gradient-to-br from-purple-700 via-purple-800 to-indigo-900 text-white shadow-md shadow-purple-900/30 ring-2 ring-purple-400/40"
-                      : "bg-gradient-to-br from-slate-900 to-purple-950 text-white border border-purple-300/40 dark:border-purple-500/30 shadow-2xs"
-                  }`}
-                >
-                  {chapter.num}
-                </div>
-
-                {/* Info Chapitre : Titre + Description + Badges de contenu */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug">
-                    {chapter.titre}
-                  </h3>
-                  {chapter.description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                      {chapter.description}
-                    </p>
-                  )}
-
-                  {/* Résumé du contenu sous forme de Badges (comme dans le site de référence) */}
-                  <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/20">
-                      📘 {seances.length} cours
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/20">
-                      📑 {fiches.length} fiches
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-500/20">
-                      ✍️ {tds.length} TD/DL
-                    </span>
-                    {videoCount > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-500/20">
-                        🎥 {videoCount} vidéos 🔒
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Étiquette Module à Droite & Flèche */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="hidden sm:inline-block text-xs font-bold px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30">
-                    {chapter.moduleName || chapter.badge}
-                  </span>
-
-                  {/* Actions directes enseignant sur le chapitre */}
-                  {isTeacherView && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(`Supprimer définitivement le chapitre "${chapter.titre}" ?`)) {
-                          removeChapter(chapter.moduleId, chapter.id);
-                        }
-                      }}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      title="Supprimer ce chapitre entier"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-
-                  <div
-                    className={`w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-transform duration-300 ${
-                      isOpen ? "rotate-180 bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300" : ""
-                    }`}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Zone d'indication de drop pour transfert inter-chapitres */}
-              {draggedVideo && draggedVideo.chapterId !== chapter.id && (
-                <div
-                  onDragOver={(e) => handleDragOver(chapter.id, undefined, false, e, true)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleDropOnChapter(chapter, draggedVideo.isConcours);
-                  }}
-                  className={`mx-5 mb-4 p-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-copy select-none ${
-                    dragOverVideo?.chapterId === chapter.id && dragOverVideo.isChapterDropZone
-                      ? "bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-300 scale-[1.01]"
-                      : "bg-purple-500/10 border-purple-400/50 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20"
-                  }`}
-                >
-                  <ArrowRightLeft className="w-4 h-4 animate-pulse text-emerald-500" />
-                  <span>
-                    Déposer ici pour transférer « {draggedVideo.videoItem.titre} » dans ce chapitre ({chapter.titre})
-                  </span>
-                </div>
-              )}
-
-              {/* Contenu Déplié : Polycopié officiel en haut, Séances de cours, Extraits de concours en parallèle, puis Fiches et TDs */}
-              {isOpen && (() => {
-                const chapterPdf = getChapterOfficialPdf(chapter);
-                const courseVideos = getChapterCourseVideos(chapter, selectedFiliere);
-                const concoursVideos = getChapterConcoursVideos(chapter, selectedFiliere);
-                const isVideosExpanded = expandedVideoChapters.has(chapter.id);
-                const displayedCourseVideos = isVideosExpanded ? courseVideos : courseVideos.slice(0, 6);
-                const isConcoursExpanded = expandedConcoursChapters.has(chapter.id);
-                const displayedConcoursVideos = isConcoursExpanded ? concoursVideos : concoursVideos.slice(0, 6);
-
-                return (
-                  <div className="border-t border-slate-100 dark:border-slate-800/80 bg-[#FAF8F2] dark:bg-[#090d18]/60 p-5 sm:p-7 space-y-7">
-                    {/* ── 1. EN HAUT : POLYCOPIÉ DE COURS OFFICIEL (STYLE & PRÉSENTABLE) ── */}
-                    <ChapterOfficialPdfBanner
-                      pdf={chapterPdf}
-                      chapterTitre={chapter.titre}
-                      selectedFiliere={selectedFiliere}
-                      onOpenPdf={onOpenPdf}
-                    />
-
-                    {/* ── 2. JUSTE EN BAS : SÉANCES & REPLAYS VIDÉO DU COURS ── */}
-                    <div className="space-y-3.5">
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-                            🎬 SÉANCES DE COURS & REPLAYS VIDÉO
-                          </span>
-                          {selectedFiliere !== "ALL" && (
-                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                              · Programme {selectedFiliere} (Tronc commun + Spécificités)
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Boutons Enseignant/Admin pour ajouter directement une vidéo ou restaurer les vidéos masquées */}
-                        {isTeacherView && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {chapter.hiddenVideoIds && chapter.hiddenVideoIds.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => restoreVideos(chapter.moduleId || activeModule, chapter.id, false)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 transition-colors cursor-pointer shadow-xs"
-                                title="Rétablir les vidéos du catalogue Prépasciences masquées"
-                              >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                                <span>Restaurer ({chapter.hiddenVideoIds.length})</span>
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => openAddSession(chapter)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors cursor-pointer shadow-xs"
-                            >
-                              <PlusCircle className="w-3.5 h-3.5" />
-                              <span>+ Séance / Vidéo</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {courseVideos.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {displayedCourseVideos.map((vid, vIdx) => (
-                            <UnifiedChapterVideoCard
-                              key={vid.id || vIdx}
-                              vid={vid}
-                              index={vIdx}
-                              totalCount={displayedCourseVideos.length}
-                              chapTitre={chapter.titre}
-                              onOpenPdf={onOpenPdf}
-                              onOpenVideo={onOpenVideo}
-                              isTeacherView={isTeacherView}
-                              onEdit={
-                                isTeacherView
-                                  ? () => openEditSession(chapter, vid, false)
-                                  : undefined
-                              }
-                              onDelete={
-                                isTeacherView
-                                  ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, vid.id, false)
-                                  : undefined
-                              }
-                              onTransfer={
-                                isTeacherView
-                                  ? () => openTransferModal(vid, chapter, false)
-                                  : undefined
-                              }
-                              onMoveUp={
-                                isTeacherView && vIdx > 0
-                                  ? () => handleMoveVideo(chapter, vid.id, "prev", false)
-                                  : undefined
-                              }
-                              onMoveDown={
-                                isTeacherView && vIdx < displayedCourseVideos.length - 1
-                                  ? () => handleMoveVideo(chapter, vid.id, "next", false)
-                                  : undefined
-                              }
-                              onDragStart={(e) => handleDragStart(chapter.moduleId || activeModule, chapter.id, vid.id, false, vid, e)}
-                              onDragOver={(e) => handleDragOver(chapter.id, vid.id, false, e)}
-                              onDragEnd={handleDragEnd}
-                              onDrop={() => handleDrop(chapter, vid.id, false)}
-                              isDragging={
-                                draggedVideo?.chapterId === chapter.id &&
-                                draggedVideo?.videoId === vid.id &&
-                                !draggedVideo?.isConcours
-                              }
-                              isDragOver={
-                                dragOverVideo?.chapterId === chapter.id &&
-                                dragOverVideo?.videoId === vid.id &&
-                                !dragOverVideo?.isConcours
-                              }
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-4 text-center rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200/70 dark:border-purple-500/20 text-xs text-purple-900 dark:text-purple-300">
-                          {selectedFiliere === "PSI" && chapter.id.includes("quantique") ? (
-                            <span>
-                              ℹ️ La Physique Quantique est spécifique aux filières MP et PC (hors programme pour la filière PSI).
-                            </span>
-                          ) : (
-                            <span>Aucune séance vidéo théorique enregistrée pour ce filtre de filière.</span>
-                          )}
-                        </div>
-                      )}
-
-                      {courseVideos.length > 6 && (
-                        <div className="text-center pt-2">
-                          <button
-                            type="button"
-                            onClick={() => toggleExpandVideos(chapter.id)}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/30 transition-all cursor-pointer shadow-2xs"
-                          >
-                            <span>
-                              {isVideosExpanded
-                                ? "Afficher moins"
-                                : "Afficher l'intégralité des séances de cours"}
-                            </span>
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isVideosExpanded ? "rotate-180" : ""}`} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* ── 3. NOUVELLE RUBRIQUE : EXTRAITS DE CONCOURS & PROBLÈMES TYPES (TRAVAIL EN PARALLÈLE DU COURS) ── */}
-                    {concoursVideos.length > 0 && (
-                      <div className="space-y-3.5 pt-2">
-                        <div className="flex items-center justify-between pb-2 border-b border-amber-200/80 dark:border-amber-500/30">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                              🎯 EXTRAITS DE CONCOURS & PROBLÈMES TYPES
-                            </span>
-                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                              · Annales écrites & Oraux X-ENS · Mines-Ponts · Centrale-Supélec · CCINP
-                            </span>
-                          </div>
-
-                          {isTeacherView && chapter.hiddenConcoursVideoIds && chapter.hiddenConcoursVideoIds.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => restoreVideos(chapter.moduleId || activeModule, chapter.id, true)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition-colors cursor-pointer shadow-xs"
-                              title="Rétablir les extraits de concours masqués"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                              <span>Restaurer concours ({chapter.hiddenConcoursVideoIds.length})</span>
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {displayedConcoursVideos.map((cVid, cIdx) => (
-                            <ConcoursExtractCard
-                              key={cVid.id || cIdx}
-                              vid={cVid}
-                              index={cIdx}
-                              totalCount={displayedConcoursVideos.length}
-                              chapTitre={chapter.titre}
-                              onOpenPdf={onOpenPdf}
-                              onOpenVideo={onOpenVideo}
-                              isTeacherView={isTeacherView}
-                              onEdit={
-                                isTeacherView
-                                  ? () => openEditSession(chapter, cVid, true)
-                                  : undefined
-                              }
-                              onDelete={
-                                isTeacherView
-                                  ? () => removeVideo(chapter.moduleId || activeModule, chapter.id, cVid.id, true)
-                                  : undefined
-                              }
-                              onTransfer={
-                                isTeacherView
-                                  ? () => openTransferModal(cVid, chapter, true)
-                                  : undefined
-                              }
-                              onMoveUp={
-                                isTeacherView && cIdx > 0
-                                  ? () => handleMoveVideo(chapter, cVid.id, "prev", true)
-                                  : undefined
-                              }
-                              onMoveDown={
-                                isTeacherView && cIdx < displayedConcoursVideos.length - 1
-                                  ? () => handleMoveVideo(chapter, cVid.id, "next", true)
-                                  : undefined
-                              }
-                              onDragStart={(e) => handleDragStart(chapter.moduleId || activeModule, chapter.id, cVid.id, true, cVid, e)}
-                              onDragOver={(e) => handleDragOver(chapter.id, cVid.id, true, e)}
-                              onDragEnd={handleDragEnd}
-                              onDrop={() => handleDrop(chapter, cVid.id, true)}
-                              isDragging={
-                                draggedVideo?.chapterId === chapter.id &&
-                                draggedVideo?.videoId === cVid.id &&
-                                draggedVideo?.isConcours
-                              }
-                              isDragOver={
-                                dragOverVideo?.chapterId === chapter.id &&
-                                dragOverVideo?.videoId === cVid.id &&
-                                dragOverVideo?.isConcours
-                              }
-                            />
-                          ))}
-                        </div>
-
-                        {concoursVideos.length > 6 && (
-                          <div className="text-center pt-2">
-                            <button
-                              type="button"
-                              onClick={() => toggleExpandConcours(chapter.id)}
-                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-500/30 transition-all cursor-pointer shadow-2xs"
-                            >
-                              <span>
-                                {isConcoursExpanded
-                                  ? "Afficher moins"
-                                  : "Afficher tous les extraits de concours de ce chapitre"}
-                              </span>
-                              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isConcoursExpanded ? "rotate-180" : ""}`} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── 4. FICHES DE SYNTHÈSE DANS BOÎTIER ÉLÉGANT ── */}
-                    {(fiches.length > 0 || isTeacherView) && (
-                      <div className="bg-[#fdfaf5] dark:bg-[#111827] border border-[#f2e7d7] dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
-                        <div className="flex items-center justify-between pb-2 border-b border-[#ebdccd] dark:border-slate-800">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                              📑 FICHES DE SYNTHÈSE
-                            </span>
-                          </div>
-
-                          {isTeacherView && (
-                            <button
-                              type="button"
-                              onClick={() => openAddFiche(chapter)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-700 hover:bg-amber-800 text-white transition-colors cursor-pointer shadow-xs"
-                            >
-                              <PlusCircle className="w-3.5 h-3.5" />
-                              <span>+ Fiche</span>
-                            </button>
-                          )}
-                        </div>
-
-                        {fiches.length > 0 ? (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {fiches.map((f, fIdx) => (
-                              <CourseFicheCard
-                                key={f.id || fIdx}
-                                fiche={f}
-                                chapTitre={chapter.titre}
-                                onOpenPdf={onOpenPdf}
-                                isTeacherView={isTeacherView}
-                                onEdit={
-                                  isTeacherView
-                                    ? () => openEditFiche(chapter, f)
-                                    : undefined
-                                }
-                                onDelete={
-                                  isTeacherView
-                                    ? () => deleteFiche(chapter.moduleId, chapter.id, f.id || f.titre)
-                                    : undefined
-                                }
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-4 text-center rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-dashed border-amber-200/70 dark:border-amber-500/20 text-xs text-amber-900 dark:text-amber-300">
-                            Aucune fiche de synthèse pour ce chapitre pour le moment.
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── 4. PLEINE LARGEUR TD & DEVOIRS LIBRES (DL) ── */}
-                    <div className="space-y-3.5 pt-2">
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-                            ✍️ TD & DEVOIRS LIBRES (DL) · FICHES D&apos;EXERCICES & ANNALES
-                          </span>
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            {tds.length}
-                          </span>
-                        </div>
-
-                        {isTeacherView && (
-                          <button
-                            type="button"
-                            onClick={() => openAddExercise(chapter)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer shadow-xs"
-                          >
-                            <PlusCircle className="w-3.5 h-3.5" />
-                            <span>+ Ajouter un TD / Énoncé / Corrigé</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {tds.length > 0 ? (
-                        <div className="space-y-2.5">
-                          {tds.map((td, tIdx) => (
-                            <CourseExerciseLine
-                              key={td.id || tIdx}
-                              item={td}
-                              index={tIdx}
-                              chapTitre={chapter.titre}
-                              onOpenPdf={onOpenPdf}
-                              onOpenVideo={onOpenVideo}
-                              isTeacherView={isTeacherView}
-                              onDelete={
-                                isTeacherView && td.id
-                                  ? () => deleteExercise(chapter.moduleId, chapter.id, td.id!)
-                                  : undefined
-                              }
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-6 text-center rounded-xl bg-white/60 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-800 text-xs text-slate-500">
-                          Aucun TD pour ce chapitre pour le moment.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          );
-        })}
-
-        {filteredChapters.length === 0 && (
-          <div className="p-12 text-center bg-white dark:bg-[#0d1322] rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-slate-500 dark:text-slate-400">
-            Aucun chapitre ne correspond à votre recherche.
-          </div>
-        )}
-      </div>
             </>
           )}
         </div>

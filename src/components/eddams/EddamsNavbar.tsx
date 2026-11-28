@@ -49,10 +49,10 @@ export function EddamsNavbar({
 
   return (
     <header
-      className={`sticky top-0 z-50 backdrop-blur-md transition-colors duration-200 border-b ${
+      className={`sticky top-0 z-50 backdrop-blur-xl transition-colors duration-200 border-b ${
         theme === "dark"
-          ? "bg-[#090e1c]/95 border-purple-500/20 text-slate-200"
-          : "bg-[#F4F1E6]/92 border-purple-200/60 shadow-xs text-slate-800"
+          ? "bg-[#070B14]/92 border-slate-800/90 text-slate-200"
+          : "bg-[#F6F7FA]/90 border-slate-200/85 shadow-[0_1px_10px_rgba(15,23,42,0.04)] text-slate-800"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
@@ -187,33 +187,31 @@ export function EddamsNavbar({
                 type="button"
                 onClick={() => onSelectNiveau("sup")}
                 aria-pressed={activeNiveau === "sup"}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
                   activeNiveau === "sup"
-                    ? "bg-purple-600 text-white shadow-xs"
+                    ? "bg-[#162A4A] dark:bg-purple-600 text-white shadow-xs"
                     : theme === "dark"
                     ? "text-slate-300 hover:text-white"
-                    : "text-slate-600 hover:text-purple-800"
+                    : "text-slate-600 hover:text-[#162A4A]"
                 }`}
                 title="1ère année CPGE (Sup)"
               >
-                <span>⚛️</span>
-                <span>1ère année</span>
+                1ère année · Sup
               </button>
               <button
                 type="button"
                 onClick={() => onSelectNiveau("spe")}
                 aria-pressed={activeNiveau === "spe"}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
                   activeNiveau === "spe"
-                    ? "bg-purple-600 text-white shadow-xs"
+                    ? "bg-[#162A4A] dark:bg-purple-600 text-white shadow-xs"
                     : theme === "dark"
                     ? "text-slate-300 hover:text-white"
-                    : "text-slate-600 hover:text-purple-800"
+                    : "text-slate-600 hover:text-[#162A4A]"
                 }`}
                 title="2ème année CPGE (Spé)"
               >
-                <span>⚡</span>
-                <span>2ème année</span>
+                2ème année · Spé
               </button>
             </div>
           )}
@@ -338,8 +336,8 @@ export function EddamsNavbar({
         <div
           className={`md:hidden border-t px-4 py-1.5 flex items-center justify-center ${
             theme === "dark"
-              ? "bg-[#090e1c]/95 border-purple-500/20"
-              : "bg-[#F4F1E6]/95 border-purple-200/50"
+              ? "bg-[#070B14]/95 border-slate-800"
+              : "bg-[#F6F7FA]/95 border-slate-200/80"
           }`}
         >
           <div
@@ -347,39 +345,37 @@ export function EddamsNavbar({
             aria-label="Choisir l'année CPGE"
             className={`inline-flex items-center p-0.5 rounded-full border ${
               theme === "dark"
-                ? "bg-slate-900 border-purple-500/30"
-                : "bg-white border-purple-200/80"
+                ? "bg-slate-900 border-slate-700"
+                : "bg-white border-slate-200"
             }`}
           >
             <button
               type="button"
               onClick={() => onSelectNiveau("sup")}
               aria-pressed={activeNiveau === "sup"}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
                 activeNiveau === "sup"
-                  ? "bg-purple-600 text-white shadow-xs"
+                  ? "bg-[#162A4A] dark:bg-purple-600 text-white shadow-xs"
                   : theme === "dark"
                   ? "text-slate-300"
                   : "text-slate-600"
               }`}
             >
-              <span>⚛️</span>
-              <span>1ère année</span>
+              1ère année · Sup
             </button>
             <button
               type="button"
               onClick={() => onSelectNiveau("spe")}
               aria-pressed={activeNiveau === "spe"}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
                 activeNiveau === "spe"
-                  ? "bg-purple-600 text-white shadow-xs"
+                  ? "bg-[#162A4A] dark:bg-purple-600 text-white shadow-xs"
                   : theme === "dark"
                   ? "text-slate-300"
                   : "text-slate-600"
               }`}
             >
-              <span>⚡</span>
-              <span>2ème année</span>
+              2ème année · Spé
             </button>
           </div>
         </div>

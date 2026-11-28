@@ -1,10 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit, Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -16,7 +24,10 @@ const geistMono = Geist_Mono({
 
 export const viewport: Viewport = {
   colorScheme: "light dark",
-  themeColor: "#F4F1E6",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F6F7FA" },
+    { media: "(prefers-color-scheme: dark)", color: "#070B14" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
@@ -84,7 +95,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={`${outfit.variable} ${inter.variable} ${geistMono.variable} antialiased`}
     >
       <head>
         {/* Preconnect to WhatsApp for instant CTA response */}
@@ -118,7 +129,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#F4F1E6] text-[#17142D]">
+      <body className="min-h-screen bg-[#F6F7FA] text-[#0F172A]">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -9,7 +9,7 @@ import { ConcoursWidget } from "@/components/eddams/ConcoursWidget";
 import { FiliereConcours } from "@/components/eddams/pcConcoursData";
 import { CoursesWidget } from "@/components/eddams/CoursesWidget";
 import { ReferencesWidget } from "@/components/eddams/ReferencesWidget";
-import { PdfViewerModal } from "@/components/eddams/PdfViewerModal";
+import { PdfViewerModal, PdfDocOption } from "@/components/eddams/PdfViewerModal";
 import { VideoPlayerModal } from "@/components/eddams/VideoPlayerModal";
 import { FreemiumLockModal } from "@/components/video/FreemiumLockModal";
 import { EddamsNavbar } from "@/components/eddams/EddamsNavbar";
@@ -83,7 +83,13 @@ function EddamsPortal() {
   };
 
   // Modales universelles
-  const [pdfModal, setPdfModal] = useState<{ isOpen: boolean; url: string | null; title: string }>({
+  const [pdfModal, setPdfModal] = useState<{
+    isOpen: boolean;
+    url: string | null;
+    title: string;
+    docs?: PdfDocOption[];
+    initialIndex?: number;
+  }>({
     isOpen: false,
     url: null,
     title: "",
@@ -110,8 +116,13 @@ function EddamsPortal() {
     isPending: false,
   });
 
-  const handleOpenPdf = (url: string, title: string) => {
-    setPdfModal({ isOpen: true, url, title });
+  const handleOpenPdf = (
+    url: string,
+    title: string,
+    docs?: PdfDocOption[],
+    initialIndex?: number
+  ) => {
+    setPdfModal({ isOpen: true, url, title, docs, initialIndex });
   };
 
   const handleOpenVideo = (url: string, title: string) => {
@@ -141,8 +152,8 @@ function EddamsPortal() {
     <div
       className={`min-h-screen transition-colors duration-300 font-sans flex flex-col relative ${
         theme === "dark"
-          ? "dark bg-[#070a13] text-slate-100 selection:bg-purple-900 selection:text-purple-100"
-          : "bg-[#F4F1E6] text-slate-900 selection:bg-purple-100 selection:text-purple-900"
+          ? "dark bg-[#070B14] text-slate-100 selection:bg-purple-900 selection:text-purple-100"
+          : "bg-[#F6F7FA] text-[#0F172A] selection:bg-purple-100 selection:text-purple-950"
       }`}
     >
 
@@ -266,9 +277,11 @@ function EddamsPortal() {
       {/* 4. Modales Universelles Drive PDF, YouTube & Freemium Lock */}
       <PdfViewerModal
         isOpen={pdfModal.isOpen}
-        onClose={() => setPdfModal({ isOpen: false, url: null, title: "" })}
+        onClose={() => setPdfModal({ isOpen: false, url: null, title: "", docs: undefined, initialIndex: 0 })}
         url={pdfModal.url}
         title={pdfModal.title}
+        docs={pdfModal.docs}
+        initialIndex={pdfModal.initialIndex}
       />
 
       <VideoPlayerModal
@@ -295,7 +308,7 @@ function EddamsPortal() {
 
 export default function EddamsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f4f6ff] dark:bg-[#070a13]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#F6F7FA] dark:bg-[#070B14]" />}>
       <EddamsPortal />
     </Suspense>
   );

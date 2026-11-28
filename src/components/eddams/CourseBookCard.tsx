@@ -117,7 +117,6 @@ export function CourseBookCard({ livre, onOpenPdf }: CourseBookCardProps) {
             src={srcs[imgIdx]}
             alt=""
             referrerPolicy="no-referrer"
-            crossOrigin="anonymous"
             onLoad={() => setImgLoaded(true)}
             onError={handleImgError}
             loading="lazy"

@@ -745,13 +745,13 @@ CREATE POLICY "Public Read Fiches" ON public.fiches FOR SELECT USING (true);
   };
 
   if (!isMounted) {
-    return <div className="min-h-screen bg-[#070b19]" />;
+    return <div className="min-h-screen bg-[#F6F7FA] dark:bg-[#070B14]" />;
   }
 
   return (
     <div
       className={`min-h-screen font-sans flex flex-col transition-colors duration-200 ${
-        theme === "dark" ? "dark bg-[#070b19] text-white" : "bg-[#f8fafc] text-slate-900"
+        theme === "dark" ? "dark bg-[#070B14] text-white" : "bg-[#F6F7FA] text-[#0F172A]"
       }`}
     >
       {/* Toast Notification */}

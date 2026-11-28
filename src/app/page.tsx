@@ -33,7 +33,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#F4F1E6] text-[#17142D] selection:bg-purple-200 selection:text-purple-900 overflow-x-clip">
+    <main className="min-h-screen bg-[#F6F7FA] text-[#0F172A] selection:bg-purple-200 selection:text-purple-950 overflow-x-clip">
       {/* Sticky / Glass Navigation Bar (Light Theme) */}
       <Navbar />
 
